@@ -3,6 +3,21 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Helper tools
+lines.exe
+
+# Tests and unimportant stuff
+test/
+mat/
+
+# rsrscgen generated files
+raddi.com-vi.rc
+raddi.com.manifest
+node.manifest
+node-vi.rc
+app.manifest
+app-vi.rc
+
 # User-specific files
 *.suo
 *.user
@@ -17,6 +32,7 @@
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
+a64/
 x64/
 x86/
 bld/

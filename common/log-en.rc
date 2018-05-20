@@ -1,0 +1,17 @@
+#include <windows.h>
+#include "../common/log.h"
+
+STRINGTABLE
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+{
+    MAIN | EVENT | 0xF0 "path: {1}"
+    0xA1F0              "{1} {2} {3} {4} {5}"
+    0xA1F1              "initializing..."
+    0xA1F2              "released"
+
+    MAIN | ERROR | 0xF1 "LOG FILE {1} CREATE/APPEND FAILED, console only, error {ERR}"
+    MAIN | ERROR | 0xF2 "log: failed to create/append on provided path {1}, error {ERR}"
+    MAIN | ERROR | 0xF3 "log: failed to create/append on shell path {1}, error {ERR}"
+    MAIN | ERROR | 0xFF "exiting with error code {ERR}"
+    MAIN | EVENT | 0xFF "."
+}

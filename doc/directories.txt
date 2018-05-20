@@ -1,0 +1,49 @@
+Directories
+===========
+
+/app
+ - GUI client App
+ - raddi.exe on Windows
+
+/com
+ - command-line client
+ - raddi.com on Windows
+
+/common
+ - general utility code shared by more than one component
+ - mostly platform specific
+
+/core
+ - raddi code
+
+/doc
+ - documentation
+
+/img
+ - graphics material
+
+/lib
+/lib/x86
+/lib/x64
+/lib/a64
+/lib/include
+ - third-party libraries, either code or import/ltcg .libs
+
+/node
+ - node service (daemon), basically all platform specific code
+ - raddi32.exe or raddi64.exe on Windows
+
+/tools
+ - additional third-party tools required to build the projects
+ - stub.exe
+    - because I detest the "This program cannot be run in DOS mode." string
+ - rsrcgen.exe
+    - takes .info files and generates .manifest and VERSIONINFO .rc file
+
+/a64
+/x64
+/x86
+ - /debug
+ - /release
+ - /portable 
+     - build target directories
