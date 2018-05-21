@@ -2,7 +2,6 @@
 #define RADDI_EID_H
 
 #include "raddi_iid.h"
-#include <string>
 
 namespace raddi {
 
