@@ -14,8 +14,6 @@ namespace raddi {
 
         // identification
         //  - location of the entry in the entries tree (channels/threads/comments...)
-        //  - lower 2 bits of id.timestamp are used to determine entry type
-        //    effectively restricting amount of various post types
         //
         raddi::eid id;
         raddi::eid parent;
