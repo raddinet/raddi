@@ -10,6 +10,7 @@
 // TODO: rewrite:
 //  - remove note..error levels (let callsite decide importance)
 //  - add 'object' distinction (below component) for classes (or merge with MAIN,SERVER,SOURCE,...)
+//     - remove named components, just use code
 
 #undef ERROR
 #define NOTE  0x0A000
@@ -99,18 +100,17 @@ namespace raddi {
         inline std::wstring translate (int argument, const std::wstring & format) { return translate ((long long) argument, format); }
         inline std::wstring translate (unsigned int argument, const std::wstring & format) { return translate ((unsigned long long) argument, format); }
 
-        inline std::wstring translate (std::wstring argument, const std::wstring &) { return argument; }
+        inline std::wstring translate (const std::wstring & argument, const std::wstring &) { return argument; }
         inline std::wstring translate (const wchar_t * argument, const std::wstring &) { return argument; }
-        inline std::wstring translate (wchar_t * argument, const std::wstring &) { return argument; }
 
         std::wstring translate (api_error, const std::wstring &);
         std::wstring translate (const in_addr *, const std::wstring &);
         std::wstring translate (const in6_addr *, const std::wstring &);
         std::wstring translate (const sockaddr *, const std::wstring &);
-        std::wstring translate (sockaddr *, const std::wstring &);
-        std::wstring translate (in_addr, const std::wstring &);
-        std::wstring translate (in6_addr, const std::wstring &);
-        std::wstring translate (sockaddr, const std::wstring &);
+
+        inline std::wstring translate (const in_addr & address, const std::wstring & format) { return translate (&address, format); }
+        inline std::wstring translate (const in6_addr & address, const std::wstring & format) { return translate (&address, format); }
+        inline std::wstring translate (const sockaddr & address, const std::wstring & format) { return translate (&address, format); }
 
 #ifdef _WIN32
         // TODO: replace with 'std::tm' where needed to be portable
@@ -122,6 +122,7 @@ namespace raddi {
 
         std::wstring translate (const void * argument, const std::wstring &);
         std::wstring translate (const char * argument, const std::wstring &);
+        std::wstring translate (const std::string & argument, const std::wstring &);
 
         // internal
         //  - implementation details

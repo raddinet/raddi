@@ -387,6 +387,17 @@ std::wstring raddi::log::translate (const char * argument, const std::wstring &)
     return result;
 }
 
+std::wstring raddi::log::translate (const std::string & argument, const std::wstring &) {
+    std::wstring result;
+    if (argument [0]) {
+        if (auto n = MultiByteToWideChar (CP_ACP, MB_PRECOMPOSED, argument.data (), (int) argument.length (), NULL, 0)) {
+            result.resize (n);
+            MultiByteToWideChar (CP_ACP, MB_PRECOMPOSED, argument.data (), (int) argument.length (), &result [0], n);
+        };
+    }
+    return result;
+}
+
 std::wstring raddi::log::translate (const in_addr * address, const std::wstring &) {
     wchar_t sz [16];
     RtlIpv4AddressToString (address, sz);
@@ -396,10 +407,6 @@ std::wstring raddi::log::translate (const in6_addr * address, const std::wstring
     wchar_t sz [48];
     RtlIpv6AddressToString (address, sz);
     return sz;
-}
-
-std::wstring raddi::log::translate (sockaddr * address, const std::wstring & format) {
-    return translate (const_cast <const sockaddr *> (address), format);
 }
 
 namespace {
@@ -445,16 +452,6 @@ std::wstring raddi::log::translate (const sockaddr * address, const std::wstring
             return s;
         }
     }
-}
-
-std::wstring raddi::log::translate (in_addr address, const std::wstring & format) {
-    return translate (&address, format);
-}
-std::wstring raddi::log::translate (in6_addr address, const std::wstring & format) {
-    return translate (&address, format);
-}
-std::wstring raddi::log::translate (sockaddr address, const std::wstring & format) {
-    return translate (&address, format);
 }
 
 #ifdef _WIN32
