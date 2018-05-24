@@ -4,9 +4,9 @@
 #ifdef _WIN32
 #ifdef _MSC_VER
 #if defined(_M_ARM64)
-#define ARCHITECTURE "AArch64"
+#define ARCHITECTURE "arm-64"
 #elif defined(_M_ARM)
-#define ARCHITECTURE "AArch32"
+#define ARCHITECTURE "arm-32"
 #elif defined(_M_X64)
 #define ARCHITECTURE "x86-64"
 #else
