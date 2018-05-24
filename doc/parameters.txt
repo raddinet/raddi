@@ -1,0 +1,232 @@
+Command-line parameters
+=======================
+
+Common parameters:
+	- log:<default|all|everything|event(s)|data|error(s)|stop(s)|disable(d)>[:<path>]
+		- selects events written into the log file
+		- level - one of predefined strings:
+			- "default" - uses default log level, currently "error"
+			- "disable" or "disabled" - logs nothing
+			- "all" or "everything" - all events, even frequent status notes
+			- "event" or "events" - significant runtime events and all below
+			- "data" - malformed/invalid data processed and all below
+			- "error" or "errors" - recoverable runtime errors and below
+			- "stop" or "stops" - logs irrecoverable errors
+		- path is optional path to log
+	- display:<default|all|everything|event(s)|data|error(s)|stop(s)|disable(d)>
+		- selects events displayed to console when started as application
+		- parameter is same as log level
+			- default display level is "events"
+	- protocol:<text>
+		- sets 8 bytes long protocol magic string that prevents connects between
+		  incompatible versions; can be used to establish whole separate network
+		- text parameter is converterted to UTF-8 and clipped or NUL-padded to 8
+		  bytes
+			- default is: RADDI/1
+
+Node parameters:
+	- threads:<n>
+		- number of worker threads the node service should use
+		- when 0 (default) a 3 threads are started for each 2 logical processors
+		  capping on 1/8 way from 'connections' to 'max-connections'
+	- listen:<IP:port>
+	- listen:<port>
+	- listen:off
+		- request to listen on IP address and port, IPv4 and IPv6 are allowed
+		- for port only, two (IPv4 and IPv6) listeners are started
+		- if not specified, listeners are started on default port 44303
+		   - unless 'listen:off' (or invalid listen parameter) is provided
+	- discovery:<IP:port>
+	- discovery:<port>
+	- discovery:off
+		- starts local peer discovery on IP address and port, similar to 'listen'
+		- for port only, two (IPv4 and IPv6) discoverers are started
+		- if not specified, local peer discovery is started on default port 44303
+		   - unless 'discovery:off' (or invalid discovery parameter) is provided
+	- source:<path>
+		- directory for files with entries for transmission
+	- database:<name|path>
+		- the path may be relative to default storage (name) or absolute (path)
+		- default name is "database"
+	- bootstrap:<URL>
+	- bootstrap:off
+		- while starting downloads and parses (plain text files) provided URL(s)
+		  for IP addresses and adds those to database as core-level peer nodes
+		- more than one URL can be provided by repeating the parameter
+		- if none provided, the node will use default URL only if the local core
+		  level peer nodes list is empty
+			- default URL is: https://www.raddi.net/bootstrap.txt
+	- bootstrap-proxy:<name>
+		- if present, bootstrap URL is accessed through proxy
+		- if name is omitted, the default system-configured proxy is used
+	- bootstrap-user-agent:<user-agent-string>
+		- replaces user-agent string used when accessing bootstrap URLs
+		- default user agent string is "RADDI/1.0" where 1.0 represents current
+		  version of the software
+	- proxy:<port|IP:port>
+		- specifies SOCKS5t (Tor) proxy; support for optimistic data is REQUIRED
+		- default SOCKS5t proxy IP address is 127.0.0.1:9050
+		- notes:
+			- local network addresses are not routed through proxy
+			- Tor Browser opens port 9150 instead of 9050 (expert bundle)
+		- for maximum anonymity consider using along with following options:
+			- "bootstrap:off" or "bootstrap-proxy:..."
+			- "discovery:off" to prevent local network connections
+			- "listen:off" so the node doesn't advertise listening port
+		- no proxy is used by default, if the parameter is omitted
+	- aes:<auto(matic)|disable(d)|force(d)>
+		- adjusts how node selects between AES256-GCM and XChaCha20-Poly1305
+		- value: one of predefined strings:
+			- "auto" - uses AES when supported by both parties,
+				   XChaCha20-Poly1305 otherwise
+			- "disabled" - always uses XChaCha20-Poly1305
+			- "forced" - disconnects peers that don't support AES256-GCM
+	- network-propagation-participation:<0|1|false|true>
+		- selects if node participates in network propagation, i.e. subscribes to
+		  receive all traffic and store/rebroadcast it where appropriate in order
+ 		  to ensure the network health
+		- generally users with data plan should disable this feature to conserve
+		  bandwidth, preferably by using the 'leaf' option
+		- default is true
+	- keep-alive:<N>
+		- specifies how long after last received data are peer connections probed
+		  to ensure connected status
+		- default value is 60000, i.e. 60 seconds; zero disables keep-alives
+		- NOTE: non-zero values smaller than 1000 may not work
+	- 
+	- core
+		- affected options:
+			- database-store-everything = 1
+	- leaf
+		- affected options:
+			- max-core-connections += 1
+			- min-core-connections += 1
+			- network-propagation-participation = false
+
+
+Node database behavior parameters:
+	- database-reinsertion-validation:<0|1|false|true>
+		- when non-zero, repeatedly received entries are validated against data
+		  already in database
+		- default is 0 for release builds, 1 for debug builds
+	- database-backtrack-granularity:<seconds>
+		- specifies relative difference of a newly created shard's base timestamp
+		  when database receives entry older than oldest entry already present
+		- default is 4×86400 i.e. four days
+	- database-store-everything:<0|1|false|true>
+		- when non-zero the database is not testing for subscriptions and stores
+		  everything (core network nodes are typically configured as such)
+		- default is 0 when parameter is missing, 1 if no value is provided
+
+RADDI.com utility parameters:
+	- timestamp
+	- timestamp:<N>
+		- 'timestamp' displays current timestamp as hexadecimal lowecase number
+		- 'now' is alias for 'timestamp' without parameter
+		- N
+			- optional
+			- hexadecimal timestamp to decode, e.g.:
+			  'timestamp:8de600' displays '2018-04-18 15:10:56'
+		- NOTE: all times and timestamps are in UTC
+	- microtimestamp
+	- microtimestamp:<N>
+		- displays current (us) timestamp as 16 hexadecimal lowecase characters
+		- N
+			- optional
+			- hexadecimal timestamp to decode, e.g.:
+			  'timestamp:87544f12f84' displays '2018-04-18 15:16:00.852868'
+	- instance:<pid>
+		- specifies active instance, identified by PID number, to operate on
+		- otherwise first instance found is used, searched in following order:
+			1) raddi node service
+			2) raddi node running under same user account
+			3) raddi node running under other user account
+	- text:<text>
+		- <text> is converted to UTF-8 and appended to content of the new entry
+		  without adding any additional characters
+		- applies to:
+			- new:identity, new:channel, new:thread, reply
+	- content:<N×*|hexadecimal|...>
+		- content is retrieved and translated per specification and appended to
+		  content of the new entry, applicable specifications follow:
+		- hexadecimal
+			- string of two-character hexadecimal values optionally separated
+			  by any non-hexadecimal character; translated to string of bytes
+			  with specified values
+		- N×*
+			- variable number (N) of star (*) characters, i.e.: content:***
+			- requests user input from command line
+			- input terminates after N consecutive LF characters, trailing
+			  LF characters are not included in the content
+		- applies to:
+			- new:identity, new:channel, new:thread,
+			  reply, upvote, downvote, revert, report
+	- complexity:L,T,...
+		- overrides CC PoW complexity requirements
+		- parameter consists of series of decimal numbers separated by non-digits
+		  where values in range 18...32 override the complexity level and higher
+		  values override minimal time needed to compute the PoW in milliseconds
+		- NOTES:
+			- failure to meet minimal complexity requirements will result in
+			  other nodes rejecting the entries
+			- as the complexity level requirements are expected to increase
+			  in the future, the minimal time value ensure that appropriately
+			  increased level is applied even when older software is used or
+			  the developers are lazy to re-tune the levels
+		- applies to:
+			- new:identity, new:channel, new:thread, reply
+	- identity:<iid>:<key>
+		- provides the identity identifier of the entry author
+		  and key to sign the entry with to verify authenticity
+		- the utility verifies that the identity already exists in the database
+		  and that the key is actually correct before continuing because wrongly
+		  signed entry would only be rejected by other nodes
+		- usually just provide output of the 'new:identity' command
+		- applies to:
+			- new:channel, new:thread,
+			  reply, upvote, downvote, revert, report
+	- new:identity
+		- creates new identity announcement with specified content (text/content)
+		  and transmits it through active instance (specified, or first found)
+		- NOTE: requires higher complexity PoW that may take more time to compute
+		- prints identity identifier (hexadecimal format) followed by colon (:)
+		  and private key (64 lowercase hexadecimal characters)
+	- new:channel
+		- creates new channel announcement with specified content (text/content)
+		  and transmits it through active instance (specified, or first found)
+		- NOTE: requires higher complexity PoW that may take more time to compute
+		- required parameters:
+			- identity
+		- prints single line:
+			- entry identifier of the channel, in lowercase hexadecimals
+	- new:thread
+		- creates new top-level thread entry with specified content(text/content)
+		  and transmits it through active instance (specified, or first found)
+		- "new:thread channel:<eid>" is actually just an alias for "reply:<eid>"
+		   - channel parameter is not verified to actually describe a channel
+		- required parameters:
+			- identity, channel
+		- prints single line:
+			- entry identifier of the thread, in lowercase hexadecimals
+	- channel:<eid>
+		- specifies channel entry identitifer for new:thread command
+		- applies to:
+			- new:thread
+	- reply:<eid>
+		- creates new response entry to the <eid> entry and transmits it through
+		  active instance (specified, or first found)
+		- NOTE: due to rate limit imposed by the EID format, the command may fail
+		        if called in rapid succession; one second delay is sufficient to
+		        wait before retrying
+		- required parameters:
+			- identity
+			- text or content in case of reply response
+		- prints single line:
+			- new entry identifier (eid), in lowercase hexadecimals
+	- list:identities
+	- list:channels
+
+	- verify-identity-private-key
+		- performs additional validation of the key before creating new entry
+		- optional, attempt to use invalid key might get caught by sign/verify
+
