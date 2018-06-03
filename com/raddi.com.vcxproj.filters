@@ -1,0 +1,183 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="raddi.com.cpp" />
+    <ClCompile Include="..\common\lock.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\log.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_command.cpp">
+      <Filter>Core\Local</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_instance.cpp">
+      <Filter>Core\Local</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_timestamp.cpp">
+      <Filter>Core\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database.cpp">
+      <Filter>Core\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database_shard.cpp">
+      <Filter>Core\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database_table.cpp">
+      <Filter>Core\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_channel.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_eid.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_entry.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_identity.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_iid.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_proof.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\node\platform.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\file.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="raddi.com-en.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="raddi.com-vi.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="raddi.com.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\common\log-en.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\core\raddi_database.rc">
+      <Filter>Core\Database</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\lock.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\log.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\options.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_consensus.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_defaults.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_command.h">
+      <Filter>Core\Local</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_instance.h">
+      <Filter>Core\Local</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_timestamp.h">
+      <Filter>Core\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database.h">
+      <Filter>Core\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_row.h">
+      <Filter>Core\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_shard.h">
+      <Filter>Core\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_table.h">
+      <Filter>Core\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_channel.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_eid.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_entry.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_identity.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_iid.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_proof.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\node\platform.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\file.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{24c82bd3-839e-4e23-ad00-98a91757f73a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{292f4eb9-6503-4ddf-9ed4-25978f455cf9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{71290c1a-ada6-4cc0-ac23-33f3f17e0902}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Local">
+      <UniqueIdentifier>{0237689c-cd74-47d2-b6b9-bda01495064a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Utility">
+      <UniqueIdentifier>{4ee67134-a630-445d-8864-fe95f3f90759}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Database">
+      <UniqueIdentifier>{b0d28c22-7be2-480f-97c5-1b279fbaf6d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Structures">
+      <UniqueIdentifier>{c2339098-f226-45d8-97d2-701f4e8d554b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="System">
+      <UniqueIdentifier>{72215c57-a01e-47ef-9500-eac2aa3e665a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\img\raddicom.ico">
+      <Filter>Resources</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="raddi.com.manifest">
+      <Filter>Resources</Filter>
+    </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\core\raddi_database.tcc">
+      <Filter>Core\Database</Filter>
+    </None>
+    <None Include="..\core\raddi_database_shard.tcc">
+      <Filter>Core\Database</Filter>
+    </None>
+    <None Include="..\core\raddi_database_table.tcc">
+      <Filter>Core\Database</Filter>
+    </None>
+  </ItemGroup>
+</Project>

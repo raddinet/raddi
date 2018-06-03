@@ -1,0 +1,46 @@
+#include <windows.h>
+#include "../common/log.h"
+
+STRINGTABLE
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+{
+    MAIN | EVENT | 0x01 "raddi.com {1}.{2} {3}, {4}"
+    
+    MAIN | NOTE | 0x01  "using argument {1}: {2}"
+    MAIN | NOTE | 0x05  "{1} version {2}, linkage: {3}"
+
+    MAIN | NOTE | 0x10  "proof-of-work on complexity level {1} took only {3} ms, required at least {2} ms"
+    MAIN | NOTE | 0x11  "proof-of-work on complexity level {1} found in {3} ms ({2} ms required)"
+    MAIN | NOTE | 0x12  "proof-of-work complexity level is {1}, required time is {2} ms"
+    MAIN | NOTE | 0x13  "proof-of-work complexity level overriden to {1}, required time is {2} ms"
+
+    MAIN | ERROR | 0x10 "argument {1} conversion failed, error {ERR}"
+    MAIN | ERROR | 0x11 "truncated content at argument {1}, entry full"
+    MAIN | ERROR | 0x12 "truncated on user input "
+    MAIN | ERROR | 0x13 "{1} is not valid identity id"
+    MAIN | ERROR | 0x14 "{1} is not valid identity private key, {2} bytes required, {3} provided"
+    MAIN | ERROR | 0x15 "identity parameter required"
+    MAIN | ERROR | 0x16 "provided identity private key is invalid"
+    MAIN | ERROR | 0x17 "identity {1} does not exist"
+    MAIN | ERROR | 0x18 "{1} is not valid entry id"
+    MAIN | ERROR | 0x19 "entry {1} does not exist"
+    MAIN | ERROR | 0x1A "content required"
+    MAIN | ERROR | 0x1B "entry {1} already exists, wait for a second"
+    MAIN | ERROR | 0x1C "{1} is not valid timestamp"
+    MAIN | ERROR | 0x1D "content size {1} exceeds consensus maximum {2}"
+    MAIN | ERROR | 0x1E "failed to read content file {1}, error {ERR}"
+    MAIN | ERROR | 0x1F "unable to open content file {1}, error {ERR}"
+    MAIN | ERROR | 0x20 "invalid offset {3} exceeds size of file {1} which is {2} bytes"
+    MAIN | ERROR | 0x21 "invalid offset/length, specification {3}+{4}={5} exceeds size of file {1} which is {2} bytes"
+
+    MAIN | STOP  | 0x20 "{1} internal error, validation failed in {2}"
+
+
+    MAIN | DATA  | 0x90 "warning: instance {1} is not broadcasting at the moment"
+    MAIN | DATA  | 0x91 "warning: no node instance available"
+
+    MAIN | EVENT | 0x91 "sending {2} bytes through {1}"
+    MAIN | ERROR | 0x90 "transmission file {1} creation failed, error {ERR}"
+    MAIN | ERROR | 0x91 "transmission file {1} writing ({2} bytes) failed, error {ERR}"
+    MAIN | ERROR | 0x92 "database {1} connect failed, error {ERR}"
+}
