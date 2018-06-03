@@ -1,0 +1,14 @@
+STREAMING
+=========
+
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+NOTHING OF THIS IS IMPLEMENTED
+
+stream entries all share same ID
+
+entry::proof must either contain distinguishing bit
+ ...or first entry with valid proof marks itself as a stream announcement
+    and streaming-enabled nodes and subscribers will ignore PoW which will
+    actually contain out-of-band data (sync, order, keyframing, timestamps, ...)
+
+only explicit subscribers of streams are getting them

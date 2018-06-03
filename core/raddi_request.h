@@ -86,6 +86,7 @@ namespace raddi {
             // download -> request::download (eid + uint32_t)
             //  - requests peer to retrieve everything belonging to certain channel or thread
             //    that was created at or after the threshold timestamp
+            //  - TODO: empty EID means TOTALLY ALL, but allowed only between core nodes
             //  - if eid is nested post, whole thread gets fetched
             //
             download = 0x33,

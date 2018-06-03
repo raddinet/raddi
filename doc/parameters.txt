@@ -126,7 +126,7 @@ RADDI.com utility parameters:
 		- N
 			- optional
 			- hexadecimal timestamp to decode, e.g.:
-			  'timestamp:8de600' displays '2018-04-18 15:10:56'
+			  'timestamp:8de600' shows '2018-04-18 15:10:56'
 		- NOTE: all times and timestamps are in UTC
 	- microtimestamp
 	- microtimestamp:<N>
@@ -134,7 +134,7 @@ RADDI.com utility parameters:
 		- N
 			- optional
 			- hexadecimal timestamp to decode, e.g.:
-			  'timestamp:87544f12f84' displays '2018-04-18 15:16:00.852868'
+			  'microtimestamp:87544f12f84' shows '2018-04-18 15:16:00.852868'
 	- instance:<pid>
 		- specifies active instance, identified by PID number, to operate on
 		- otherwise first instance found is used, searched in following order:
@@ -146,21 +146,26 @@ RADDI.com utility parameters:
 		  without adding any additional characters
 		- applies to:
 			- new:identity, new:channel, new:thread, reply
-	- content:<N×*|hexadecimal|...>
+	- content:<*×N|@path[@offset[:length]]|hexadecimal>
 		- content is retrieved and translated per specification and appended to
 		  content of the new entry, applicable specifications follow:
 		- hexadecimal
 			- string of two-character hexadecimal values optionally separated
 			  by any non-hexadecimal character; translated to string of bytes
 			  with specified values
-		- N×*
+		- *×N
 			- variable number (N) of star (*) characters, i.e.: content:***
 			- requests user input from command line
 			- input terminates after N consecutive LF characters, trailing
 			  LF characters are not included in the content
+		- @path[@offset[:length]]
+			- single (@) character followed by path to a file that is append
+			  whole as-is to current content
+			- optionally can also include offset and length if only a portion
+			  the file is to be used; if length is not specified, until the
+			  end of the file is assumed
 		- applies to:
-			- new:identity, new:channel, new:thread,
-			  reply, upvote, downvote, revert, report
+			- new:identity, new:channel, new:thread, reply
 	- complexity:L,T,...
 		- overrides CC PoW complexity requirements
 		- parameter consists of series of decimal numbers separated by non-digits
@@ -175,16 +180,22 @@ RADDI.com utility parameters:
 			  the developers are lazy to re-tune the levels
 		- applies to:
 			- new:identity, new:channel, new:thread, reply
+	- identity:*
+	- identity:<iid>:*
 	- identity:<iid>:<key>
-		- provides the identity identifier of the entry author
-		  and key to sign the entry with to verify authenticity
+	- identity:<iid>:@path[@offset[:length]]
+		- provides the identity identifier of the entry author and key to sign
+		  the entry with to verify authenticity
+		- parts of the parameter are similar to 'content' parameter, see above
+			- use star (*) character to request either the identity
+			  description string, or just the key, from the command-line
+			- use at (@) character to read identity key from a file
 		- the utility verifies that the identity already exists in the database
 		  and that the key is actually correct before continuing because wrongly
 		  signed entry would only be rejected by other nodes
-		- usually just provide output of the 'new:identity' command
+		- easiest use is to just provide output of the 'new:identity' command
 		- applies to:
-			- new:channel, new:thread,
-			  reply, upvote, downvote, revert, report
+			- new:channel, new:thread, new:thread, reply
 	- new:identity
 		- creates new identity announcement with specified content (text/content)
 		  and transmits it through active instance (specified, or first found)

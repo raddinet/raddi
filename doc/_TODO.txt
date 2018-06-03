@@ -1,0 +1,53 @@
+TODO
+====
+
+next reddit post:
+ - https://www.yours.org/@raddinet
+
+github repo:
+ - raddi-builds-windows
+   - release - installer exe in release, separated exe/dlls in subdirs
+   - portable
+
+common/string.h
+ - string with platform-defined internal representation
+   (UTF-16 on Windows, UTF-8 on Linux), auto converting
+ - use for paths and everything
+    - options?
+    - node.cpp/raddi.com.cpp -> main args?
+
+POW!!!
+ - COMPRESSROUND reduces edge representation from > 4bytes to 4 bytes when #remaining edges is small enough to allow it.
+    - this speeds up remaining trimming rounds.
+ - XBITS determines granularity of bucketsort (using 2XBITS
+ - SAVEEDGES allows instant recovery of edge indices of solutions, at cost of extra 1GB memory
+    - so OFF?
+
+perfect compression dictionary for english text
+ - add dots, commas etc with space at the end?
+ - https://sourceforge.net/p/lzmautils/discussion/708858/thread/e40fbf99/
+
+cache of detached entries
+
+TBD app: https://msdn.microsoft.com/en-us/library/aa767914(VS.85).aspx#app_reg
+TBD www - read-only web interface
+
+consider http server? simple GET/POST support
+ - POST - new identity/channel/post/etc.
+ - GET - db queries? lists of identities/channels
+       - deep tree data fetch?
+ - replace Source functionality?
+
+document protocol
+ - requirement: synchronized time
+
+UCRT?
+ - https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
+ - https://github.com/MicrosoftDocs/cpp-docs/blob/master/docs/c-runtime-library/crt-library-features.md
+
+CC algo comparison
+	speed	memory
+matrix:	1	1	// x30 -> 14.8s		- mean
+simple:	/10	×2	// x30 -> 224s
+refnce:	/3	/5				- lean
+cuda:	10
