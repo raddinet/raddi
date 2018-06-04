@@ -3,6 +3,7 @@ TODO
 
 next reddit post:
  - https://www.yours.org/@raddinet
+ - raddi.com on builds
 
 github repo:
  - raddi-builds-windows
@@ -28,6 +29,11 @@ perfect compression dictionary for english text
  - https://sourceforge.net/p/lzmautils/discussion/708858/thread/e40fbf99/
 
 cache of detached entries
+
+merge raddi::detached, raddi::noticed and raddi::subscriptions
+ - maybe one base template with 3 specializations
+
+rewrite log as noted in log.cpp or somewhere there in comment
 
 TBD app: https://msdn.microsoft.com/en-us/library/aa767914(VS.85).aspx#app_reg
 TBD www - read-only web interface
