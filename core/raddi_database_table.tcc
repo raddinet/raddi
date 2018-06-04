@@ -1,55 +1,45 @@
 #ifndef RADDI_DATABASE_TABLE_TCC
 #define RADDI_DATABASE_TABLE_TCC
 
+#include "../common/directory.h"
+
 template <typename Key>
 bool raddi::db::table <Key>::reload () {
     this->shards.reserve (16384 / sizeof (shard <Key>));
 
-    if (CreateDirectory (this->db.table_directory_path (this->name).c_str (), NULL))
-        return true;
+    switch (directory::create (this->db.table_directory_path (this->name).c_str ())) {
 
-    if (GetLastError () == ERROR_ALREADY_EXISTS) {
+        case directory::created:
+            return true;
 
-        // TODO: abstract this to 'directory' class
-        // TODO: abstract paths to some 'path' that will be platform-independent, and 'file' and 'directory' will take it
-
-        WIN32_FIND_DATA found;
-        auto path = this->db.table_directory_path (this->name) + L"????????";
-        auto search = FindFirstFileEx (path.c_str (), FindExInfoBasic, &found, FindExSearchNameMatch, NULL, FIND_FIRST_EX_LARGE_FETCH);
-
-        if (search == INVALID_HANDLE_VALUE) {
-            search = FindFirstFileEx (path.c_str (), FindExInfoStandard, &found, FindExSearchNameMatch, NULL, 0);
-        }
-        if (search != INVALID_HANDLE_VALUE) {
-
-            std::vector <std::uint32_t> timestamps;
+        case directory::already_exists:
             try {
+                std::vector <std::uint32_t> timestamps;
                 timestamps.reserve (4096);
-                do {
+
+                auto callback = [&timestamps] (const wchar_t * filename) {
                     wchar_t * tail = nullptr;
-                    auto timestamp = std::wcstoul (found.cFileName, &tail, 16);
-                    if ((tail == &found.cFileName [8]) && (found.cFileName [8] == L'\0')) {
+                    auto timestamp = std::wcstoul (filename, &tail, 16);
+                    if ((tail == &filename [8]) && (filename [8] == L'\0')) {
                         timestamps.push_back (timestamp);
                     }
-                } while (FindNextFile (search, &found));
-                FindClose (search);
+                };
 
+                if (::directory ((this->db.table_directory_path (this->name) + L"????????").c_str ()) (callback)) {
+                    std::sort (timestamps.begin (), timestamps.end ());
+
+                    exclusive guard (this->lock);
+
+                    this->shards.clear ();
+                    this->shards.reserve (timestamps.size ());
+                    for (const auto timestamp : timestamps) {
+                        this->shards.emplace_back (timestamp, this);
+                    }
+                    return true;
+                }
             } catch (const std::bad_alloc &) {
-                FindClose (search);
-                return false;
+                // return false
             }
-
-            std::sort (timestamps.begin (), timestamps.end ());
-
-            exclusive guard (this->lock);
-
-            this->shards.clear ();
-            this->shards.reserve (timestamps.size ());
-            for (const auto timestamp : timestamps) {
-                this->shards.emplace_back (timestamp, this);
-            }
-            return true;
-        }
     }
     return false;
 }

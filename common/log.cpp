@@ -1,6 +1,7 @@
 #include "log.h"
 #include "lock.h"
 #include "file.h"
+#include "directory.h"
 
 #include <ws2tcpip.h>
 #include <mstcpip.h>
@@ -98,7 +99,7 @@ namespace {
     void create (wchar_t * path, const wchar_t * subdir, const wchar_t * filename) {
         if (subdir) {
             std::wcsncat (path, subdir, 255);
-            CreateDirectory (path, NULL);
+            directory::create (path);
         }
         std::wcsncat (path, filename, 255);
         create (path);

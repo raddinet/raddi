@@ -1,4 +1,5 @@
 #include "raddi_subscription_set.h"
+#include "../common/directory.h"
 
 void raddi::subscription_set::subscribe (const std::wstring & app, const eid & subscription) {
     exclusive guard (this->lock);
@@ -28,48 +29,34 @@ bool raddi::subscription_set::is_subscribed (const eid * begin, const eid * end)
 bool raddi::subscription_set::load () {
     exclusive guard (this->lock);
 
-    if (CreateDirectory (this->path.c_str (), NULL))
-        return true;
+    switch (directory::create (this->path.c_str ())) {
 
-    if (GetLastError () == ERROR_ALREADY_EXISTS) {
+        case directory::created:
+            return true;
 
-        // TODO: abstract this to 'directory' class, reuse in 'table'
-        //  - having wildcards ar a separate argument for 'list' function
+        default:
+        case directory::create_failed:
+            raddi::log::error (component::database, 22, this->path);
+            return false;
 
-        WIN32_FIND_DATA found;
-        auto wildcard = this->path + L"*";
-        auto search = FindFirstFileEx (wildcard.c_str (), FindExInfoBasic, &found, FindExSearchNameMatch, NULL, FIND_FIRST_EX_LARGE_FETCH);
-
-        if (search == INVALID_HANDLE_VALUE) {
-            search = FindFirstFileEx (wildcard.c_str (), FindExInfoStandard, &found, FindExSearchNameMatch, NULL, 0);
-        }
-        if (search != INVALID_HANDLE_VALUE) {
+        case directory::already_exists:
             try {
-                do {
-                    const std::wstring file = found.cFileName;
-                    if (file != L"." && file != L"..") {
-
-                        auto full = this->path + file;
-                        if (auto n = this->data [file].load (full)) {
-                            raddi::log::note (component::database, 16, n - 1, full);
-                        } else {
-                            raddi::log::error (component::database, 22, full);
-                        }
+                auto callback = [this] (const wchar_t * filename) {
+                    auto full = this->path + filename;
+                    if (auto n = this->data [filename].load (full)) {
+                        raddi::log::note (component::database, 16, n - 1, full);
+                    } else {
+                        raddi::log::error (component::database, 22, full);
                     }
-                } while (FindNextFile (search, &found));
-                FindClose (search);
-                return true;
+                };
+                return directory ((this->path + L"*").c_str ()) (callback) 
+                    || raddi::log::error (component::database, 22, this->path);
 
             } catch (const std::bad_alloc &) {
-                FindClose (search);
                 raddi::log::error (component::database, 21);
                 return false;
             }
-        }
     }
-
-    raddi::log::error (component::database, 22, this->path);
-    return false;
 }
 
 void raddi::subscription_set::flush () const {

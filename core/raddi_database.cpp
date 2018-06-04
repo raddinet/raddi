@@ -16,6 +16,8 @@
 
 #include "../common/log.h"
 #include "../common/lock.h"
+#include "../common/directory.h"
+
 #include "sodium.h"
 
 raddi::db::db (file::access mode, const std::wstring & path)
@@ -30,8 +32,7 @@ raddi::db::db (file::access mode, const std::wstring & path)
         this->peers [i] .reset (new peerset ((level) i));
     }
 
-    if (CreateDirectory (path.c_str (), NULL) || GetLastError () == ERROR_ALREADY_EXISTS) {
-
+    if (directory::create (path.c_str ())) {
         if (this->lock.open (path + L"\\.lock", file::mode::always,
                              mode, (mode == file::access::read) ? file::share::full : file::share::read,
                              file::buffer::none)) {
