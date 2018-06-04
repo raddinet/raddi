@@ -150,8 +150,8 @@ std::size_t userfilecontent (wchar_t * path, std::uint8_t * content, std::size_t
         if (offset) {
             f.seek (offset);
         }
-        if (f.read (content, n)) {
-            return n;
+        if (f.read (content, (std::size_t) n)) {
+            return (std::size_t) n;
 
         } else {
             raddi::log::error (0x1E, path);
