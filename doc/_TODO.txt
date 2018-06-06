@@ -25,8 +25,17 @@ POW!!!
     - so OFF?
 
 perfect compression dictionary for english text
- - add dots, commas etc with space at the end?
  - https://sourceforge.net/p/lzmautils/discussion/708858/thread/e40fbf99/
+ - 1) open reddit export and extract body string
+   2) replace unicode (\u1234) and escapes (\n or \") with actual unicode/control characters
+   3) split to words (keep apostrophed words like can't or can\u2019t)
+   4) for 'en' dictitonary drop words with unicode characters in it except \u2019 (maybe other?)
+   5) compute freqency of words -> value
+   6) reduce: remove words found in other words (affect value: avg, sum or max?)
+   7) clamp: delete low values words, keep only reasonable amount of high-value words
+   Z) combine: to one long string, asc sorting by value, with removing words found inside the newly combined string
+ - evaluate gains of shuffling various similarly-valued words in order to 
+ - compress initial bodies with established dictionary, report results, try different dictionaries, compare results
 
 cache of detached entries
 
