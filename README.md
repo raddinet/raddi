@@ -6,3 +6,9 @@ A project aiming to develop and introduce radically decentralized discussion pla
 
 ## Status
 Nowhere near ready.
+
+## Depends on or utilizes
+* https://github.com/jedisct1/libsodium
+* https://github.com/tromp/cuckoo
+* https://git.tukaani.org/xz
+* https://sqlite.org/ - tentative, client app
