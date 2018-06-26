@@ -1,7 +1,7 @@
 raddi/lib directory
 ===================
 
-To compile copy third-party libraries here so this directory looks like:
+To compile, copy third-party libraries here so this directory content looks like:
 
 raddi/lib/sqlite3.c
 raddi/lib/include/sqlite3.h
