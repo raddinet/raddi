@@ -15,6 +15,7 @@
 //  - TODO: move common operations to indexer
 //  - TODO: make solver->base /buckets class with 'write<N>' function
 //  - TODO: use libsimdpp for SipHash and other
+//  - TODO: heavily uses unaligned access, this will be problem on ARM
 //
 namespace cuckoo {
 
@@ -33,7 +34,7 @@ namespace cuckoo {
     };
 
     // hash
-    //  - parametrizable version of modofied SipHash function simplified for fast graph edge generation
+    //  - parametrizable version of modified SipHash function simplified for fast graph edge generation
     //
     template <unsigned N1, unsigned N2>
     class hash {
@@ -115,7 +116,6 @@ namespace cuckoo {
         }
     };
 
-
     // verify
     //  - Generator - edges hashing functor; verification does not use parallel generation
     //  - complexity/seed
@@ -150,7 +150,7 @@ namespace cuckoo {
         //  - NOTE: I know 'volatile' should be pointless here ...but just to be sure
         //  - does not reset automatically to prevent races
         //
-        volatile bool cancel = false;
+        volatile bool * cancel = nullptr;
 
         // shortest/longest
         //  - length limits imposed on solutions
@@ -162,7 +162,8 @@ namespace cuckoo {
 
         // solve
         //  - finds cycles/solutions and appends them to 'solutions' vector above
-        //  - returns number of cycles/solutions found with valid length
+        //  - returns: - solution/cycle length for which 'callback' returned true
+        //             - 0 if no solution found or all callbacks returned false
         //  - parameters: seed - hash or any blob of data that seeds the graph
         //                callback - bool callback (std::uintmax_t * cycle, std::size_t length)
         //                         - return true to stop searching, false to continue
@@ -333,6 +334,7 @@ namespace cuckoo {
     private:
         std::uint32_t path (std::uint32_t * cycle, std::uint32_t u, std::uint32_t * us) const;
         void recordedge (unsigned int i, unsigned int u2, unsigned int v2);
+        inline bool cancelled () const { return this->cancel && *this->cancel; }
 
         // touch
         //  - attempts to bring all commited pages into working set for improved performance

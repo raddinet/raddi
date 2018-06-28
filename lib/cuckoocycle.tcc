@@ -53,7 +53,7 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
     //    I don't do this as it would actually degrade performance by introducting extensive swapping
 
     if (sizeof (std::size_t) > sizeof (unsigned int)) {
-        this->touch (this->buckets, sizeof (zbucket<ZBUCKETSIZE>) * NY * NX, &this->cancel);
+        this->touch (this->buckets, sizeof (zbucket<ZBUCKETSIZE>) * NY * NX, this->cancel);
     }
 
     // split workload into threads
@@ -66,7 +66,7 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
 
     // trim
 
-    if (!this->cancel) {
+    if (!this->cancelled ()) {
         auto n = this->threads.size ();
 
         this->threadpool.begin (n);
@@ -77,7 +77,7 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
         this->threadpool.join ();
 
         this->round = 2;
-        for (; (this->round != ((Complexity > 30) ? 96u : 68u) - 2) && !this->cancel; this->round += 2) {
+        for (; (this->round != ((Complexity > 30) ? 96u : 68u) - 2) && !this->cancelled (); this->round += 2) {
             this->threadpool.begin (n);
                 for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRound <true>, &t);
             this->threadpool.join ();
@@ -96,22 +96,20 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
 
     // solution recovery
 
-    std::size_t n = 0u;
-
-    if (!this->cancel) {
+    if (!this->cancelled ()) {
         this->uxymap.reset ();
 
         std::uint32_t us [MAXPATHLEN];
         std::uint32_t vs [MAXPATHLEN];
         std::memset (this->results, ~0, (2 * NX * NYZ2) * sizeof (std::uint32_t));
 
-        for (auto vx = 0u; (vx != NX) && !this->cancel; ++vx) {
-            for (auto ux = 0u; (ux != NX) && !this->cancel; ++ux) {
+        for (auto vx = 0u; (vx != NX) && !this->cancelled (); ++vx) {
+            for (auto ux = 0u; (ux != NX) && !this->cancelled (); ++ux) {
 
                 auto readbig = this->buckets [ux] [vx].words;
                 auto endreadbig = readbig + this->buckets [ux] [vx].size / sizeof (std::uint32_t);
 
-                for (; (readbig != endreadbig) && !this->cancel; ++readbig) {
+                for (; (readbig != endreadbig) && !this->cancelled (); ++readbig) {
 
                     auto e = *readbig;
                     auto uxyz = (ux << YZ2BITS) | (e >> YZ2BITS);
@@ -129,8 +127,6 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
 
                                 this->length = nu + nv + 1;
                                 if (this->length >= this->shortest && this->length <= this->longest) {
-                                    ++n;
-
                                     auto ni = 0u;
                                     this->recordedge (ni++, *us, *vs);
 
@@ -147,7 +143,7 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
 
                                     std::sort (&this->solution [0], &this->solution [this->length]);
                                     if (callback (&this->solution [0], this->length))
-                                        return n;
+                                        return this->length;
                                 }
                             } else
                                 if (nu < nv) {
@@ -167,7 +163,7 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
             }
         }
     }
-    return n;
+    return 0;
 }
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
@@ -222,7 +218,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::genUnod
     auto edge = this->start << YZBITS;
     auto endedge = edge + NYZ;
 
-    for (auto my = this->start; (my < this->end) && !this->solver->cancel; my++, endedge += NYZ) {
+    for (auto my = this->start; (my < this->end) && !this->solver->cancelled (); my++, endedge += NYZ) {
         destination.initV (my);
         if (NEEDSYNC) {
             for (auto x = 0u; x != NX; ++x) {
@@ -281,7 +277,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::genVnod
 
     auto small0 = reinterpret_cast <std::uint8_t *> (&this->bucket);
 
-    for (auto ux = this->start; (ux != this->end) && !this->solver->cancel; ++ux) {
+    for (auto ux = this->start; (ux != this->end) && !this->solver->cancelled (); ++ux) {
         small.initU (0);
         for (auto my = 0u; my != NY; ++my) {
 
@@ -648,7 +644,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimRen
     auto maxnnid = 0u;
     auto degs = (std::uint16_t *) this->deg;
 
-    for (auto vx = this->start; (vx != this->end) && !this->solver->cancel; ++vx) {
+    for (auto vx = this->start; (vx != this->end) && !this->solver->cancelled (); ++vx) {
         if (TRIMONV) {
             destination.initV (vx);
         } else {
@@ -749,7 +745,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::match (
     auto edge = this->start << YZBITS;
     auto endedge = edge + NYZ;
 
-    for (auto my = this->start; (my != this->end) && !this->solver->cancel; ++my, endedge += NYZ) {
+    for (auto my = this->start; (my != this->end) && !this->solver->cancelled (); ++my, endedge += NYZ) {
         for (; edge < endedge; edge += Generator::parallelism) {
                         
             typename Generator::type node [Generator::parallelism];
