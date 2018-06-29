@@ -249,7 +249,7 @@ bool raddi::db::shard <Key>::insert (const db::table <Key> * table, const void *
 
 template <typename Key>
 bool raddi::db::shard <Key>::unsynchronized_insert (const db::table <Key> * table, const void * data, std::size_t size, const root & top) {
-    if (size >= sizeof (raddi::entry)
+    if (size >= sizeof (raddi::entry) + raddi::proof::min_size
      && size <= sizeof (raddi::entry) + raddi::entry::max_content_size) {
 
         if (this->unsynchronized_advance (table)) {

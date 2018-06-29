@@ -10,27 +10,28 @@ except where introduced by non-UTF-8 bytes; see decompression and extraction pha
 description below. Certain code points also have specific meaning. Incorrectly formatted
 message can be refused by a node.
 
-The maximum size of content data, 65326, is calculated as:
+The maximum size of content data, 65430, is calculated as:
 	= 65534: 2B protocol frame size bytes, where FFFF value is reseved for keep-alive
 	  reply, thus leaving FFFE as maximum frame size
 	- 16 bytes encryption (AES256-GCM or XChaCha20-Poly1305) authentication tag bytes
 	- 12 bytes entry identitier (also identites author)
 	- 12 bytes parent entry identitier
 	- 64 bytes of Ed25519ph signature
-	- 104 bytes of Cuckoo Cycle proof-of-work of length in range of 12 to 26 edges
 
-This size is specifically restricted to:
-	- 95 bytes for a new identity announcements
+Note that there is mandatory variable-sized Cuckoo Cycle proof-of-work appended to each
+entry. This ranges from 50 bytes (proof of length 12) to 170 bytes (proof of length 42).
+
+The size is further restricted (including the size of proof-of-work) to:
+	- 223 bytes for a new identity announcements
 		- 32 bytes (first) carry identity public key that's used to verify user's
 		  signatures
-		- 63 bytes used for identity name, restricted by consensus
+		- 50 ~ 170 bytes for proof-of-work
+		- 53 bytes used for identity name, restricted by consensus
 			- decompression/extraction and formatting not allowed in name
-	- 63 bytes for a new channel announcement, restricted by consensus
-		- all bytes used for channel name
+	- 255 bytes for a new channel announcement, restricted by consensus
+		- 50 ~ 170 bytes for proof-of-work
+		- 83 bytes used for channel name
 			- decompression/extraction and formatting not allowed in name
-	- 256 bytes for a new thread entry, restricted by consensus
-		- all bytes used for thread title
-			- decompression/extraction and formatting not allowed in title
 
 Reasons for restricting above by consensus:
 	- saving 4B of database storage per identity/channel; see raddi_database_row.h
@@ -87,6 +88,10 @@ Following code points are removed from displayed content but their meaning is in
 and applied according to user's client app settings.
 
 Leading bytes:
+	0x00: NUL, PROOF OF WORK
+		- first NUL byte that does not belong to compressed chunk (above) or does
+		  not terminate string code in this table terminates the entry and
+		  introduces PoW; generally the entry is searched backwards for the proof
 	0x06: ACK, ENDORSE
 		- mod op
 	0x07: BEL, REPORT
@@ -105,7 +110,7 @@ Leading bytes:
 		- predefined vote strings:
 			- none, reserved for future extensions
 	0x10: DLE, SIDEBAND DATA SET/EDIT
-		- valid only if first byte in entry and when appears only once
+		- valid only if first byte in entry and if appears only once
 		- valid only if direct descendant of the announcement it is affects
 			- client app should apply change to thread or identity name (or
 			  any other sideband data) only when made by it's author
@@ -136,7 +141,7 @@ Other code points with specific meaning:
 Generally defines visual representation of text.
 
 Code points:
-	0x0001: SOH, heading, render until NUL or CAN
+	0x0001: SOH, heading, render until CAN
 	0x0003: ETX, end of text, render "More..." button here and hide rest
 	0x????: ???, spoiler, hidden by client app until intentionaly revealed
 	0x000A: LF, newline

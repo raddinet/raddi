@@ -12,7 +12,7 @@
 // NOTE: validate/verify strings are in raddi_database.rc, "DATABASE | DATA | 0x1?" rows
 
 bool raddi::entry::validate (const void * header, std::size_t length) {
-    if (length < sizeof (entry) + proof::min_size)
+    if (length < sizeof (entry))
         return false;
 
     auto e = static_cast <const entry *> (header);
@@ -35,20 +35,40 @@ bool raddi::entry::validate (const void * header, std::size_t length) {
                                  e->id.timestamp, raddi::consensus::max_entry_skew_allowed);
     }
 
-    if (auto channel = e->is_announcement ()) {
-        switch (channel) {
-            case new_identity_announcement:
-                return length >= sizeof (raddi::identity)
-                    || raddi::log::data (raddi::component::database, 0x18, e->id, length, sizeof (raddi::identity));
-            case new_channel_announcement:
-                return length >= sizeof (raddi::channel)
-                    || raddi::log::data (raddi::component::database, 0x19, e->id, length, sizeof (raddi::channel));
-            default:
-                return false; // unreachable
-        }
-    } else
-        return length >= sizeof (raddi::entry) + 1
-            || raddi::log::data (raddi::component::database, 0x1A, e->id);
+    std::size_t proof_size;
+    if ((length < sizeof (entry) + proof::min_size) || (e->proof (length, &proof_size) == nullptr)) {
+        return raddi::log::data (raddi::component::database, 0x1B, e->id, length);
+    }
+
+    auto content_size = length - sizeof (raddi::entry) - proof_size;
+    switch (e->is_announcement ()) {
+        case new_identity_announcement:
+            if (length < sizeof (raddi::identity)) {
+                return raddi::log::data (raddi::component::database, 0x18, e->id, length, sizeof (raddi::identity));
+            }
+
+            content_size += sizeof (raddi::identity) - sizeof (raddi::entry);
+            if (content_size > raddi::consensus::max_identity_name_size) {
+                return raddi::log::data (raddi::component::database, 0x1C, e->id, content_size, raddi::consensus::max_identity_name_size);
+            }
+            return true;
+
+        case new_channel_announcement:
+            if (length < sizeof (raddi::channel)) {
+                return raddi::log::data (raddi::component::database, 0x19, e->id, length, sizeof (raddi::channel));
+            }
+
+            content_size += sizeof (raddi::channel) - sizeof (raddi::entry);
+            if (content_size > raddi::consensus::max_channel_name_size) {
+                return raddi::log::data (raddi::component::database, 0x1D, e->id, content_size, raddi::consensus::max_channel_name_size);
+            }
+            return true;
+
+        default:
+        case not_an_announcement:
+            return content_size > 0
+                || raddi::log::data (raddi::component::database, 0x1A, e->id);
+    }
 }
 
 const raddi::proof * raddi::entry::proof (std::size_t size, std::size_t * proof_size) const {
@@ -85,16 +105,15 @@ bool raddi::entry::verify (std::size_t size, const entry * parent, std::size_t p
                            const std::uint8_t (&public_key) [crypto_sign_ed25519_PUBLICKEYBYTES]) const {
     std::size_t proof_size;
     
-    if (auto proof = this->proof (size, &proof_size)) {
-        auto imprint = this->prehash (size - proof_size, parent, parent_size);
+    auto proof = this->proof (size, &proof_size);
+    auto imprint = this->prehash (size - proof_size, parent, parent_size);
 
-        if (proof->verify (imprint.hs)) {
-            crypto_sign_ed25519ph_update (&imprint, reinterpret_cast <const unsigned char *> (proof), proof_size);
-            return crypto_sign_ed25519ph_final_verify (&imprint, const_cast <std::uint8_t *> (this->signature), public_key) == 0
-                || raddi::log::data (raddi::component::database, 0x1E, this->id, size);
-        }
-    }
-    return raddi::log::data (raddi::component::database, 0x1F, this->id, size);
+    if (proof->verify (imprint.hs)) {
+        crypto_sign_ed25519ph_update (&imprint, reinterpret_cast <const unsigned char *> (proof), proof_size);
+        return crypto_sign_ed25519ph_final_verify (&imprint, const_cast <std::uint8_t *> (this->signature), public_key) == 0
+            || raddi::log::data (raddi::component::database, 0x1E, this->id, size);
+    } else
+        return raddi::log::data (raddi::component::database, 0x1F, this->id, size);
 }
 
 std::size_t raddi::entry::sign (std::size_t size, const entry * parent, std::size_t parent_size,
@@ -138,31 +157,4 @@ raddi::entry::announcement_type raddi::entry::is_announcement (const raddi::eid 
         }
     } else
         return not_an_announcement;
-}
-
-raddi::proof::requirements raddi::entry::default_requirements () const {
-    return proof::requirements ();
-    /*
-    // TODO: export contants to raddi_consensus.h
-    //  - perhaps make it a block of parameters that's also passed to propose, accept, sign and validate?
-
-    switch (this->is_announcement ()) {
-        case new_identity_announcement:
-            return { 22, (1 << eid::type_bit_depth) * 1000 };
-
-        case new_channel_announcement:
-            return { 21, (1 << eid::type_bit_depth) * 1000 / 2 };
-
-        case not_an_announcement:
-        default:
-            switch (this->id.classify ()) {
-
-                case eid::type::upvote:
-                    return { proof::min_complexity, 200 };
-
-                case eid::type::downvote:
-                default:
-                    return proof::requirements ();
-            }
-    }*/
 }

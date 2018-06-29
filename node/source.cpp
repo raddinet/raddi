@@ -79,7 +79,7 @@ bool Source::process (const std::wstring & file) {
         unsigned char message [sizeof (raddi::entry) + raddi::entry::max_content_size + 1 + 16];
 
         if (ReadFile (h, message, sizeof message, &n, NULL)) {
-            if (n >= sizeof (raddi::entry)) {
+            if (n >= sizeof (raddi::entry) + raddi::proof::min_size) {
                 if (!this->entry (reinterpret_cast <const raddi::entry *> (message), n)) {
                     this->report (raddi::log::level::error, 2, file);
                 }
