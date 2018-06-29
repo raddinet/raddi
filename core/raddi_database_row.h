@@ -131,7 +131,7 @@ struct raddi::db::crow {
     //          (1 << (32-length_bits)) / ((1 << length_bits) - 1 + sizeof (entry))
     //           - TODO: check when loading from command line parameters
     //
-    static constexpr const auto length_bits = 6;
+    static constexpr const auto length_bits = 8;
 
     // data
     //  - address of signature and content data in 'text' file
@@ -142,7 +142,7 @@ struct raddi::db::crow {
         std::uint32_t length : length_bits;
     } data;
 
-    static_assert ((1 << length_bits) > (sizeof (raddi::channel) - sizeof (raddi::entry) + raddi::consensus::max_channel_name_size));
+    static_assert ((1 << length_bits) > (sizeof (raddi::channel) - sizeof (raddi::entry) + raddi::proof::max_size + raddi::consensus::max_channel_name_size));
 
 public:
 
@@ -190,7 +190,7 @@ struct raddi::db::irow {
     //          (1 << (32-length_bits)) / ((1 << length_bits) - 1 + sizeof (entry))
     //           - TODO: check when loading from command line parameters
     //
-    static constexpr const auto length_bits = 7;
+    static constexpr const auto length_bits = 8;
 
     // data
     //  - address of signature and content data in 'text' file
@@ -201,7 +201,7 @@ struct raddi::db::irow {
         std::uint32_t length : length_bits;
     } data;
 
-    static_assert ((1 << length_bits) > (sizeof (raddi::identity) - sizeof (raddi::entry) + raddi::consensus::max_identity_name_size));
+    static_assert ((1 << length_bits) > (sizeof (raddi::identity) - sizeof (raddi::entry) + raddi::proof::max_size + raddi::consensus::max_identity_name_size));
 
 public:
 

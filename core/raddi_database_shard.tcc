@@ -305,7 +305,7 @@ bool raddi::db::shard <Key>::erase (const db::table <Key> * table, const decltyp
         if ((ii != ie) && (ii->id == id)) {
 
             if (thorough) {
-                const auto length = ii->data.length + sizeof (raddi::entry::signature) + sizeof (raddi::entry::proof);
+                const auto length = ii->data.length + sizeof (raddi::entry::signature);
                 if (!this->content.zero (ii->data.offset, length)) {
                     this->report (log::level::error, 19, this->path (table, L"d"), ii->data.offset, length);
                 }
@@ -390,16 +390,16 @@ bool raddi::db::shard <Key>::unsynchronized_read (typename std::vector <Key>::co
         switch (what) {
             case read::verification:
             case read::identification_and_verification:
-                length = sizeof (raddi::entry::signature) + sizeof (raddi::entry::proof);
+                length = sizeof (raddi::entry::signature);
                 break;
             case read::content:
             case read::identification_and_content:
-                offset = sizeof (raddi::entry::signature) + sizeof (raddi::entry::proof);
+                offset = sizeof (raddi::entry::signature);
                 length = demand;
                 break;
             case read::verification_and_content:
             case read::everything:
-                length = sizeof (raddi::entry::signature) + sizeof (raddi::entry::proof)
+                length = sizeof (raddi::entry::signature)
                        + demand;
                 break;
 
