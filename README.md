@@ -9,6 +9,6 @@ Nowhere near ready.
 
 ## Depends on or utilizes
 * https://github.com/jedisct1/libsodium
-* https://github.com/tromp/cuckoo
+* https://github.com/tromp/cuckoo - adapted to /lib/cuckoocycle.h (.tcc)
 * https://git.tukaani.org/xz
 * https://sqlite.org/ - tentative, client app

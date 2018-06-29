@@ -4,6 +4,7 @@
 #include "raddi_eid.h"
 #include "raddi_proof.h"
 #include "raddi_protocol.h"
+#include "raddi_consensus.h"
 
 namespace raddi {
 
@@ -52,7 +53,7 @@ namespace raddi {
         // verify
         //  - verifies that entry and it's parent is signed by private-key matching public-key 'public_key'
         //  - 'size' specifies number of bytes of transported entry: raddi::entry header + data
-        //  - provided entry MUST be validated first!
+        //  - provided entry MUST be validated first!!! or the call may crash
         //
         bool verify (std::size_t size, const entry * parent, std::size_t parent_size,
                      const std::uint8_t (&public_key) [crypto_sign_ed25519_PUBLICKEYBYTES]) const;
@@ -95,9 +96,23 @@ namespace raddi {
         static announcement_type is_announcement (const raddi::eid & id, const raddi::eid & parent);
 
         // default_requirements
-        //  - TODO: rethink; static according to announcement_type??? 
+        //  - constructs requirements according to whethe the entry is announcement or not
+        //  - we have 4 complexity levels, where higher 2 are really unusable for low-end devices
+        //    so the decision here is easier than I anticipated
         //
-        proof::requirements default_requirements () const;
+        inline proof::requirements default_requirements () const {
+            if (this->is_announcement ()) {
+                return {
+                    consensus::min_announcement_pow_complexity,
+                    consensus::min_announcement_pow_time
+                };
+            } else {
+                return {
+                    consensus::min_entry_pow_complexity,
+                    consensus::min_entry_pow_time
+                };
+            }
+        }
 
         // max_content_size
         //  - maximum size of content following the entry header

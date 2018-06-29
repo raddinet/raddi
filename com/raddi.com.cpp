@@ -563,8 +563,9 @@ bool sign_and_validate (const wchar_t * step, T & entry, std::size_t size,
     std::memcpy (sk + crypto_sign_ed25519_SEEDBYTES, pk, crypto_sign_ed25519_PUBLICKEYBYTES);
 
     try {
-        if (entry.sign (sizeof entry + size, &parent, parent_size, sk,
-                        complexity (entry.default_requirements ()), &quit)) {
+        if (auto a = entry.sign (sizeof entry + size, &parent, parent_size, sk,
+                                 complexity (entry.default_requirements ()), &quit)) {
+            size += a;
             if (entry.validate (&entry, sizeof entry + size)) {
                 if (entry.verify (sizeof entry + size, &parent, parent_size, pk)) {
                     return true;
@@ -751,9 +752,9 @@ bool reply (const wchar_t * opname, const wchar_t * to) {
 
             auto size = gather (message.description, sizeof message.description);
 
-            if (parent.is_announcement () && (size > raddi::consensus::max_thread_name_size)) {
+            /*if (parent.is_announcement () && (size > raddi::consensus::max_thread_name_size)) {
                 return raddi::log::error (0x1D, size, raddi::consensus::max_thread_name_size);
-            }
+            }*/
 
             if (sign_and_validate <raddi::entry> (opname, message, size, parent, parent_size, key, identity.public_key)) {
                 if (send (instance, message, sizeof (raddi::entry) + size)) {
@@ -801,7 +802,7 @@ bool list_core_table (T * table, list_column_info (&columns) [6]) {
                         std::printf (columns [2].format, columns [2].width, detail.index + 1);
                         std::printf (columns [3].format, columns [3].width, detail.count);
                         std::printf (columns [4].format, columns [4].width, row.data.offset);
-                        std::printf (columns [5].format, columns [5].width, row.data.length + sizeof (raddi::entry::signature) + sizeof (raddi::entry::proof));
+                        std::printf (columns [5].format, columns [5].width, row.data.length + sizeof (raddi::entry::signature));
                         std::printf ("\n");
                         return false;
                    },

@@ -50,6 +50,9 @@
     <ClCompile Include="..\common\file.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\directory.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="raddi.com-en.rc">
@@ -132,6 +135,12 @@
     <ClInclude Include="..\common\file.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\cuckoocycle.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\directory.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -158,6 +167,9 @@
     <Filter Include="System">
       <UniqueIdentifier>{72215c57-a01e-47ef-9500-eac2aa3e665a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{c7394585-f1df-4547-92f6-bc0f2a920d7b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\img\raddicom.ico">
@@ -178,6 +190,9 @@
     </None>
     <None Include="..\core\raddi_database_table.tcc">
       <Filter>Core\Database</Filter>
+    </None>
+    <None Include="..\lib\cuckoocycle.tcc">
+      <Filter>Libraries</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -13,6 +13,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | NOTE | 0x11  "proof-of-work on complexity level {1} found in {3} ms ({2} ms required)"
     MAIN | NOTE | 0x12  "proof-of-work complexity level is {1}, required time is {2} ms"
     MAIN | NOTE | 0x13  "proof-of-work complexity level overriden to {1}, required time is {2} ms"
+    MAIN | NOTE | 0x14  "proof-of-work on complexity level {1} not found, will try harder or on different seed"
 
     MAIN | ERROR | 0x10 "argument {1} conversion failed, error {ERR}"
     MAIN | ERROR | 0x11 "truncated content at argument {1}, entry full"

@@ -381,6 +381,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\directory.cpp" />
     <ClCompile Include="..\common\file.cpp" />
     <ClCompile Include="..\common\lock.cpp" />
     <ClCompile Include="..\common\log.cpp" />
@@ -410,6 +411,7 @@
     <ResourceCompile Include="raddi.com.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\common\directory.h" />
     <ClInclude Include="..\common\file.h" />
     <ClInclude Include="..\common\lock.h" />
     <ClInclude Include="..\common\log.h" />
@@ -430,6 +432,7 @@
     <ClInclude Include="..\core\raddi_instance.h" />
     <ClInclude Include="..\core\raddi_proof.h" />
     <ClInclude Include="..\core\raddi_timestamp.h" />
+    <ClInclude Include="..\lib\cuckoocycle.h" />
     <ClInclude Include="..\node\platform.h" />
   </ItemGroup>
   <ItemGroup>
@@ -439,6 +442,7 @@
     <None Include="..\core\raddi_database.tcc" />
     <None Include="..\core\raddi_database_shard.tcc" />
     <None Include="..\core\raddi_database_table.tcc" />
+    <None Include="..\lib\cuckoocycle.tcc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

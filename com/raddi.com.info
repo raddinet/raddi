@@ -10,7 +10,7 @@
 	major = 0
 	minor = 1
 	patch = 0
-	build = 583
+	build = 606
 
 [versioninfo]
 	filename	= %dir%\%internalname%-vi.rc
