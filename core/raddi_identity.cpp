@@ -58,10 +58,12 @@ bool raddi::identity::create (std::uint8_t (&private_key) [crypto_sign_ed25519_S
         // the applications retrieve the public part from database when needed
 
         std::memcpy (private_key, sk, sizeof private_key);
+        sodium_memzero (sk, sizeof sk);
 
         // generate unique identifying nonce by hashing the public key
         //  - this prevents creation of, likely coliding, vanity nonces
         //  - using simplified siphash24 above, no security requirements
+        //     - TODO: we also use simplified siphash in raddi::proof, consider merging
         
         this->id.timestamp = raddi::now ();
         this->id.identity.timestamp = this->id.timestamp;
