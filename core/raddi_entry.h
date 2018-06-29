@@ -24,26 +24,30 @@ namespace raddi {
         //
         std::uint8_t signature [crypto_sign_ed25519_BYTES];
 
-        // proof
-        //  - verification proof-of-work that validates the entry
-        //  - reason: attacker will need one machine for each spamming account
-        //  - channel/identity announcements require increased complexity
-        //
-        union {
-            raddi::proof proof;
-            // TODO: raddi::stream stream; // (file, video, music, ...) content that follows initial entry
-        };
-
-        // content
-        //  - return pointer to first byte after entry header (entry content)
-        //
-        inline void * content () { return this + 1; };
-        inline const void * content () const { return this + 1; };
+    public:
 
         // validate
         //  - performs basic validation of protocol frame content, 'size' must be exact
         //
         static bool validate (const void * entry, std::size_t size);
+
+        // proof
+        //  - finds proof-of-work at the end of the entry, returns nullptr if missing
+        //     - entry and 'size' must be validated first!
+        //  - 'size' specifies number of bytes in the received entry
+        //  - 'proof_size', optional, receives size of the proof-of-work
+        //     - it's simple: entry size - (proof pointer - this entry pointer)
+        //  - NOTES:
+        //     - proof of work follows 'content' after last NUL byte
+        //     - channel/identity announcements require increased complexity
+        //
+        const proof * proof (std::size_t size, std::size_t * proof_size = nullptr) const;
+
+        // content
+        //  - return pointer to first byte after entry header (entry content)
+        //
+        inline       std::uint8_t * content ()       { return reinterpret_cast <      std::uint8_t *> (this + 1); };
+        inline const std::uint8_t * content () const { return reinterpret_cast <const std::uint8_t *> (this + 1); };
 
         // verify
         //  - verifies that entry and it's parent is signed by private-key matching public-key 'public_key'
@@ -57,17 +61,22 @@ namespace raddi {
         //  - proves and signs entry (of 'size' bytes) and parent (of 'parent_size' bytes) with provided 'private_key'
         //     - for identity announcement the 'parent' is null
         //     - proof requiremens are default if omitted (rq)
-        //  - 'this->signature' and 'this->proof' are ignored on input, on output set to valid data
+        //  - 'this->signature' is ignored on input, on output set to valid data
+        //     - proof is appended to content and size of additional data (the proof) is returned
+        //     - NOTE: maximum size of appended data is up to 'raddi::proof::max_size' but to allocate 
+        //             'raddi::protocol::max_payload' bytes for a whole entry is probably a best idea
         //  - 'size' specifies number of bytes of transported entry, i.e. this entry header + data
         //  - 'cancel' - optional, if it points to existing bool, setting that bool terminates the operation
-        //  - needs large amount of memory and throws std::bad_alloc
+        //  - returns - on success number of bytes of additional data (the proof) appended to 'this'
+        //            - 0 if failed to sign or find proof-of-work
+        //            - throws std::bad_alloc if there is not enough memory to find proof-of-work
         //
-        bool sign (std::size_t size, const entry * parent, std::size_t parent_size,
-                   const std::uint8_t (&private_key) [crypto_sign_ed25519_SECRETKEYBYTES],
-                   volatile bool * cancel = nullptr);
-        bool sign (std::size_t size, const entry * parent, std::size_t parent_size,
-                   const std::uint8_t (&private_key) [crypto_sign_ed25519_SECRETKEYBYTES],
-                   proof::requirements rq, volatile bool * cancel = nullptr);
+        std::size_t sign (std::size_t size, const entry * parent, std::size_t parent_size,
+                          const std::uint8_t (&private_key) [crypto_sign_ed25519_SECRETKEYBYTES],
+                          volatile bool * cancel = nullptr);
+        std::size_t sign (std::size_t size, const entry * parent, std::size_t parent_size,
+                          const std::uint8_t (&private_key) [crypto_sign_ed25519_SECRETKEYBYTES],
+                          proof::requirements rq, volatile bool * cancel = nullptr);
 
         // announcement_type
         //  - some entries announce new channel/identity creation
@@ -86,26 +95,26 @@ namespace raddi {
         static announcement_type is_announcement (const raddi::eid & id, const raddi::eid & parent);
 
         // default_requirements
-        //  - according to eid::type and announcement_type estimates default proof requirements
+        //  - TODO: rethink; static according to announcement_type??? 
         //
         proof::requirements default_requirements () const;
 
         // max_content_size
         //  - maximum size of content following the entry header
+        //     - minimal size of proof is not substracted
         //  - content size is determined by protocol frame size information
         //    (basically UINT16_MAX minus AES signature and entry header size)
         // 
         static constexpr std::size_t max_content_size = raddi::protocol::max_payload
                                                       - sizeof raddi::entry::id
                                                       - sizeof raddi::entry::parent
-                                                      - sizeof raddi::entry::signature
-                                                      - sizeof raddi::entry::proof;
+                                                      - sizeof raddi::entry::signature;
     
     private:
 
         // prehash
         //  - begins hash phase of entry signature creation/validation
-        //  - hashes 'this->id', 'this->parent', content following entry header and 'parent' data (when required)
+        //  - hashes 'this->id', 'this->parent', content following entry header and 'parent' data (if provided)
         //
         crypto_sign_ed25519ph_state prehash (std::size_t size, const entry * parent, std::size_t parent_size) const;
     };
@@ -113,24 +122,12 @@ namespace raddi {
     // comparison operators
     //  - entry ID is unique entry identitifer in the network
 
-    inline bool operator == (const entry & a, const entry & b) {
-        return a.id == b.id;
-    }
-    inline bool operator != (const entry & a, const entry & b) {
-        return a.id != b.id;
-    }
-    inline bool operator <  (const entry & a, const entry & b) {
-        return a.id < b.id;
-    }
-    inline bool operator <= (const entry & a, const entry & b) {
-        return !(b < a);
-    }
-    inline bool operator >  (const entry & a, const entry & b) {
-        return  (b < a);
-    };
-    inline bool operator >= (const entry & a, const entry & b) {
-        return !(a < b);
-    };
+    inline bool operator == (const entry & a, const entry & b) { return a.id == b.id; }
+    inline bool operator != (const entry & a, const entry & b) { return a.id != b.id; }
+    inline bool operator <  (const entry & a, const entry & b) { return a.id <  b.id; }
+    inline bool operator <= (const entry & a, const entry & b) { return !(b < a); }
+    inline bool operator >  (const entry & a, const entry & b) { return  (b < a); }
+    inline bool operator >= (const entry & a, const entry & b) { return !(a < b); }
 }
 
 #endif
