@@ -107,7 +107,7 @@ namespace raddi {
         // max_size
         //  - maximum possible size of the whole request + content
         // 
-        static constexpr std::size_t max_size = sizeof (entry) - 1;
+        static constexpr std::size_t max_size = sizeof (entry) + proof::min_size - 1;
 
         // max_payload
         //  - maximum possible content size (without request header)
@@ -210,7 +210,7 @@ namespace raddi {
         // history
         //  - peer requests to receive all relevant data created after 'threshold' timestamp
         //    and everything within each 'span' if the peer has more data than 'number'
-        //  - size limit of max_payload (159) means 25 ('depth') spans maximum
+        //  - size limit of max_payload (133) means 21 ('depth') spans maximum
         //  - TODO: in future, the other side could ask, to break down a particular 'span' (that differs)
         //          in order find better matching
         //
