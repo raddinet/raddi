@@ -4,6 +4,9 @@ TODO
 next reddit post:
  - https://www.yours.org/@raddinet
  - raddi.com on builds
+ - change from fixed proof-of-work to variable sized, PoW pushed to git
+ - looking forward to someone's critique of my code
+ - Is it possible to prove that encrypted message contains certain plaintext without revealing or compromising decryption key
 
 github repo:
  - raddi-builds-windows
@@ -16,13 +19,6 @@ common/string.h
  - use for paths and everything
     - options?
     - node.cpp/raddi.com.cpp -> main args?
-
-POW!!!
- - COMPRESSROUND reduces edge representation from > 4bytes to 4 bytes when #remaining edges is small enough to allow it.
-    - this speeds up remaining trimming rounds.
- - XBITS determines granularity of bucketsort (using 2XBITS
- - SAVEEDGES allows instant recovery of edge indices of solutions, at cost of extra 1GB memory
-    - so OFF?
 
 perfect compression dictionary for english text
  - https://sourceforge.net/p/lzmautils/discussion/708858/thread/e40fbf99/
@@ -37,6 +33,10 @@ perfect compression dictionary for english text
  - evaluate gains of shuffling various similarly-valued words in order to 
  - compress initial bodies with established dictionary, report results, try different dictionaries, compare results
 
+TODO: consider requiring vote codes and such to be outside of compressed parts?
+
+raddi.com: 'sign' can now fail if no proof-of-work is found (often), add loop
+
 cache of detached entries
 
 merge raddi::detached, raddi::noticed and raddi::subscriptions
@@ -45,6 +45,8 @@ merge raddi::detached, raddi::noticed and raddi::subscriptions
 rewrite log as noted in log.cpp or somewhere there in comment
 
 TBD app: https://msdn.microsoft.com/en-us/library/aa767914(VS.85).aspx#app_reg
+TBD ext: raddi://a29e7568b5da6a-b5e418[.txt/.html/.xml/.md]
+TBD ext: raddi://a29e7568b5da6a-b5e418/[1/2/3/...][.jpg/.png/.zip/...]
 TBD www - read-only web interface
 
 consider http server? simple GET/POST support
@@ -59,10 +61,3 @@ document protocol
 UCRT?
  - https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
  - https://github.com/MicrosoftDocs/cpp-docs/blob/master/docs/c-runtime-library/crt-library-features.md
-
-CC algo comparison
-	speed	memory
-matrix:	1	1	// x30 -> 14.8s		- mean
-simple:	/10	×2	// x30 -> 224s
-refnce:	/3	/5				- lean
-cuda:	10
