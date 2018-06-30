@@ -35,8 +35,12 @@ bool raddi::entry::validate (const void * header, std::size_t length) {
                                  e->id.timestamp, raddi::consensus::max_entry_skew_allowed);
     }
 
+    if (length < sizeof (entry) + proof::min_size) {
+        return raddi::log::data (raddi::component::database, 0x1B, e->id, length);
+    }
+
     std::size_t proof_size;
-    if ((length < sizeof (entry) + proof::min_size) || (e->proof (length, &proof_size) == nullptr)) {
+    if (e->proof (length, &proof_size) == nullptr) {
         return raddi::log::data (raddi::component::database, 0x1B, e->id, length);
     }
 
@@ -47,7 +51,7 @@ bool raddi::entry::validate (const void * header, std::size_t length) {
                 return raddi::log::data (raddi::component::database, 0x18, e->id, length, sizeof (raddi::identity));
             }
 
-            content_size += sizeof (raddi::identity) - sizeof (raddi::entry);
+            content_size -= sizeof (raddi::identity) - sizeof (raddi::entry);
             if (content_size > raddi::consensus::max_identity_name_size) {
                 return raddi::log::data (raddi::component::database, 0x1C, e->id, content_size, raddi::consensus::max_identity_name_size);
             }
@@ -58,7 +62,7 @@ bool raddi::entry::validate (const void * header, std::size_t length) {
                 return raddi::log::data (raddi::component::database, 0x19, e->id, length, sizeof (raddi::channel));
             }
 
-            content_size += sizeof (raddi::channel) - sizeof (raddi::entry);
+            content_size -= sizeof (raddi::channel) - sizeof (raddi::entry);
             if (content_size > raddi::consensus::max_channel_name_size) {
                 return raddi::log::data (raddi::component::database, 0x1D, e->id, content_size, raddi::consensus::max_channel_name_size);
             }
@@ -71,22 +75,18 @@ bool raddi::entry::validate (const void * header, std::size_t length) {
     }
 }
 
-const raddi::proof * raddi::entry::proof (std::size_t size, std::size_t * proof_size) const {
-    size -= sizeof (entry);
+const raddi::proof * raddi::entry::proof (std::size_t size, std::size_t * proof_size_result) const {
+    auto content_size = size - sizeof (entry);
+    auto p = reinterpret_cast <const raddi::proof *> (this->content () + content_size - 1); // last byte
 
-    for (auto length = proof::min_length; length != proof::max_length + 2; length += 2) { // inclusive iteration
-        auto n = proof::size (length);
-        if (n <= size) {
-            auto p = this->content () + size - n;
-
-            if (raddi::proof::validate (p, n)) { // tests for NUL byte so we don't need to search explicitly here
-                if (proof_size) {
-                    *proof_size = n;
-                }
-                return reinterpret_cast <const raddi::proof *> (p);
+    if (auto proof_size = p->validate (content_size)) {
+        if (this->content () [content_size - proof_size] == 0x00) { // verify NUL byte terminating the entry
+            
+            if (proof_size_result) {
+                *proof_size_result = proof_size;
             }
-        } else
-            break;
+            return p;
+        }
     }
     return nullptr;
 }
@@ -109,7 +109,7 @@ bool raddi::entry::verify (std::size_t size, const entry * parent, std::size_t p
     auto imprint = this->prehash (size - proof_size, parent, parent_size);
 
     if (proof->verify (imprint.hs)) {
-        crypto_sign_ed25519ph_update (&imprint, reinterpret_cast <const unsigned char *> (proof), proof_size);
+        crypto_sign_ed25519ph_update (&imprint, proof->data (), proof_size);
         return crypto_sign_ed25519ph_final_verify (&imprint, const_cast <std::uint8_t *> (this->signature), public_key) == 0
             || raddi::log::data (raddi::component::database, 0x1E, this->id, size);
     } else
@@ -122,16 +122,16 @@ std::size_t raddi::entry::sign (std::size_t size, const entry * parent, std::siz
     if (size >= sizeof (entry)) {
 
         auto imprint = this->prehash (size, parent, parent_size);
-        auto proof_ptr = this->content () + size;
+        auto proof_ptr = this->content () + size - sizeof (entry);
 
         if (auto proof_size = raddi::proof::generate (imprint.hs,
                                                       proof_ptr, entry::max_content_size - size,
                                                       rq, cancel)) {
-            size += proof_size;
-            crypto_sign_ed25519ph_update (&imprint, proof_ptr, proof_size);
 
-            if (crypto_sign_ed25519ph_final_create (&imprint, this->signature, nullptr, private_key) == 0)
+            crypto_sign_ed25519ph_update (&imprint, proof_ptr, proof_size);
+            if (crypto_sign_ed25519ph_final_create (&imprint, this->signature, nullptr, private_key) == 0) {
                 return proof_size;
+            }
         }
     }
     return 0;

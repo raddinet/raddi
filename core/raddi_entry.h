@@ -36,10 +36,9 @@ namespace raddi {
         //  - finds proof-of-work at the end of the entry, returns nullptr if missing
         //     - entry and 'size' must be validated first!
         //  - 'size' specifies number of bytes in the received entry
-        //  - 'proof_size', optional, receives size of the proof-of-work
-        //     - it's simple: entry size - (proof pointer - this entry pointer)
+        //  - 'proof_size', optional, receives size of the proof-of-work in bytes
         //  - NOTES:
-        //     - proof of work follows 'content' after last NUL byte
+        //     - proof of work follows 'content' after (and including) a NUL byte
         //     - channel/identity announcements require increased complexity
         //
         const proof * proof (std::size_t size, std::size_t * proof_size = nullptr) const;

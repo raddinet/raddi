@@ -7,11 +7,13 @@
 namespace raddi {
 
     // proof of work
-    //  - on-wire and in-memory format of a proof-of-work header
+    //  - represents proof-of-work found within an entry (last byte of the entry)
+    //     - POW begins with NUL byte and ends with 'proof' structure (byte)
     //  - proof-of-work validates the entry through dynamically chosen complexity
     //  - appended to entry content and signed along with the rest
     //  - currently cuckoo cycle algorithm, may be extended later
     //  - NOTE: ARM: unaligned memory access here and in cuckoocycle.tcc !!!
+    //  - TODO: simplify somehow, too much raw pointer arithmetics here
     //
     struct proof __attribute__ ((ms_struct)) {
 
@@ -45,12 +47,8 @@ namespace raddi {
             reserved11 = 3,
         };
 
-        // header
-        //  - 2 byte header that preceeds cuckoo cycle solution
-        //  - NUL byte closes the entry content and introduces the proof
-        //     - see parsing rules in raddi::entry::proof ()
+        // data
 
-        std::uint8_t NUL_byte;
         std::uint8_t length     : length_bits;     // 12,14,16,18, 20,22,24,26, 28,30,32,34, 36,38,40,42
         std::uint8_t complexity : complexity_bits; // 26,27,28,29 (29 requires more than 2 GB of memory)
         algorithm    algorithm  : 2;
@@ -61,19 +59,35 @@ namespace raddi {
         //
         bool initialize (enum class algorithm, std::size_t complexity, std::size_t length);
 
-        // data
+        // solution
         //  - representation of the solution
-        //  - the actual size for given 'length' can be determined by calling .size()
-        //  - return pointer to first byte after proof header
+        //  - return pointer to first byte/uint32 after proof's initial NUL byte
         //
-        inline std::uint32_t * data () { return reinterpret_cast <std::uint32_t *> (this + 1); };
-        inline const std::uint32_t * data () const { return reinterpret_cast <const std::uint32_t *> (this + 1); };
+        inline std::uint32_t * solution () {
+            return reinterpret_cast <std::uint32_t *> (
+                reinterpret_cast <std::uint8_t *> (this - this->size () + sizeof (proof) + sizeof (std::uint8_t)));
+        };
+        inline const std::uint32_t * solution () const {
+            return reinterpret_cast <const std::uint32_t *> (
+                reinterpret_cast <const std::uint8_t *> (this - this->size () + sizeof (proof) + sizeof (std::uint8_t)));
+        };
+
+        // data
+        //  - return pointer to first byte (the NUL byte) of the proof
+        //
+        inline std::uint8_t * data () {
+            return reinterpret_cast <std::uint8_t *> (this - this->size () + sizeof (proof));
+        };
+        inline const std::uint8_t * data () const {
+            return reinterpret_cast <const std::uint8_t *> (this - this->size () + sizeof (proof));
+        };
 
         // size
         //  - expression that returns proof size for given length
+        //  - initial NUL byte, solution nonces, terminating control byte (this)
         //
         static constexpr std::size_t size (std::size_t length) {
-            return sizeof (proof) + sizeof (std::uint32_t) * length;
+            return sizeof (std::uint8_t) + (sizeof (std::uint32_t) * length) + sizeof (proof);
         }
 
         // min/max size
@@ -94,9 +108,11 @@ namespace raddi {
     public:
 
         // validate
-        //  - performs basic validation of proof content and size, 'size' must be exact
+        //  - performs basic validation of the proof byte
+        //  - 'size' must be exact the size of the entry CONTENT containing the proof
+        //  - returns proof size (in bytes) on success, 0 when invalid
         //
-        static bool validate (const void * proof, std::size_t size);
+        std::size_t validate (std::size_t size) const;
 
         // generate
         //  - attempts to generate proof-of-work from the hash into 'target' (including this header)
@@ -117,8 +133,7 @@ namespace raddi {
         //  - returns full size of this 'proof' structure, including header, in bytes
         //
         std::size_t size () const {
-            // sizeof (proof) + sizeof (std::uint32_t) * (2 * this->length + length_bias);
-            return this->size (2 * this->length + this->length_bias);
+            return this->size (2 * this->length + proof::length_bias);
         }
 
         // verify

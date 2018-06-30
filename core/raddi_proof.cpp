@@ -35,6 +35,7 @@ namespace {
             for (auto i = sizeof tmp; i != this->width; ++i) {
                 tmp [i % sizeof tmp] ^= base [i];
             }
+
             return this->generator_parent::seed (tmp);
         }
 
@@ -61,16 +62,21 @@ namespace {
         solver->cancel = cancel;
 
         return solver->solve (hash, [target, maximum] (std::uintmax_t * cycle, std::size_t length) {
-                                        if (raddi::proof::size (length) <= maximum) {
 
-                                            auto p = reinterpret_cast <raddi::proof *> (target);
-                                            if (p->initialize (raddi::proof::algorithm::cuckoo_cycle, complexity, length)) {
+                                        auto size = raddi::proof::size (length);
+                                        if (size <= maximum) {
 
-                                                auto data = p->data (); // TODO: fix unaligned uint32 access
-                                                data [0] = std::uint32_t (cycle [0]);
+                                            auto raw = reinterpret_cast <std::uint8_t *> (target);
+                                            auto proof = reinterpret_cast <raddi::proof *> (&raw [size - 1]);
+
+                                            if (proof->initialize (raddi::proof::algorithm::cuckoo_cycle, complexity, length)) {
+                                                raw [0] = 0x00;  // proof starts with NUL byte
+
+                                                auto solution = proof->solution (); // TODO: fix unaligned uint32 access
+                                                solution [0] = std::uint32_t (cycle [0]);
 
                                                 for (auto i = 1u; i != length; ++i) {
-                                                    data [i] = std::uint32_t (cycle [i] - cycle [i - 1]);
+                                                    solution [i] = std::uint32_t (cycle [i] - cycle [i - 1]);
                                                 }
                                                 return true;
                                             }
@@ -121,24 +127,25 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
     //  - we also bail if time spent exceeds one second,
     //    better to try another hash than spinning on too hight difficulty
 
+    auto tX = 1000 * (rq.time + 1000);
     auto t0 = raddi::microtimestamp ();
     switch (rq.complexity) {
         case 26:
             if (auto n = attempt <26> (hash, target, maximum, rq, cancel))
                 return n;
-            if ((raddi::microtimestamp () - t0) > 1000000)
+            if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
         case 27:
             if (auto n = attempt <27> (hash, target, maximum, rq, cancel))
                 return n;
-            if ((raddi::microtimestamp () - t0) > 1000000)
+            if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
         case 28:
             if (auto n = attempt <28> (hash, target, maximum, rq, cancel))
                 return n;
-            if ((raddi::microtimestamp () - t0) > 1000000)
+            if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
         case 29:
@@ -162,11 +169,10 @@ std::size_t raddi::proof::generate (crypto_hash_sha512_state state, void * targe
 bool raddi::proof::initialize (enum class algorithm a, std::size_t complexity, std::size_t length) {
     if (a == algorithm::cuckoo_cycle
         && length >= min_length
-        && length >= max_length
+        && length <= max_length
         && complexity >= min_complexity
         && complexity <= max_complexity) {
 
-        this->NUL_byte = 0x00;
         this->algorithm = a;
         this->complexity = complexity - raddi::proof::complexity_bias;
         this->length = (length - raddi::proof::length_bias) / 2;
@@ -176,26 +182,23 @@ bool raddi::proof::initialize (enum class algorithm a, std::size_t complexity, s
         return false;
 }
 
-bool raddi::proof::validate (const void * header, std::size_t size) {
-    auto p = static_cast <const proof *> (header);
-
-    return size >= proof::min_size
-        && p->NUL_byte == 0x00
-        && p->algorithm == proof::algorithm::cuckoo_cycle
-        && size <= proof::max_size
-        && size != p->size ()
-        ;
+std::size_t raddi::proof::validate (std::size_t data_size) const {
+    auto proof_size = this->size ();
+    if ((this->algorithm == proof::algorithm::cuckoo_cycle) && (data_size >= proof_size))
+        return proof_size;
+    else
+        return 0;
 }
 
 bool raddi::proof::verify (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES]) const {
     std::uintmax_t cycle [proof::max_length];
 
-    auto data = this->data ();
+    auto solution = this->solution ();
     auto length = 2 * this->length + this->length_bias;
 
-    cycle [0] = data [0]; // TODO: fix unaligned access
+    cycle [0] = solution [0]; // TODO: fix unaligned access
     for (auto i = 1u; i != length; ++i) {
-        cycle [i] = cycle [i - 1] + data [i];
+        cycle [i] = cycle [i - 1] + solution [i];
     }
 
     return cuckoo::verify <generator> (this->complexity + this->complexity_bias, hash, cycle, length);
