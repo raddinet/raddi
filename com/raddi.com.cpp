@@ -459,7 +459,7 @@ bool go () {
 
     // TODO: set-log-level, set-display-level -> raddi::command
 
-
+    // TODO: raddi benchmark
 
     // now/timestamp/microtimestamp
     //  - will show current time in raddi format (hexadecimal since 1.1.2018, see raddi_timestamp.h)
@@ -553,10 +553,10 @@ bool go () {
 }
 
 template <typename T>
-bool sign_and_validate (const wchar_t * step, T & entry, std::size_t size,
-                        const raddi::entry & parent, std::size_t parent_size,
-                        const std::uint8_t (&seed) [crypto_sign_ed25519_SEEDBYTES],
-                        const std::uint8_t (&pk) [crypto_sign_ed25519_PUBLICKEYBYTES]) {
+std::size_t sign_and_validate (const wchar_t * step, T & entry, std::size_t size,
+                               const raddi::entry & parent, std::size_t parent_size,
+                               const std::uint8_t (&seed) [crypto_sign_ed25519_SEEDBYTES],
+                               const std::uint8_t (&pk) [crypto_sign_ed25519_PUBLICKEYBYTES]) {
     
     std::uint8_t sk [crypto_sign_ed25519_SECRETKEYBYTES];
     std::memcpy (sk, seed, crypto_sign_ed25519_SEEDBYTES);
@@ -568,16 +568,16 @@ bool sign_and_validate (const wchar_t * step, T & entry, std::size_t size,
             size += a;
             if (entry.validate (&entry, sizeof entry + size)) {
                 if (entry.verify (sizeof entry + size, &parent, parent_size, pk)) {
-                    return true;
+                    return size;
                 } else
                     return raddi::log::stop (0x20, step, L"verify");
             } else
                 return raddi::log::stop (0x20, step, L"validate");
         } else
             if (quit)
-                return false;
+                return 0;
             else
-                return raddi::log::stop (0x20, step, L"sign");
+                return raddi::log::stop (0x20, step, L"sign"); // TODO: not found proof
 
     } catch (const std::bad_alloc &) {
         return raddi::log::stop (0x20, step, L"malloc");
@@ -626,8 +626,8 @@ bool new_identity () {
             return raddi::log::error (0x1D, size, raddi::consensus::max_identity_name_size);
         }
 
-        if (sign_and_validate <raddi::identity> (L"new:identity", announcement, size, announcement, 0,
-                                                 private_key, announcement.public_key)) {
+        if (size = sign_and_validate <raddi::identity> (L"new:identity", announcement, size, announcement, 0,
+                                                        private_key, announcement.public_key)) {
 
             if (send (instance, announcement, sizeof (raddi::identity) + size)) {
 
@@ -686,8 +686,8 @@ bool new_channel () {
                     return raddi::log::error (0x1D, size, raddi::consensus::max_channel_name_size);
                 }
 
-                if (sign_and_validate <raddi::channel> (L"new:channel", announcement, size, parent, parent_size,
-                                                        key, parent.public_key)) {
+                if (size = sign_and_validate <raddi::channel> (L"new:channel", announcement, size, parent, parent_size,
+                                                               key, parent.public_key)) {
                     if (send (instance, announcement, sizeof (raddi::channel) + size)) {
 
                         wchar_t string [35];
@@ -756,7 +756,7 @@ bool reply (const wchar_t * opname, const wchar_t * to) {
                 return raddi::log::error (0x1D, size, raddi::consensus::max_thread_name_size);
             }*/
 
-            if (sign_and_validate <raddi::entry> (opname, message, size, parent, parent_size, key, identity.public_key)) {
+            if (size = sign_and_validate <raddi::entry> (opname, message, size, parent, parent_size, key, identity.public_key)) {
                 if (send (instance, message, sizeof (raddi::entry) + size)) {
 
                     wchar_t string [35];
