@@ -1,0 +1,76 @@
+RADDI.net protocol overview
+===========================								|
+
+This specification is work in progress and subject to significant changes and extensions.
+
+Initial handshake
+-----------------
+
+Proposal (basically randomly generated data)
+|  IN KEY | OUT KEY |  IN NONCE | OUT NONCE |
+|   32B   |   32B   |    24B    |    24B    |
+
+OUT NONCE, byte 7 (eight), bit 0 (LSB)
+ - 1 - AES-256-GCM available
+ - 0 - AES-256-GCM not available or disabled
+
+AES is used only when both parties signal the bit. In both direction in that case.
+
+In/Out keys are established using D-H from IN KEY and OUT KEY. The protocol uses distinct
+keys/nonces for each direction.
+Nonces are added to establish final nonces used for encryption/decryption of frames.
+Nonces are incremented every time a frame is sent/received in particular direction.
+
+Communication
+-------------
+
+KEEP ALIVE TOKENS
+raddi_connection.cpp/.h
+Exchanged when there is quiet on the connection for some time.
+
+0x0000 - keep alive request
+0xFFFF - keep alive response (chosen intentionally to fit whole valid frame into 64 kB)
+
+Tokens with value of 16 and higher represent FRAME, see below. Smaller values terminate
+connection.
+
+
+FRAMING
+raddi_protocol.cpp/.h
+Each message exchanged within the established connection is preceeded by FRAMING data.
+
+| FRAMING  |
+| CB | AES |
+| 2B | 16B | ...
+
+CB - amount of data, in bytes, following the two CB bytes
+AES - authentication tag of ChaCha20-Poly1305 or AES256-GCM
+
+The additional authenticated data for AEAD construction are the two CB bytes. The rest of
+the frame is encrypted using the keys/nonces generated in the initial handshake. Nonce is
+incremented each time a frame is sent/received in that direction. Following documentation
+described data in their decrypted form:
+
+
+REQUEST
+raddi_request.cpp/.h
+Valid when CB is range 20 ~ 153 inclusive.
+
+| FRAMING  | REQUEST | CONTENT |
+| CB | AES | RQ | TL |         |
+| 2B | 16B | 1B | 3B |    ~    |
+
+
+ENTRY
+raddi_entry.cpp/.h
+Valid when CB is range 154 ~ 65534 inclusive.
+
+| FRAMING  | HEADER                                  | CONTENT | PROOF OF WORK         |
+|          |      ID      |  PARENT ID   | SIGNATURE |         |                       |
+| CB | AES | Te | Tc | NN | Te | Tc | NN |           |         | NUL | EDGE...    | FT |
+| 2B | 16B | 4B | 4B | 4B | 4B | 4B | 4B |    64B    |    ~    | 1B  | 4B × 2 × N | 1B |
+
+
+TODO: raddi_iid.h/.cpp
+TODO: raddi_eid.h/.cpp
+TODO: raddi_proof.h/.cpp
