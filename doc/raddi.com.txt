@@ -1,0 +1,92 @@
+raddi.com
+=========
+
+What's in the name: Using .com extension on Windows I can have two raddi executables,
+one for command-line utility, raddi.com, and one for GUI, raddi.exe, and shell selects
+always the right one.
+From command line, .com is used when typing "raddi timestamp", from Explorer the .exe
+gets icon hinting user to click on it.
+
+raddi.com usage examples
+========================								|
+
+NOTES:
+	For all command-line parameters see parameters.txt, most importantly note that
+	display:all parameter works for raddi.com too.
+
+	Each entry (identity, channel, thread, post, etc...) broadcast onto the network
+	needs to carry proof-of-work which takes some time, and significant CPU/memory
+	resources, to create. Usually just a few seconds.
+
+	raddi.com won't work unless you run node software which is successfully connected
+	to the network.
+
+Creating new identity
+---------------------
+
+	raddi new:identity "text:My awesome nickname"
+
+Sample result:
+
+	a76c4bf9eeb95e:8a33d1a4dbdde93fa0383e8e6caa47dd2f85f11b50d6c501f5bde438396be284
+
+First part (before colon) is the identity identifier, second part is your private key.
+Save this, don't share it :) You'll need this string for everything. You may create as
+many identities as you want though.
+
+The identity's public key is broadcast onto the network which should start accepting your
+messages within a few moments.
+Note that your identity is also your personal channel, but you may create another.
+
+Creating new channel
+--------------------
+
+	raddi new:channel text:Stuff identity:xxxxx:zzzzzzzzzz
+
+	// replace 'xxxxx:zzzzzzzzzz' with the result of identity creation.
+
+Sample result:
+
+	a76c4bf9eeb95e-eeb980
+
+TBD
+
+Creating new thread
+-------------------
+
+	raddi new:thread channel:a76c4bf9eeb95e-eeb980 text:Abc identity:xxxxx:zzzzzzzzzz
+
+Sample result:
+
+	a76c2bf9eeb95e-eeb9ca
+
+TBD
+
+Posting reply
+-------------
+
+	raddi reply:a76c2bf9eeb95e-eeb9ca text:Reply identity:xxxxx:zzzzzzzzzz
+
+Sample result:
+
+	a76c2bf9eeb95e-eebaf1
+
+TBD
+
+Listing known identities
+------------------------
+
+	raddi list:identities
+
+TBD
+NOTE long list, use 'oldest' and 'latest' parameters
+
+Listing known channels
+----------------------
+
+	raddi list:channels
+
+TBD
+NOTE long list, use 'oldest' and 'latest' parameters
+
+
