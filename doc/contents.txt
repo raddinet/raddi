@@ -93,9 +93,10 @@ Leading bytes:
 		  not terminate string code in this table terminates the entry and
 		  introduces PoW; generally the entry is searched backwards for the proof
 	0x06: ACK, ENDORSE
-		- mod op
+		- mod op?
 	0x07: BEL, REPORT
-		- 
+		- no further content required, GUI clients should graphically distinguish
+		  the parent entry as reported for evaluation by moderators
 	0x08: BS, REVERT
 		- 
 

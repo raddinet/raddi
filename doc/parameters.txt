@@ -20,7 +20,7 @@ Common parameters:
 	- protocol:<text>
 		- sets 8 bytes long protocol magic string that prevents connects between
 		  incompatible versions; can be used to establish whole separate network
-		- text parameter is converterted to UTF-8 and clipped or NUL-padded to 8
+		- text parameter is converted to UTF-8 and truncated or NUL-padded to 8
 		  bytes
 			- default is: RADDI/1
 
