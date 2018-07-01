@@ -574,10 +574,7 @@ std::size_t sign_and_validate (const wchar_t * step, T & entry, std::size_t size
             } else
                 return raddi::log::stop (0x20, step, L"validate");
         } else
-            if (quit)
-                return 0;
-            else
-                return raddi::log::stop (0x20, step, L"sign"); // TODO: not found proof
+            return 0;
 
     } catch (const std::bad_alloc &) {
         return raddi::log::stop (0x20, step, L"malloc");
@@ -617,33 +614,33 @@ bool new_identity () {
         std::uint8_t description [raddi::identity::max_description_size];
     } announcement;
 
-    std::uint8_t private_key [crypto_sign_ed25519_SEEDBYTES];
+    auto description_size = gather (announcement.description, sizeof announcement.description);
+    if (description_size > raddi::consensus::max_identity_name_size) {
+        return raddi::log::error (0x1D, description_size, raddi::consensus::max_identity_name_size);
+    }
 
-    if (announcement.create (private_key)) {
-        auto size = gather (announcement.description, sizeof announcement.description);
+    while (!quit) {
+        std::uint8_t private_key [crypto_sign_ed25519_SEEDBYTES];
+        if (announcement.create (private_key)) {
 
-        if (size > raddi::consensus::max_identity_name_size) {
-            return raddi::log::error (0x1D, size, raddi::consensus::max_identity_name_size);
-        }
+            if (auto size = sign_and_validate <raddi::identity> (L"new:identity", announcement, description_size,
+                                                                 announcement, 0, private_key, announcement.public_key)) {
+                if (send (instance, announcement, sizeof (raddi::identity) + size)) {
 
-        if (size = sign_and_validate <raddi::identity> (L"new:identity", announcement, size, announcement, 0,
-                                                        private_key, announcement.public_key)) {
+                    wchar_t string [26];
+                    if (announcement.id.identity.serialize (string, sizeof string / sizeof string [0])) {
 
-            if (send (instance, announcement, sizeof (raddi::identity) + size)) {
+                        std::printf ("%ls:", string);
+                        for (auto b : private_key) std::printf ("%02x", b);
+                        std::printf ("\n");
 
-                wchar_t string [26];
-                if (announcement.id.identity.serialize (string, sizeof string / sizeof string [0])) {
+                        // TODO: support exporting private keys to file (according to parameter (export? save?)
+                        // TODO: support binary output?
 
-                    std::printf ("%ls:", string);
-                    for (auto b : private_key) std::printf ("%02x", b);
-                    std::printf ("\n");
-
-                    // TODO: support exporting private keys to file (according to parameter (export? save?)
-                    // TODO: support binary output?
-
-                    return true;
-                } else
-                    return raddi::log::stop (0x20, L"new:identity", L"serialize");
+                        return true;
+                    } else
+                        return raddi::log::stop (0x20, L"new:identity", L"serialize");
+                }
             }
         }
     }
@@ -679,23 +676,24 @@ bool new_channel () {
                 std::uint8_t description [raddi::channel::max_description_size];
             } announcement;
 
-            if (announcement.create (id)) {
-                auto size = gather (announcement.description, sizeof announcement.description);
+            auto description_size = gather (announcement.description, sizeof announcement.description);
+            if (description_size > raddi::consensus::max_channel_name_size) {
+                return raddi::log::error (0x1D, description_size, raddi::consensus::max_channel_name_size);
+            }
 
-                if (size > raddi::consensus::max_channel_name_size) {
-                    return raddi::log::error (0x1D, size, raddi::consensus::max_channel_name_size);
-                }
+            while (!quit) {
+                if (announcement.create (id)) {
+                    if (auto size = sign_and_validate <raddi::channel> (L"new:channel", announcement, description_size,
+                                                                        parent, parent_size, key, parent.public_key)) {
+                        if (send (instance, announcement, sizeof (raddi::channel) + size)) {
 
-                if (size = sign_and_validate <raddi::channel> (L"new:channel", announcement, size, parent, parent_size,
-                                                               key, parent.public_key)) {
-                    if (send (instance, announcement, sizeof (raddi::channel) + size)) {
-
-                        wchar_t string [35];
-                        if (announcement.id.serialize (string, sizeof string / sizeof string [0])) {
-                            std::printf ("%ls\n", string);
-                            return true;
-                        } else
-                            return raddi::log::stop (0x20, L"new:channel", L"serialize");
+                            wchar_t string [35];
+                            if (announcement.id.serialize (string, sizeof string / sizeof string [0])) {
+                                std::printf ("%ls\n", string);
+                                return true;
+                            } else
+                                return raddi::log::stop (0x20, L"new:channel", L"serialize");
+                        }
                     }
                 }
             }
@@ -723,7 +721,7 @@ bool reply (const wchar_t * opname, const wchar_t * to) {
             std::uint8_t description [raddi::entry::max_content_size];
         } parent;
         struct : public raddi::identity {
-            std::uint8_t description [raddi::identity::max_description_size]; // use consensus value?
+            std::uint8_t description [raddi::identity::max_description_size];
         } identity;
 
         std::size_t identity_size;
@@ -743,28 +741,26 @@ bool reply (const wchar_t * opname, const wchar_t * to) {
                 std::uint8_t description [raddi::entry::max_content_size];
             } message;
 
-            message.id.timestamp = raddi::now ();
-            message.id.identity = id;
-            message.parent = parent.id;
-
             if (database.get (message.id, nullptr, nullptr))
                 return raddi::log::error (0x1B, message.id.serialize ());
 
-            auto size = gather (message.description, sizeof message.description);
+            auto description_size = gather (message.description, sizeof message.description);
 
-            /*if (parent.is_announcement () && (size > raddi::consensus::max_thread_name_size)) {
-                return raddi::log::error (0x1D, size, raddi::consensus::max_thread_name_size);
-            }*/
+            while (!quit) {
+                message.id.timestamp = raddi::now ();
+                message.id.identity = id;
+                message.parent = parent.id;
 
-            if (size = sign_and_validate <raddi::entry> (opname, message, size, parent, parent_size, key, identity.public_key)) {
-                if (send (instance, message, sizeof (raddi::entry) + size)) {
+                if (auto size = sign_and_validate <raddi::entry> (opname, message, description_size, parent, parent_size, key, identity.public_key)) {
+                    if (send (instance, message, sizeof (raddi::entry) + size)) {
 
-                    wchar_t string [35];
-                    if (message.id.serialize (string, sizeof string / sizeof string [0])) {
-                        std::printf ("%ls\n", string);
-                        return true;
-                    } else
-                        return raddi::log::stop (0x20, opname, L"serialize");
+                        wchar_t string [35];
+                        if (message.id.serialize (string, sizeof string / sizeof string [0])) {
+                            std::printf ("%ls\n", string);
+                            return true;
+                        } else
+                            return raddi::log::stop (0x20, opname, L"serialize");
+                    }
                 }
             }
         }
@@ -828,7 +824,7 @@ bool list_identities () {
         { 5, "%*u", "i" },
         { 5, "%*llu", "n" },
         { 9, "%*u", "offset" },
-        { 4, "%*u", "size" },
+        { 5, "%*u", "size" },
     };
     return list_core_table (database.identities.get (), columns);
 
@@ -853,7 +849,7 @@ bool list_channels () {
         { 5, "%*u", "i" },
         { 5, "%*llu", "n" },
         { 9, "%*u", "offset" },
-        { 4, "%*u", "size" },
+        { 5, "%*u", "size" },
     };
     return list_core_table (database.channels.get (), columns);
 }
