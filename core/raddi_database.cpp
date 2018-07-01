@@ -190,7 +190,7 @@ bool raddi::db::insert (const void * data, std::size_t size, const root & top, b
     auto entry = static_cast <const raddi::entry *> (data);
 
     // when inserting to table, size is always less or equal to (0xFFFF - 16) (AES overhead)
-    // and gets reduced by 160 bytes (entry header) thus allowing us to add up to 176 bytes
+    // and gets reduced by 88 bytes (entry header) thus allowing us to add up to 104 bytes
     // of additional data should that be neccessary
 
     switch (entry->is_announcement ()) {

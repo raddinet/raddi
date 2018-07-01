@@ -94,8 +94,8 @@ namespace raddi {
                announcement_type is_announcement () const;
         static announcement_type is_announcement (const raddi::eid & id, const raddi::eid & parent);
 
-        // default_requirements
-        //  - constructs requirements according to whethe the entry is announcement or not
+        // default_requirements (minimal)
+        //  - constructs requirements according to whether the entry is announcement or not
         //  - we have 4 complexity levels, where higher 2 are really unusable for low-end devices
         //    so the decision here is easier than I anticipated
         //
