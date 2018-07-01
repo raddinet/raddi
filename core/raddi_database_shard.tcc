@@ -142,7 +142,9 @@ bool raddi::db::shard <Key>::unsynchronized_advance (const db::table <Key> * tab
     }
 
     if (this->content.closed ()) {
-        if (!this->content.open (this->path (table, L"d"), open, table->db.mode, share, file::buffer::random)) {
+        if (this->content.open (this->path (table, L"d"), open, table->db.mode, share, file::buffer::random)) {
+            this->content.tail ();
+        } else {
             this->report (log::level::error, 12, this->path (table, L"d"), table->db.mode, share);
             this->index.close ();
             return false;
