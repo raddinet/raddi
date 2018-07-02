@@ -135,6 +135,11 @@ RADDI.com utility parameters:
 			- optional
 			- hexadecimal timestamp to decode, e.g.:
 			  'microtimestamp:87544f12f84' shows '2018-04-18 15:16:00.852868'
+	- benchmark
+		- proof-of-work (cuckoo cycle) benchmark
+		- attempts to generate proof-of-work of all supported complexities on
+		  predefined input, verifies that the results are as expected and reports
+		  time it took to generate them
 	- instance:<pid>
 		- specifies active instance, identified by PID number, to operate on
 		- otherwise first instance found is used, searched in following order:
@@ -240,4 +245,7 @@ RADDI.com utility parameters:
 	- verify-identity-private-key
 		- performs additional validation of the key before creating new entry
 		- optional, attempt to use invalid key might get caught by sign/verify
-
+	- deepscan
+		- performs revalidation of the entire database; enumerates all entries
+		  and validates their correctness and verifies their proof-of-work and
+		  signatures
