@@ -1,0 +1,81 @@
+#include <windows.h>
+#include "../common/log.h"
+
+STRINGTABLE
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+{
+    DATABASE | NOTE | 1     "changes in directory, {1} bytes" // monitor
+    DATABASE | NOTE | 2     "rescanning directory to process files previously in use" // monitor
+    DATABASE | NOTE | 3     "resizing buffer to {1} bytes to improve performance" // monitor
+    DATABASE | NOTE | 7     "rejected entry {1}, missing parent entry"
+    DATABASE | NOTE | 8     "shards unloaded: {1} inactive ({2}s) and {3} over limit ({4})"
+    DATABASE | NOTE | 12    "shard opened: {1}"
+    DATABASE | NOTE | 13    "loaded {1} entries"
+    DATABASE | NOTE | 14    "entry {2} inserted"//" to {1}"
+    DATABASE | NOTE | 15    "shard split initiated with threshold {1:x}"
+    DATABASE | NOTE | 16    "loaded {1} entries from {3}"
+
+    DATABASE | NOTE | 0x20  "loaded {2} {3} addresses from {1}, having total {4} addresses of this level"
+    DATABASE | NOTE | 0x21  "saved {3} {2} addresses to {1}"
+
+    DATABASE | EVENT | 1    "path: {1}" // db path
+    DATABASE | EVENT | 2    "reader mode started" // monitor
+    DATABASE | EVENT | 3    "" // monitor
+    DATABASE | EVENT | 12   "shard created: {1}"
+    DATABASE | EVENT | 13   "shard split into {1:x} and {2:x} containing {3} and {4} entries respectively, {5} lost"
+
+    DATABASE | DATA | 2     "rejected identity {1} announcement, signature(s) did not verify"
+    DATABASE | DATA | 5     "rejected entry {1}, unknown author"
+    DATABASE | DATA | 6     "rejected entry {1} does not verify against author's public key"
+    DATABASE | DATA | 8     "rejected entry {1} reinsertion, does not match previous ({2}, {3})"
+
+    DATABASE | DATA | 0x10  "rejected entry {1}, malformed, timestamp {2} older than parent's {3}"
+    DATABASE | DATA | 0x11  "rejected entry {1}, malformed, timestamp {2} older than it's identity birth {3}"
+    DATABASE | DATA | 0x12  "rejected entry {1}, malformed, parent's timestamp {2} older than it's identity birth {3}"
+    DATABASE | DATA | 0x13  "rejected entry {1}, timestamp {2} older than {4} years, threshold is {3}"
+    DATABASE | DATA | 0x14  "rejected entry {1}, timestamp {2} more than {4} seconds into the future, threshold is {3}"
+    DATABASE | DATA | 0x15  "rejected entry {1} from network propagation, timestamp {2} older than {4} seconds, threshold is {3}"
+    DATABASE | DATA | 0x16  "rejected entry {1} from historical download, timestamp {2} older than {4} seconds, threshold is {3}"
+    DATABASE | DATA | 0x18  "rejected entry {1}, malformed, identity announcement size {2} too short, {3} bytes required"
+    DATABASE | DATA | 0x19  "rejected entry {1}, malformed, channel announcement size {2} too short, {3} bytes required"
+    DATABASE | DATA | 0x1A  "rejected entry {1}, empty"
+    DATABASE | DATA | 0x1B  "rejected entry {1}, {2} bytes, missing proof of work"
+    DATABASE | DATA | 0x1C  "rejected entry {1}, identity announcement name length {2} exceeds consensus maximum of {3} bytes"
+    DATABASE | DATA | 0x1D  "rejected entry {1}, channel announcement name length {2} exceeds consensus maximum of {3} bytes"
+    DATABASE | DATA | 0x1E  "rejected entry {1}, {2} bytes, invalid signature"
+    DATABASE | DATA | 0x1F  "rejected entry {1}, {2} bytes, invalid proof of work"
+
+    // TODO: move DATABASE | DATA | 0x2? to node-en.rc??? // coordinator data
+    DATABASE | DATA | 0x20  "rejected coordination request, timestamp {1} is {4} seconds old; max {3} threshold {2}"
+    DATABASE | DATA | 0x21  "rejected coordination request, timestamp {1} is {4} seconds into the future; max {3} threshold {2}"
+    DATABASE | DATA | 0x22  "rejected coordination request, unknown type {1}"
+    DATABASE | DATA | 0x23  "rejected coordination request {1}, invalid size {2}, expected {3}"
+    DATABASE | DATA | 0x24  "rejected coordination request {1}, threshold {2} older than {4} days, threshold is {3}"
+
+    DATABASE | ERROR | 1    "database storage doesn't exist and unable to create new at {1}, error {ERR}"
+    DATABASE | ERROR | 2    "access denied to data at {1}, error {ERR}"
+    DATABASE | ERROR | 5    "won't process nor broadcast, unable to listen for files in {1} error {ERR}" // monitor and source both
+    DATABASE | ERROR | 6    "listening stopped, failed with error {ERR}" // monitor
+    DATABASE | ERROR | 7    "overflow, rescanning table directory, error {ERR}" // monitor
+    DATABASE | ERROR | 11   "accessing ({2}) shard index file {1} with share mode {3} error {ERR}"
+    DATABASE | ERROR | 12   "accessing ({2}) shard content file {1} with share mode {3} error {ERR}"
+    DATABASE | ERROR | 13   "not enough memory loading shard"
+    DATABASE | ERROR | 14   "writing shard index file ""{1}"" error {ERR}"
+    DATABASE | ERROR | 15   "writing shard content file ""{1}"" error {ERR}"
+    DATABASE | ERROR | 16   "not enough memory updating shard ""{1}"" error {ERR}"
+    DATABASE | ERROR | 17   "broken at {1}+{2}, read error {ERR}"
+    DATABASE | ERROR | 18   "shard split, filesystem failure, error {ERR}"
+    DATABASE | ERROR | 19   "erase failure in shard content file {1} at offset {2}, {3} bytes, error {ERR}"
+    DATABASE | ERROR | 20   "erase failure in shard index file {1} at offset {2}, {3} bytes, error {ERR}"
+    DATABASE | ERROR | 21   "not enough memory to load"
+    DATABASE | ERROR | 22   "failed to access storage {1}, error {ERR}"
+    DATABASE | ERROR | 23   "file size overflow; 64-bit version needed for shards above {2} MB on current settings, this one is {1} MB"
+    DATABASE | ERROR | 24   "entry {2} ({3} bytes) classification failed when inserting into shard ""{1}"""
+
+    // coordinator data errors
+    DATABASE | ERROR | 0x20 "not enough memory to load peer addresses"
+    DATABASE | ERROR | 0x21 "failed to access peer address storage {1}, error {ERR}"
+    DATABASE | ERROR | 0x22 "failed to read {2} addresses from {1}, error {ERR}"
+    DATABASE | ERROR | 0x23 "failed to open {1} to write {2} addresses, error {ERR}"
+    DATABASE | ERROR | 0x24 "failed to write {2} addresses to {1}, error {ERR}"
+}
