@@ -1,12 +1,8 @@
 TODO
 ====
 
-next reddit post:
- - https://www.yours.org/@raddinet
- - raddi.com on builds
- - change from fixed proof-of-work to variable sized, PoW pushed to git
- - looking forward to someone's critique of my code
- - Is it possible to prove that encrypted message contains certain plaintext without revealing or compromising decryption key
+TODO: Is it possible to prove that encrypted message contains certain plaintext without revealing or compromising decryption key
+TODO: not yet subscribe/unsub done -> node running in core mode
 
 github repo:
  - raddi-builds-windows
@@ -34,8 +30,6 @@ perfect compression dictionary for english text
  - compress initial bodies with established dictionary, report results, try different dictionaries, compare results
 
 TODO: consider requiring vote codes and such to be outside of compressed parts?
-
-raddi.com: 'sign' can now fail if no proof-of-work is found (often), add loop
 
 cache of detached entries
 
