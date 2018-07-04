@@ -16,7 +16,7 @@ struct raddi::db::row {
 
     // data
     //  - address of signature and content data in 'text' file
-    //  - length does NOT include signature and proof bytes
+    //  - length does NOT include signature bytes
     //
     struct __attribute__ ((ms_struct)) {
         std::uint64_t offset : 48;
@@ -81,7 +81,7 @@ struct raddi::db::trow {
 
     // data
     //  - address of signature and content data in 'text' file
-    //  - length does NOT include signature and proof bytes
+    //  - length does NOT include signature bytes
     //
     struct __attribute__ ((ms_struct)) {
         std::uint64_t offset : 48;
@@ -135,7 +135,7 @@ struct raddi::db::crow {
 
     // data
     //  - address of signature and content data in 'text' file
-    //  - length does NOT include signature and proof bytes
+    //  - length does NOT include signature bytes
     //
     struct __attribute__ ((ms_struct)) {
         std::uint32_t offset : 32 - length_bits;
@@ -194,7 +194,7 @@ struct raddi::db::irow {
 
     // data
     //  - address of signature and content data in 'text' file
-    //  - length does NOT include signature and proof bytes
+    //  - length does NOT include signature bytes
     //
     struct __attribute__ ((ms_struct)) {
         std::uint32_t offset : 32 - length_bits;

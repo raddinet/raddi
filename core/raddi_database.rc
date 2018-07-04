@@ -36,6 +36,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     DATABASE | DATA | 0x14  "rejected entry {1}, timestamp {2} more than {4} seconds into the future, threshold is {3}"
     DATABASE | DATA | 0x15  "rejected entry {1} from network propagation, timestamp {2} older than {4} seconds, threshold is {3}"
     DATABASE | DATA | 0x16  "rejected entry {1} from historical download, timestamp {2} older than {4} seconds, threshold is {3}"
+    DATABASE | DATA | 0x17  "rejected entry {1}, insufficient proof-of-work complexity {2}, {3} required ({4} default with current adjustment of {5})"
     DATABASE | DATA | 0x18  "rejected entry {1}, malformed, identity announcement size {2} too short, {3} bytes required"
     DATABASE | DATA | 0x19  "rejected entry {1}, malformed, channel announcement size {2} too short, {3} bytes required"
     DATABASE | DATA | 0x1A  "rejected entry {1}, empty"

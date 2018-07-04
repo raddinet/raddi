@@ -126,6 +126,8 @@ bool raddi::connection::send (enum class raddi::request::type type, const void *
     if (data && size) {
         std::memcpy (r.payload, data, size);
     }
+
+    this->report (log::level::note, 7, type, sizeof (request), size);
     return this->send (&r, sizeof (request) + size);
 }
 
@@ -153,6 +155,7 @@ std::uint64_t raddi::connection::keepalive (std::uint64_t now, std::uint64_t exp
 }
 
 void raddi::connection::status () const {
+    // TODO: return status structure
     this->report (raddi::log::level::note, 1,
                   this->messages, this->keepalives, this->counter,
                   this->counters.sent, this->counters.delayed);// */

@@ -108,9 +108,10 @@ public:
             && !this->pending.empty ();
     }
 
-    /*std::size_t buffered () const {
+    std::size_t buffer_size () const {
+        immutability guard (this->lock);
         return this->awaiting.size ();
-    }*/
+    }
 
 public:
     struct {
@@ -193,6 +194,8 @@ protected:
     }
     bool connect (const SOCKADDR_INET & peer);
     void terminate () noexcept;
+
+    using Transmitter::buffer_size;
 };
 
 class Listener

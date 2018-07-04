@@ -61,6 +61,7 @@ namespace raddi {
         using Connection::connecting;
         using Connection::pending;
         using Connection::optimize;
+        using Connection::buffer_size;
 
     public:
         std::uint64_t latest = raddi::microtimestamp ();

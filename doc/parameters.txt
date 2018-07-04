@@ -88,12 +88,23 @@ Node parameters:
 		- generally users with data plan should disable this feature to conserve
 		  bandwidth, preferably by using the 'leaf' option
 		- default is true
+	- channels-synchronization-participation:<0|1|false|true>
+		- determines whether the node responds to identity/channels history query
+		  with data batch that it has determined the peer has incomplete; this is
+		  often substantial amount of data
+		- generally users with data plan should disable this feature to conserve
+		  bandwidth, preferably by using the 'leaf' option
+		- default is true
+	- proof-complexity-requirements-adjustment:<#>
+		- adjusts (increases or decreases) minimal required PoW complexity for
+		  both identity/channels (default 27) and other entries (default 26)
+		- prepared for use in future where mainstream PCs could spam the network
+		- default is 0
 	- keep-alive:<N>
 		- specifies how long after last received data are peer connections probed
 		  to ensure connected status
 		- default value is 60000, i.e. 60 seconds; zero disables keep-alives
 		- NOTE: non-zero values smaller than 1000 may not work
-	- 
 	- core
 		- affected options:
 			- database-store-everything = 1
@@ -102,7 +113,7 @@ Node parameters:
 			- max-core-connections += 1
 			- min-core-connections += 1
 			- network-propagation-participation = false
-
+			- channels-synchronization-participation = false
 
 Node database behavior parameters:
 	- database-reinsertion-validation:<0|1|false|true>
