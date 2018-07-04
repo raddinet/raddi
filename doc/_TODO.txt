@@ -29,9 +29,20 @@ perfect compression dictionary for english text
  - evaluate gains of shuffling various similarly-valued words in order to 
  - compress initial bodies with established dictionary, report results, try different dictionaries, compare results
 
-TODO: consider requiring vote codes and such to be outside of compressed parts?
+consider requiring vote codes and such to be outside of compressed parts?
+
+channel subscriptions (coordinator) + reporting history
+channel subscriptions (commands)
+
+node::refused -> coordinator? for save/load
 
 cache of detached entries
+
+bad input reporting in node
+
+replay protection in raddi::db::classify case
+
+simplify path for posting data from non-core node
 
 merge raddi::detached, raddi::noticed and raddi::subscriptions
  - maybe one base template with 3 specializations
