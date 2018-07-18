@@ -91,22 +91,21 @@ const raddi::proof * raddi::entry::proof (std::size_t size, std::size_t * proof_
     return nullptr;
 }
 
-crypto_sign_ed25519ph_state raddi::entry::prehash (std::size_t size, const entry * parent, std::size_t parent_size) const {
+crypto_sign_ed25519ph_state raddi::entry::prehash (std::size_t size) const {
     crypto_sign_ed25519ph_state state;
     crypto_sign_ed25519ph_init (&state);
-    crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (parent), parent_size);
     crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (&this->id), sizeof this->id);
     crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (&this->parent), sizeof this->parent);
     crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (this->content ()), size - sizeof (entry));
     return state;
 }
 
-bool raddi::entry::verify (std::size_t size, const entry * parent, std::size_t parent_size,
+bool raddi::entry::verify (std::size_t size,
                            const std::uint8_t (&public_key) [crypto_sign_ed25519_PUBLICKEYBYTES]) const {
     std::size_t proof_size;
     
     auto proof = this->proof (size, &proof_size);
-    auto imprint = this->prehash (size - proof_size, parent, parent_size);
+    auto imprint = this->prehash (size - proof_size);
 
     if (proof->verify (imprint.hs)) {
         crypto_sign_ed25519ph_update (&imprint, proof->data (), proof_size);
@@ -116,12 +115,12 @@ bool raddi::entry::verify (std::size_t size, const entry * parent, std::size_t p
         return raddi::log::data (raddi::component::database, 0x1F, this->id, size);
 }
 
-std::size_t raddi::entry::sign (std::size_t size, const entry * parent, std::size_t parent_size,
+std::size_t raddi::entry::sign (std::size_t size,
                                 const std::uint8_t (&private_key) [crypto_sign_ed25519_SECRETKEYBYTES],
                                 proof::requirements rq, volatile bool * cancel) {
     if (size >= sizeof (entry)) {
 
-        auto imprint = this->prehash (size, parent, parent_size);
+        auto imprint = this->prehash (size);
         auto proof_ptr = this->content () + size - sizeof (entry);
 
         if (auto proof_size = raddi::proof::generate (imprint.hs,
@@ -137,10 +136,10 @@ std::size_t raddi::entry::sign (std::size_t size, const entry * parent, std::siz
     return 0;
 }
 
-std::size_t raddi::entry::sign (std::size_t size, const entry * parent, std::size_t parent_size,
+std::size_t raddi::entry::sign (std::size_t size,
                                 const std::uint8_t (&private_key) [crypto_sign_ed25519_SECRETKEYBYTES],
                                 volatile bool * cancel) {
-    return this->sign (size, parent, parent_size, private_key,
+    return this->sign (size, private_key,
                        this->default_requirements (), cancel);
 }
 

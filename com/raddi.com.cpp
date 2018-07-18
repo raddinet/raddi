@@ -562,7 +562,6 @@ bool go () {
 
 template <typename T>
 std::size_t sign_and_validate (const wchar_t * step, T & entry, std::size_t size,
-                               const raddi::entry & parent, std::size_t parent_size,
                                const std::uint8_t (&seed) [crypto_sign_ed25519_SEEDBYTES],
                                const std::uint8_t (&pk) [crypto_sign_ed25519_PUBLICKEYBYTES]) {
     
@@ -571,11 +570,11 @@ std::size_t sign_and_validate (const wchar_t * step, T & entry, std::size_t size
     std::memcpy (sk + crypto_sign_ed25519_SEEDBYTES, pk, crypto_sign_ed25519_PUBLICKEYBYTES);
 
     try {
-        if (auto a = entry.sign (sizeof entry + size, &parent, parent_size, sk,
+        if (auto a = entry.sign (sizeof entry + size, sk,
                                  complexity (entry.default_requirements ()), &quit)) {
             size += a;
             if (entry.validate (&entry, sizeof entry + size)) {
-                if (entry.verify (sizeof entry + size, &parent, parent_size, pk)) {
+                if (entry.verify (sizeof entry + size, pk)) {
                     return size;
                 } else
                     return raddi::log::stop (0x20, step, L"verify");
@@ -604,7 +603,7 @@ bool validate_identity_key (const wchar_t * step,
         std::memcpy (sk, seed, crypto_sign_ed25519_SEEDBYTES);
         std::memcpy (sk + crypto_sign_ed25519_SEEDBYTES, identity.public_key, crypto_sign_ed25519_PUBLICKEYBYTES);
 
-        if (identity.sign (size, nullptr, 0, sk)) {
+        if (identity.sign (size, sk)) {
             return std::memcmp (identity_signature_copy, identity.signature, crypto_sign_BYTES) == 0
                 || raddi::log::error (0x16);
         } else
@@ -632,7 +631,7 @@ bool new_identity () {
         if (announcement.create (private_key)) {
 
             if (auto size = sign_and_validate <raddi::identity> (L"new:identity", announcement, description_size,
-                                                                 announcement, 0, private_key, announcement.public_key)) {
+                                                                 private_key, announcement.public_key)) {
                 if (send (instance, announcement, sizeof (raddi::identity) + size)) {
 
                     wchar_t string [26];
@@ -692,7 +691,7 @@ bool new_channel () {
             while (!quit) {
                 if (announcement.create (id)) {
                     if (auto size = sign_and_validate <raddi::channel> (L"new:channel", announcement, description_size,
-                                                                        parent, parent_size, key, parent.public_key)) {
+                                                                        key, parent.public_key)) {
                         if (send (instance, announcement, sizeof (raddi::channel) + size)) {
 
                             wchar_t string [35];
@@ -725,9 +724,6 @@ bool reply (const wchar_t * opname, const wchar_t * to) {
 
     if (identity (id, key)) {
 
-        struct : public raddi::entry {
-            std::uint8_t description [raddi::entry::max_content_size];
-        } parent;
         struct : public raddi::identity {
             std::uint8_t description [raddi::identity::max_description_size];
         } identity;
@@ -736,18 +732,14 @@ bool reply (const wchar_t * opname, const wchar_t * to) {
         if (!database.get (id, &identity, &identity_size))
             return raddi::log::error (0x17, id.serialize ());
 
-        if (!parent.id.parse (to))
+        struct : public raddi::entry {
+            std::uint8_t description [raddi::entry::max_content_size];
+        } message;
+
+        if (!message.parent.parse (to))
             return raddi::log::error (0x18, to);
 
-        std::size_t parent_size;
-        if (!database.get (parent.id, &parent, &parent_size))
-            return raddi::log::error (0x19, to);
-        
         if (validate_identity_key (opname, identity, identity_size, key)) {
-
-            struct : public raddi::entry {
-                std::uint8_t description [raddi::entry::max_content_size];
-            } message;
 
             if (database.get (message.id, nullptr, nullptr))
                 return raddi::log::error (0x1B, message.id.serialize ());
@@ -757,9 +749,8 @@ bool reply (const wchar_t * opname, const wchar_t * to) {
             while (!quit) {
                 message.id.timestamp = raddi::now ();
                 message.id.identity = id;
-                message.parent = parent.id;
-
-                if (auto size = sign_and_validate <raddi::entry> (opname, message, description_size, parent, parent_size, key, identity.public_key)) {
+                 
+                if (auto size = sign_and_validate <raddi::entry> (opname, message, description_size, key, identity.public_key)) {
                     if (send (instance, message, sizeof (raddi::entry) + size)) {
 
                         wchar_t string [35];

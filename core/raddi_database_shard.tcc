@@ -257,6 +257,8 @@ bool raddi::db::shard <Key>::unsynchronized_insert (const db::table <Key> * tabl
         if (this->unsynchronized_advance (table)) {
 
             // TODO: use file locking to protect readers against shard splits?
+            // TODO: move content data generation (pointer offsetting) and complete row (Key) initialization to 'row'
+            //       Key::content (...) -> ptr/size to write, classify -> initialize, will also set offset/length
 
             const auto prefix = sizeof (raddi::entry::id) + sizeof (raddi::entry::parent);
             const auto iposition = this->index.tell ();

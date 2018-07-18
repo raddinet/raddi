@@ -50,16 +50,15 @@ namespace raddi {
         inline const std::uint8_t * content () const { return reinterpret_cast <const std::uint8_t *> (this + 1); };
 
         // verify
-        //  - verifies that entry and it's parent is signed by private-key matching public-key 'public_key'
+        //  - verifies that entry is signed by private-key matching public-key 'public_key'
         //  - 'size' specifies number of bytes of transported entry: raddi::entry header + data
         //  - provided entry MUST be validated first!!! or the call may crash
         //
-        bool verify (std::size_t size, const entry * parent, std::size_t parent_size,
+        bool verify (std::size_t size,
                      const std::uint8_t (&public_key) [crypto_sign_ed25519_PUBLICKEYBYTES]) const;
 
         // sign
-        //  - proves and signs entry (of 'size' bytes) and parent (of 'parent_size' bytes) with provided 'private_key'
-        //     - for identity announcement the 'parent' is null
+        //  - proves and signs entry (of 'size' bytes) with provided 'private_key'
         //     - proof requiremens are default if omitted (rq)
         //  - 'this->signature' is ignored on input, on output set to valid data
         //     - proof is appended to content and size of additional data (the proof) is returned
@@ -71,10 +70,10 @@ namespace raddi {
         //            - 0 if failed to sign or find proof-of-work
         //            - throws std::bad_alloc if there is not enough memory to find proof-of-work
         //
-        std::size_t sign (std::size_t size, const entry * parent, std::size_t parent_size,
+        std::size_t sign (std::size_t size,
                           const std::uint8_t (&private_key) [crypto_sign_ed25519_SECRETKEYBYTES],
                           volatile bool * cancel = nullptr);
-        std::size_t sign (std::size_t size, const entry * parent, std::size_t parent_size,
+        std::size_t sign (std::size_t size,
                           const std::uint8_t (&private_key) [crypto_sign_ed25519_SECRETKEYBYTES],
                           proof::requirements rq, volatile bool * cancel = nullptr);
 
@@ -128,9 +127,9 @@ namespace raddi {
 
         // prehash
         //  - begins hash phase of entry signature creation/validation
-        //  - hashes 'this->id', 'this->parent', content following entry header and 'parent' data (if provided)
+        //  - hashes 'this->id', 'this->parent' and content following entry header
         //
-        crypto_sign_ed25519ph_state prehash (std::size_t size, const entry * parent, std::size_t parent_size) const;
+        crypto_sign_ed25519ph_state prehash (std::size_t size) const;
     };
 
     // comparison operators

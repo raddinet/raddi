@@ -24,7 +24,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 0x16 "provided identity private key is invalid"
     MAIN | ERROR | 0x17 "identity {1} does not exist"
     MAIN | ERROR | 0x18 "{1} is not valid entry id"
-    MAIN | ERROR | 0x19 "entry {1} does not exist"
+    // MAIN | ERROR | 0x19 "entry {1} does not exist"
     MAIN | ERROR | 0x1A "content required"
     MAIN | ERROR | 0x1B "entry {1} already exists, wait for a second"
     MAIN | ERROR | 0x1C "{1} is not valid timestamp"

@@ -34,8 +34,7 @@ namespace raddi {
         //  - provided entry MUST be validated first!
         //
         bool verify (std::size_t size) const;
-        bool verify (std::size_t size, const entry * parent, std::size_t parent_size,
-                     const std::uint8_t (&public_key) [crypto_sign_ed25519_PUBLICKEYBYTES]) const {
+        bool verify (std::size_t size, const std::uint8_t (&public_key) [crypto_sign_ed25519_PUBLICKEYBYTES]) const {
             // TODO: this is hack for 'sign_and_validate' in raddi.com.cpp, FIX THAT
             return this->verify (size);
         }

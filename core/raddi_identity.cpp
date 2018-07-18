@@ -76,5 +76,5 @@ bool raddi::identity::create (std::uint8_t (&private_key) [crypto_sign_ed25519_S
 
 bool raddi::identity::verify (std::size_t size) const {
     return this->id.identity.nonce == hash (this->id.identity.timestamp, this->public_key)
-        && this->entry::verify (size, nullptr, 0, this->public_key);
+        && this->entry::verify (size, this->public_key);
 }

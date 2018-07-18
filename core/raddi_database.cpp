@@ -75,12 +75,6 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
     const auto entry = static_cast <const raddi::entry *> (data);
     const auto type = entry->is_announcement ();
 
-    struct : public raddi::identity {
-        std::uint8_t name [raddi::identity::max_description_size];
-    } author;
-
-    std::size_t author_size;
-
     // find identity, validate signature, on failure add negative mark to the connection
 
     switch (type) {
@@ -93,29 +87,12 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
             break;
 
         case raddi::entry::new_channel_announcement:
-
-            // find announcement of author of this entry
-
-            if (!this->identities->get (entry->id.identity, &author, &author_size)) {
-
-                this->report (log::level::data, 5, entry->id.serialize ());
-                return raddi::db::rejected;
-            }
-
-            // verify it's signed by that author
-
-            if (!entry->verify (size, &author, author_size, author.public_key)) {
-
-                this->report (log::level::data, 6, entry->id.serialize ());
-                return raddi::db::rejected;
-            }
-            break;
-
         case raddi::entry::not_an_announcement:
 
             // find announcement of author of this entry
-            //  - reading only content (need public_key), header is not valid here
+            //  - note that 'author' identity instance allocates only space for fixed fields (public_key)
 
+            raddi::identity author;
             if (!this->identities->get (entry->id.identity, read::content,
                                         &author, nullptr, sizeof (identity::public_key))) {
 
@@ -123,23 +100,9 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
                 return raddi::db::rejected;
             }
 
-            // find parent entry
-            //  - complete parent entry is necessary to verify signature of the new one
+            // verify it's signed by that author
 
-            struct {
-                std::size_t size;
-
-                struct : public raddi::entry {
-                    std::uint8_t description [raddi::entry::max_content_size];
-                } data;
-            } parent;
-
-            if (!this->get (entry->parent, &parent.data, &parent.size)) {
-
-                this->report (log::level::note, 7, entry->id.serialize ());
-                return raddi::db::detached;
-            }
-            if (!entry->verify (size, &parent.data, parent.size, author.public_key)) {
+            if (!entry->verify (size, author.public_key)) {
 
                 this->report (log::level::data, 6, entry->id.serialize ());
                 return raddi::db::rejected;
