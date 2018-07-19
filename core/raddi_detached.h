@@ -2,6 +2,7 @@
 #define RADDI_DETACHED_H
 
 #include "../common/lock.h"
+#include "../common/counter.h"
 #include "raddi_eid.h"
 
 #include <vector>
@@ -14,7 +15,6 @@ namespace raddi {
     //  - special cache for reordering entries that arrived before their parent entries
     //  - optimized for efficiently dropping too old entries
     //  - TODO: report usage, top usage (and time of top usage)
-    //  - TODO: report successfull reordering (counters), also counter for entries dropped
     //
     class detached {
         mutable ::lock lock;
@@ -25,6 +25,14 @@ namespace raddi {
         //          - value - the entry to be inserted when parent arrives
         //
         std::map <std::uint32_t, std::multimap <raddi::iid, std::vector <std::uint8_t>>> data;
+
+    public:
+        counter inserted;
+        counter rejected;
+        counter processed;
+
+        std::size_t top_size = 0;
+        std::size_t top_memory = 0;
 
     public:
 
@@ -64,6 +72,7 @@ namespace raddi {
 
                     for (const auto & e : entries) {
                         callback (e.data (), e.size ());
+                        this->processed += e.size ();
                     }
                 } catch (...) {
                     this->lock.release_exclusive ();
@@ -80,16 +89,24 @@ namespace raddi {
         // size
         //  - returns number of entries currently held
         //
-        std::size_t size () const;
+        std::size_t size () const {
+            immutability guard (this->lock);
+            return this->unsynchronized_size ();
+        }
 
         // memory
         //  - returns amount of memory used by entries and structures that hold them
         //  - does not attempt to estimate allocation overhead
         //
-        std::size_t memory () const;
+        std::size_t memory () const {
+            immutability guard (this->lock);
+            return this->unsynchronized_memory ();
+        }
 
     private:
         std::size_t unsynchronized_recursive_erase (const eid & parent, unsigned int iteration = 0);
+        std::size_t unsynchronized_size () const;
+        std::size_t unsynchronized_memory () const;
     };
 }
 

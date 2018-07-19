@@ -9,6 +9,17 @@ void raddi::detached::insert (const eid & parent, const entry * entry, std::size
 
     exclusive guard (this->lock);
     this->data [parent.timestamp].emplace (parent.identity, std::vector <std::uint8_t> (data, data + size));
+    this->inserted += size;
+
+    auto current_size = this->unsynchronized_size ();
+    if (this->top_size < current_size) {
+        this->top_size = current_size;
+    }
+
+    auto current_memory = this->unsynchronized_memory ();
+    if (this->top_memory < current_memory) {
+        this->top_memory = current_memory;
+    }
 }
 
 std::size_t raddi::detached::reject (const eid & parent) {
@@ -32,6 +43,7 @@ std::size_t raddi::detached::unsynchronized_recursive_erase (const eid & parent,
         auto range = mm->second.equal_range (parent.identity);
         for (auto i = range.first; i != range.second; ++i) {
             grandparents.insert (reinterpret_cast <const entry *> (i->second.data ())->parent);
+            this->rejected += i->second.size ();
         }
 
         mm->second.erase (range.first, range.second);
@@ -48,11 +60,10 @@ std::size_t raddi::detached::unsynchronized_recursive_erase (const eid & parent,
 void raddi::detached::clean (std::uint32_t age) {
     exclusive guard (this->lock);
     this->data.erase (this->data.begin (), this->data.lower_bound (raddi::now () - age)); // TODO: raddi::older?
+    // TODO: include in 'rejected' or add custom counter?
 }
 
-std::size_t raddi::detached::size () const {
-    immutability guard (this->lock);
-
+std::size_t raddi::detached::unsynchronized_size () const {
     std::size_t n = 0;
     for (const auto & m : this->data) {
         n += m.second.size ();
@@ -60,9 +71,7 @@ std::size_t raddi::detached::size () const {
     return n;
 }
 
-std::size_t raddi::detached::memory () const {
-    immutability guard (this->lock);
-    
+std::size_t raddi::detached::unsynchronized_memory () const {
     std::size_t n = sizeof this->data;
     for (const auto & m : this->data) {
         n += sizeof m;
