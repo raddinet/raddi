@@ -133,8 +133,8 @@ namespace {
 
 // static data members live here
 
-Counter Receiver::total;
-Counter Transmitter::total;
+counter Receiver::total;
+counter Transmitter::total;
 Listener::Totals Listener::total;
 UdpPoint::Totals UdpPoint::total;
 

@@ -10,6 +10,7 @@
 #include "sodium.h"
 #include "../common/lock.h"
 #include "../common/log.h"
+#include "../common/counter.h"
 
 bool WSAInitialize () noexcept;
 bool StringToAddress (SOCKADDR_INET & address, const wchar_t * string) noexcept;
@@ -64,16 +65,6 @@ public:
     virtual void completion (bool success, std::size_t n) = 0;
 };
 
-struct Counter {
-    unsigned long long n = 0;
-    unsigned long long bytes = 0;
-
-    void operator += (std::size_t value) noexcept {
-        InterlockedAdd64 ((volatile LONG64 *) &this->bytes, value);
-        InterlockedIncrement (&this->n);
-    }
-};
-
 class Transmitter
     : public Overlapped
     , virtual Socket
@@ -115,13 +106,13 @@ public:
 
 public:
     struct {
-        Counter delayed;
-        Counter dropped;
-        Counter sent;
-        Counter oom;
+        counter delayed;
+        counter dropped;
+        counter sent;
+        counter oom;
     } counters;
 
-    static Counter total;
+    static counter total;
 };
 
 class Receiver
@@ -172,10 +163,10 @@ protected:
     // counter
     //  - number of fragments and total size of received data on the socket
     //
-    Counter counter;
+    counter counter;
 
 public:
-    static Counter total;
+    static struct counter total;
 };
 
 class Connection
@@ -263,32 +254,14 @@ public:
     bool send (const void * data, std::size_t size, const sockaddr * to, int to_len);
     bool broadcast (const void * data, std::size_t size, std::uint16_t port);
 
-    Counter received;
-    Counter sent;
+    counter received;
+    counter sent;
 
 public:
     static struct Totals {
-        Counter received;
-        Counter sent;
+        counter received;
+        counter sent;
     } total;
 };
-
-// translate
-//  - for passing Counters as a log function parameter
-//
-inline std::wstring translate (Counter c, const std::wstring &) {
-    static const char prefix [] = { 'B', 'k', 'M', 'G', 'T', 'P', 'E' };
-
-    auto m = 0;
-    auto v = (double) c.bytes;
-    while (v >= 922) {
-        v /= 1024.0;
-        ++m;
-    }
-    wchar_t number [64];
-    std::swprintf (number, sizeof number / sizeof number [0], L"%llu (%.*f %c%s)",
-                    c.n, (v < 10.0 && c.bytes > 10), v, prefix [m], (m != 0) ? L"B" : L"");
-    return number;
-}
 
 #endif

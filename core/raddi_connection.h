@@ -67,8 +67,8 @@ namespace raddi {
         std::uint64_t latest = raddi::microtimestamp ();
         std::uint64_t probed = 0;
 
-        Counter messages;
-        Counter keepalives;
+        struct counter messages;
+        struct counter keepalives;
 
         // connect
         //  - starts processing incomming traffic on the connection
