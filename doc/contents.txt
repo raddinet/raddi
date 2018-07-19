@@ -46,10 +46,10 @@ Each of the following bytes is followed by 2B (LE) size information that must no
 the remaining size of the entry content. Segments unknown to the implementation should be
 ignored.
 
-Leading bytes:
+Leading byte:
 	0xF8: reserved
 	0xF9: reserved
-	0xFA: ATTACHMENT
+	0xFA: BINARY ATTACHMENT
 		- type interpreted by header
 			- images (displayed aside the text):
 				- PNG: 89 50 4E 47 0D 0A 1A 0A
@@ -92,22 +92,24 @@ Leading bytes:
 		- first NUL byte that does not belong to compressed chunk (above) or does
 		  not terminate string code in this table terminates the entry and
 		  introduces PoW; generally the entry is searched backwards for the proof
-	0x06: ACK, ENDORSE
-		- mod op?
 	0x07: BEL, REPORT
+		- user reports this entry to moderators for evaluation
 		- no further content required, GUI clients should graphically distinguish
 		  the parent entry as reported for evaluation by moderators
 	0x08: BS, REVERT
-		- 
-
+		- nullifies operations (mod ops, votes, edits, ...) in parent entry
+			- only authors can nullify their votes and edits; nullified text
+			  content can be rendered with some "user changed his mind" icons
+			- how moderators can nullify each other's ops depends on their
+			  standing in user's subscriptions (client-specific, TBD)
 	0x0B: VT, VOTE
-		- followed by either: 1B code in predefined range 0x00..0x1F,
+		- followed by either: 1B code in predefined range 0x01..0x1F,
 		  or by a NUL-terminated UTF-8 string describing the vote type
 		- predefined vote codes:
-			- 0x00: UP (generic agreement)
-			- 0x01: DOWN (generic disagreement)
-			- 0x02: INFO (considered informative, but user disagrees)
-			- 0x03: FUNNY (user agrees, but it's joke, not informative)
+			- 0x01: UP (generic agreement)
+			- 0x02: DOWN (generic disagreement)
+			- 0x03: INFO (considered informative, but user disagrees)
+			- 0x04: FUNNY (user agrees, but it's joke, not informative)
 		- predefined vote strings:
 			- none, reserved for future extensions
 	0x10: DLE, SIDEBAND DATA SET/EDIT
@@ -125,8 +127,7 @@ Leading bytes:
 			- 0x03: ??? footer ???
 			- 0x09: ??? title bar ???
 			- 0x0B: sidebar - set/change identity/channel sidebar text
-	0x15: NAK, REMOVED
-		- mod op
+	0x16: SYN, CHAINING
 		- 
 
 	0x1A: SUB, EDIT
@@ -137,13 +138,40 @@ Leading bytes:
 		- NOTE: content outside EDITs should be appended to displayed
 		        representation of the original content
 
+TBD:
+----
+	MOD OPS...
+	0x06: ACK, ENDORSE
+		- TBD
+		- mod op?
+		- or plain "read" indicator for IMs?
+	0x15: NAK, REMOVED
+		- mod op
+		- 
+UNUSED BYTES/CODEPOINTS:
+	0x04 EOT
+	0x05 ENQ
+	0x0C FF
+	0x0D CR
+	0x0E SO
+	0x0F SI
+	0x15 NAK
+	0x17 ETB
+	0x19 EM
+	0x1C FS
+	0x1D GS
+	0x1E RS
+	0x1F US
+
 Other code points with specific meaning:
 ----------------------------------------
-Generally defines visual representation of text.
+Generally define visual representation of text.
 
 Code points:
-	0x0001: SOH, heading, render until CAN
+	0x0001: SOH, heading, render until STX
+	0x0002: STX, text, cancels heading started with SOH
 	0x0003: ETX, end of text, render "More..." button here and hide rest
+	0x0009: HT, TAB, standard meaning, column alignment
 	0x????: ???, spoiler, hidden by client app until intentionaly revealed
 	0x000A: LF, newline
 		- two LF in sequence should render as 3/4 line height space
@@ -161,8 +189,10 @@ Text formatting:
 		- TODO: more intensive, or less (scale?)
 		- TODO: color? semantic colors?
 
+TODO: Parent entry hash
 TODO: Use TAB, FS, GS, RS and US for simple tables
 TODO: crosspost mark
 TODO: junctions???
 TODO: stream starts
-TODO: mods: ban, move, merge, nsfw/nsfl, 
+TODO: mods: ban, move, merge, nsfw/nsfl, remove, endorse
+TODO: ENQ? users pinging OP for update?

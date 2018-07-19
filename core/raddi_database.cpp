@@ -90,7 +90,7 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
         case raddi::entry::not_an_announcement:
 
             // find announcement of author of this entry
-            //  - note that 'author' identity instance allocates only space for fixed fields (public_key)
+            //  - note that 'author' identity instance allocates only stack space for fixed fields (public_key)
 
             raddi::identity author;
             if (!this->identities->get (entry->id.identity, read::content,
@@ -127,6 +127,7 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
                 // parent is normal channel or identity channel: entry is a thread, either in a normal channel or in an identity channel
                 top->thread = entry->id;
                 top->channel = entry->parent;
+                return raddi::db::classify;
 
             } else
             if (this->threads->get (entry->parent, &r)) {
@@ -134,17 +135,16 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
                 // parent is thread: entry is a top level comment within a thread (or vote on the thread)
                 top->channel = r.parent;
                 top->thread = entry->parent;
+                return raddi::db::classify;
 
             } else
             if (this->data->get (entry->parent, &r)) {
 
                 // parent is normal entry: nested comment, vote or stuff
                 *top = r.top ();
-
-            } else {
-                return raddi::db::rejected; // unreachable branch
-            }
-            return raddi::db::classify;
+                return raddi::db::classify;
+            } else
+                return raddi::db::detached;
     }
     return raddi::db::rejected; // unreachable
 }

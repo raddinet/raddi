@@ -739,6 +739,9 @@ bool reply (const wchar_t * opname, const wchar_t * to) {
         if (!message.parent.parse (to))
             return raddi::log::error (0x18, to);
 
+        // TODO: if option "append-parent-hash"
+        //  - fetch parent, hash, append
+
         if (validate_identity_key (opname, identity, identity_size, key)) {
 
             if (database.get (message.id, nullptr, nullptr))

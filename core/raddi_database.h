@@ -161,7 +161,7 @@ namespace raddi {
         //
         enum assessment {
             rejected = 0, // invalid, don't insert to the database
-            detached = 1, // valid, but database misses parent (unsubmitted perhaps), can't insert
+            detached = 1, // valid, but database misses parent (unsubmitted perhaps), can't insert (yet)
             classify = 2, // valid, insert at your discretion
             required = 3, // required, insert if possible
         };
