@@ -105,6 +105,8 @@ Leading bytes:
 	0x0B: VT, VOTE
 		- followed by either: 1B code in predefined range 0x01..0x1F,
 		  or by a NUL-terminated UTF-8 string describing the vote type
+		- client app is free to ignore votes embedded in compressed or encrypted
+		  data (not that it isn't free to ignore them altogether, just saying)
 		- predefined vote codes:
 			- 0x01: UP (generic agreement)
 			- 0x02: DOWN (generic disagreement)
@@ -128,8 +130,8 @@ Leading bytes:
 			- 0x09: ??? title bar ???
 			- 0x0B: sidebar - set/change identity/channel sidebar text
 	0x16: SYN, CHAINING
-		- 
-
+		- followed by 8 (TBD) bytes of hash (TBD) of parent entry to ensure valid
+		  chain of responses
 	0x1A: SUB, EDIT
 		- valid only when user edits his own entry; then the entry may contain
 		  multiple EDITs which may not overlap
