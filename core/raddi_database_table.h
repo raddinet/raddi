@@ -63,7 +63,7 @@ public:
     //  - if parent entry is missing from the table the insertion fails
     //     - i.e. the node didn't see channel/thread begin (yet) and will request the data later manually
     //
-    bool insert (const void * data, std::size_t size, const root &, bool & exists);
+    bool insert (const entry * entry, std::size_t size, const root &, bool & exists);
 
     // erase
     //  - erases specified entry from the table

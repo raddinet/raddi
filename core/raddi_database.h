@@ -169,8 +169,13 @@ namespace raddi {
 
         // insert
         //  - 
+        //  - returns: true - if successfully inserted or entry is already in database and verified
+        //                    to be the same or verification is disabled (reinsertion_validation)
+        //                     - 'exists' is set to true/false to report that information
+        //             false - 
+        //                   - 'exists' is also false on disk/memory failure
         //
-        bool insert (const void * data, std::size_t size, const root &, bool & exists);
+        bool insert (const entry * entry, std::size_t size, const root &, bool & exists);
 
         // erase
         //  - 

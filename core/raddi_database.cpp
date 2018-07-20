@@ -149,8 +149,7 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
     return raddi::db::rejected; // unreachable
 }
 
-bool raddi::db::insert (const void * data, std::size_t size, const root & top, bool & exists) {
-    auto entry = static_cast <const raddi::entry *> (data);
+bool raddi::db::insert (const entry * entry, std::size_t size, const root & top, bool & exists) {
 
     // when inserting to table, size is always less or equal to (0xFFFF - 16) (AES overhead)
     // and gets reduced by 88 bytes (entry header) thus allowing us to add up to 104 bytes
@@ -158,16 +157,16 @@ bool raddi::db::insert (const void * data, std::size_t size, const root & top, b
 
     switch (entry->is_announcement ()) {
         case raddi::entry::new_identity_announcement:
-            return this->identities->insert (data, size, top, exists);
+            return this->identities->insert (entry, size, top, exists);
         case raddi::entry::new_channel_announcement:
-            return this->channels->insert (data, size, top, exists);
+            return this->channels->insert (entry, size, top, exists);
 
         case raddi::entry::not_an_announcement:
             if ((entry->id == top.thread) && (entry->parent == top.channel)) {
-                return this->threads->insert (data, size, top, exists);
+                return this->threads->insert (entry, size, top, exists);
             }
     }
-    return this->data->insert (data, size, top, exists);
+    return this->data->insert (entry, size, top, exists);
 }
 
 bool raddi::db::get (const raddi::eid & entry, void * buffer, std::size_t * length) const {

@@ -59,9 +59,7 @@ public:
     // classify
     //  - parses entry and initializes members other than 'data'
     //
-    inline bool classify (const void * data, std::size_t size, const raddi::db::root & top) {
-        auto entry = reinterpret_cast <const raddi::entry *> (data);
-
+    inline bool classify (const entry * entry, std::size_t size, const raddi::db::root & top) {
         this->id = entry->id;
         this->parent = entry->parent;
         this->top_ = top;
@@ -112,9 +110,9 @@ public:
     // classify
     //  - parses entry and initializes members other than 'data'
     //
-    inline bool classify (const void * data, std::size_t size, const raddi::db::root & top) {
-        this->id = reinterpret_cast <const raddi::entry *> (data)->id;
-        this->parent = reinterpret_cast <const raddi::entry *> (data)->parent;
+    inline bool classify (const entry * entry, std::size_t size, const raddi::db::root & top) {
+        this->id = entry->id;
+        this->parent = entry->parent;
         return true;
     }
 };
@@ -168,8 +166,8 @@ public:
     // classify
     //  - parses entry and initializes members other than 'data'
     //
-    inline bool classify (const void * entry, std::size_t size, const raddi::db::root & top) {
-        this->id = reinterpret_cast <const raddi::channel *> (entry)->id;
+    inline bool classify (const entry * entry, std::size_t size, const raddi::db::root & top) {
+        this->id = entry->id;
 
         // allow insertion only if the identity entry will fit
         return size < sizeof (raddi::entry) + (1 << length_bits);
@@ -227,8 +225,8 @@ public:
     // classify
     //  - parses entry and initializes 'id'
     //
-    inline bool classify (const void * entry, std::size_t size, const raddi::db::root & top) {
-        this->id = reinterpret_cast <const raddi::identity *> (entry)->id.identity;
+    inline bool classify (const entry * entry, std::size_t size, const raddi::db::root & top) {
+        this->id = entry->id.identity;
 
         // allow insertion only if the identity entry will fit
         return size < sizeof (raddi::entry) + (1 << length_bits);

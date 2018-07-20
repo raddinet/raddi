@@ -221,9 +221,7 @@ void raddi::db::shard <Key>::unsynchronized_insert_to_cache (const Key & r) {
 }
 
 template <typename Key>
-bool raddi::db::shard <Key>::insert (const db::table <Key> * table, const void * data, std::size_t size, const root & top, bool & exists) {
-    auto entry = static_cast <const raddi::entry *> (data);
-
+bool raddi::db::shard <Key>::insert (const db::table <Key> * table, const entry * entry, std::size_t size, const root & top, bool & exists) {
     exclusive guard (this->lock);
 
     if (!table->db.settings.reinsertion_validation) {
@@ -239,18 +237,18 @@ bool raddi::db::shard <Key>::insert (const db::table <Key> * table, const void *
             if (size != length) {
                 return this->report (log::level::data, 7, entry->id.serialize (), size, length);
             }
-            if (std::memcmp (buffer, data, size) != 0) {
+            if (std::memcmp (buffer, entry, size) != 0) {
                 return this->report (log::level::data, 7, entry->id.serialize (), size, length);
             }
         }
     }
 
     return exists
-        || this->unsynchronized_insert (table, data, size, top);
+        || this->unsynchronized_insert (table, entry, size, top);
 }
 
 template <typename Key>
-bool raddi::db::shard <Key>::unsynchronized_insert (const db::table <Key> * table, const void * data, std::size_t size, const root & top) {
+bool raddi::db::shard <Key>::unsynchronized_insert (const db::table <Key> * table, const entry * entry, std::size_t size, const root & top) {
     if (size >= sizeof (raddi::entry) + raddi::proof::min_size
      && size <= sizeof (raddi::entry) + raddi::entry::max_content_size) {
 
@@ -264,13 +262,13 @@ bool raddi::db::shard <Key>::unsynchronized_insert (const db::table <Key> * tabl
             const auto iposition = this->index.tell ();
             const auto cposition = this->content.tell ();
 
-            if (!this->content.write (reinterpret_cast <const char *> (data) + prefix, size - prefix)) {
+            if (!this->content.write (reinterpret_cast <const char *> (entry) + prefix, size - prefix)) {
                 this->content.resize (cposition);
                 return this->report (log::level::error, 15, this->path (table));
             }
 
             Key row;
-            if (row.classify (data, size, top)) {
+            if (row.classify (entry, size, top)) {
                 row.data.offset = cposition;
                 row.data.length = size - sizeof (raddi::entry);
 
@@ -287,9 +285,13 @@ bool raddi::db::shard <Key>::unsynchronized_insert (const db::table <Key> * tabl
                     this->report (log::level::note, 14, this->path (table), row.id);
                     return true;
                 } catch (const std::bad_alloc &) {
-                    this->report (log::level::error, 16, this->path (table));
-                    this->unsynchronized_close ();
-                    this->cache.shrink_to_fit (); // bad_alloc???
+                    try {
+                        this->report (log::level::error, 16, this->path (table));
+                        this->unsynchronized_close ();
+                        this->cache.shrink_to_fit ();
+                    } catch (const std::bad_alloc &) {
+                        // not much to try here
+                    }
                 }
             } else {
                 this->report (log::level::error, 24, this->path (table), row.id, size);

@@ -55,10 +55,10 @@ void raddi::db::table <Key>::flush () {
 }
 
 template <typename Key>
-bool raddi::db::table <Key>::insert (const void * data, std::size_t size, const root & top, bool & exists) {
+bool raddi::db::table <Key>::insert (const entry * entry, std::size_t size, const root & top, bool & exists) {
     try {
         exclusive guard (this->lock);
-        return this->unsynchronized_get_shard (static_cast <const raddi::entry *> (data)->id.timestamp)->insert (this, data, size, top, exists);
+        return this->unsynchronized_get_shard (entry->id.timestamp)->insert (this, entry, size, top, exists);
     } catch (const std::bad_alloc &) {
         exists = false;
         return false;

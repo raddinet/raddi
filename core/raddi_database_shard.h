@@ -54,7 +54,7 @@ public:
     // insert
     //  - inserts whole entry (decoded protocol frame) into the shard, adding cached 'root' eids
     //
-    bool insert (const db::table <Key> *, const void * data, std::size_t size, const root &, bool & exists);
+    bool insert (const db::table <Key> *, const entry * data, std::size_t size, const root &, bool & exists);
 
     // erase
     //  - deletes entry from shard (overwrites with zeros actually)
@@ -115,7 +115,7 @@ private:
                              read = read::nothing, void * = nullptr, std::size_t * = nullptr, std::size_t = 0u);
     bool unsynchronized_read (typename std::vector <Key>::const_iterator i,
                               read = read::nothing, void * = nullptr, std::size_t = 0u);
-    bool unsynchronized_insert (const db::table <Key> *, const void * data, std::size_t size, const root &);
+    bool unsynchronized_insert (const db::table <Key> *, const entry * data, std::size_t size, const root &);
 };
 
 #include "raddi_database_shard.tcc"
