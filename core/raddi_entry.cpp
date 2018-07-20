@@ -94,6 +94,7 @@ const raddi::proof * raddi::entry::proof (std::size_t size, std::size_t * proof_
 crypto_sign_ed25519ph_state raddi::entry::prehash (std::size_t size) const {
     crypto_sign_ed25519ph_state state;
     crypto_sign_ed25519ph_init (&state);
+    crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (raddi::protocol::magic), sizeof raddi::protocol::magic);
     crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (&this->id), sizeof this->id);
     crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (&this->parent), sizeof this->parent);
     crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (this->content ()), size - sizeof (entry));
