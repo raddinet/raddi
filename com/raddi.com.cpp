@@ -889,7 +889,7 @@ bool database_verification () {
             if (database.get (row.id, &identity, &identity_size)) {
 
                 if (identity.validate (&identity, identity_size)) {
-                    if (identity.verify (identity_size, nullptr, 0, identity.public_key)) {
+                    if (identity.verify (identity_size, identity.public_key)) {
                         printf ("OK\n");
                     } else {
                         printf ("DOES NOT VERIFY\n");
@@ -924,7 +924,7 @@ bool database_verification () {
             }
 
             if (suspect.validate (&suspect, suspect_size)) {
-                if (suspect.verify (suspect_size, &identity, identity_size, identity.public_key)) {
+                if (suspect.verify (suspect_size, identity.public_key)) {
                     printf ("OK\n");
                 } else {
                     printf ("DOES NOT VERIFY\n");
@@ -962,7 +962,7 @@ bool database_verification () {
             }
 
             if (suspect.validate (&suspect, suspect_size)) {
-                if (suspect.verify (suspect_size, &parent, parent_size, identity.public_key)) {
+                if (suspect.verify (suspect_size, identity.public_key)) {
                     printf ("OK\n");
                 } else {
                     printf ("DOES NOT VERIFY\n");
@@ -1000,7 +1000,7 @@ bool database_verification () {
             }
 
             if (suspect.validate (&suspect, suspect_size)) {
-                if (suspect.verify (suspect_size, &parent, parent_size, identity.public_key)) {
+                if (suspect.verify (suspect_size, identity.public_key)) {
                     printf ("OK\n");
                 } else {
                     printf ("DOES NOT VERIFY\n");
