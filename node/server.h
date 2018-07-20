@@ -17,7 +17,7 @@ bool StringToAddress (SOCKADDR_INET & address, const wchar_t * string) noexcept;
 
 // ReserveServerMemory
 //  - reserves slots for N receivers
-//  - value of 0 or higher than internal maximum (1024 now) disables reservation
+//  - value of 0 or higher than internal maximum disables reservation
 //    and allows unlimited connections, note that that is order of magnitudes slower (for now)
 //
 bool ReserveServerMemory (std::size_t n) noexcept;

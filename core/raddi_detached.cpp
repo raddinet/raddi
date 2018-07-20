@@ -60,7 +60,6 @@ std::size_t raddi::detached::unsynchronized_recursive_erase (const eid & parent,
 void raddi::detached::clean (std::uint32_t age) {
     exclusive guard (this->lock);
     this->data.erase (this->data.begin (), this->data.lower_bound (raddi::now () - age)); // TODO: raddi::older?
-    // TODO: include in 'rejected' or add custom counter?
 }
 
 std::size_t raddi::detached::unsynchronized_size () const {

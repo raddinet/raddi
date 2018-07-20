@@ -28,7 +28,7 @@ namespace raddi {
 
     public:
         counter inserted;
-        counter rejected;
+        counter rejected; // only actively rejected, data dropped by 'clean' = 'inserted' - 'processed' - 'rejected'
         counter processed;
 
         std::size_t top_size = 0;
