@@ -48,7 +48,8 @@ namespace raddi {
         std::map <std::uint32_t, std::uint32_t> request_limiter; // TODO: separate class
         std::uint32_t                           request_limiter_report_time = 0;
         std::uint32_t                           unsolicited = 0;
-        std::map <raddi::eid, std::uint32_t>    history_extension;
+        // std::map <raddi::eid, std::uint32_t>    history_extension;
+        std::uint32_t                           rejected = 0;
 
         raddi::address  peer; // inbound connections have port set to 0
         raddi::level    level; // not strictly required here, coordinator could do search

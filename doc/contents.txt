@@ -143,6 +143,7 @@ Leading bytes:
 TBD:
 ----
 	MOD OPS...
+	STREAM INTRODUCER
 	0x06: ACK, ENDORSE
 		- TBD
 		- mod op?

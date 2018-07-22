@@ -40,7 +40,7 @@ public:
     using Monitor <raddi::component::database>::start;
 
     // reload
-    //  - 
+    //  - attempts to reload index of shards from directory contents
     //
     bool reload ();
 

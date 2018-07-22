@@ -7,7 +7,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     DATABASE | NOTE | 1     "changes in directory, {1} bytes" // monitor
     DATABASE | NOTE | 2     "rescanning directory to process files previously in use" // monitor
     DATABASE | NOTE | 3     "resizing buffer to {1} bytes to improve performance" // monitor
-    // DATABASE | NOTE | 7     "rejected entry {1}, missing parent entry"
+    DATABASE | NOTE | 6     "parent {2} arrived, processing detached entry {1}"
+    DATABASE | NOTE | 7     "entry {1} detached, postponed until parent {2} arrives; cache pressure: {3}, highwater: {4}"
     DATABASE | NOTE | 8     "shards unloaded: {1} inactive ({2}s) and {3} over limit ({4})"
     DATABASE | NOTE | 12    "shard opened: {1}"
     DATABASE | NOTE | 13    "loaded {1} entries"

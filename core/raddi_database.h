@@ -127,7 +127,7 @@ namespace raddi {
 
         // db constructor
         //  - access: global file access mode for this instance
-        //            there can be only one writer and any number of reades per directoty (locked through .lock file)
+        //            there can be only one writer and any number of reades per directory (locked through .lock file)
         //
         db (file::access, const std::wstring & path);
         ~db ();
@@ -157,7 +157,7 @@ namespace raddi {
 
         // assess/assessment
         //  - verifies proof and signature entry against identity in database
-        //  - root is not provided for 'rejected' result or  if the database is not connected
+        //  - root is not provided for 'rejected' and 'detached' results
         //
         enum assessment {
             rejected = 0, // invalid, don't insert to the database
@@ -168,21 +168,26 @@ namespace raddi {
         assessment assess (const void * data, std::size_t size, root *);
 
         // insert
-        //  - 
+        //  - inserts entry with its root information into appropriate table in the database
         //  - returns: true - if successfully inserted or entry is already in database and verified
         //                    to be the same or verification is disabled (reinsertion_validation)
         //                     - 'exists' is set to true/false to report that information
-        //             false - 
-        //                   - 'exists' is also false on disk/memory failure
+        //             false - disk/memory failure; 'exists' is always false
         //
         bool insert (const entry * entry, std::size_t size, const root &, bool & exists);
 
         // erase
-        //  - 
+        //  - erases specified entry from the database
+        //  - if 'thorough' then also content is overwritten by zeros
+        //  - returns false on error or if no such entry is present
         //
         bool erase (const eid & entry, bool thorough = false);
 
-        bool get (const eid & entry, void * buffer, std::size_t * length) const;
+        // get
+        //  - finds 'eid' in an appropriate table and retrieves complete entry content
+        //  - returns true on success, false on error or if no such entry exists
+        //
+        bool get (const eid &, void * buffer, std::size_t * length) const;
 
         // TODO: add symmetric cipher (or just XOR) for data files and store it alongside of them, this is just to prevent raw drive search
 
@@ -245,9 +250,7 @@ namespace raddi {
         //  - channels - root channel entries and directly following meta entries
         //  - identities - root identity entries and directly following meta entries
         //  - NOTE: sent entries and private keys are stored by client apps, not nodes
-
-        // TODO? table changes; // changes in identity/channel descriptions and sidebar info
-        // TODO? table online; // cache of special channel for identities participating in chat
+        //  - TODO: figure out a clean way to remove the unneccessary indirection
 
         std::unique_ptr <table <row>> data;
         std::unique_ptr <table <trow>> threads;
