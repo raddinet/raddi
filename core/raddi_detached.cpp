@@ -11,14 +11,9 @@ void raddi::detached::insert (const eid & parent, const entry * entry, std::size
     this->data [parent.timestamp].emplace (parent.identity, std::vector <std::uint8_t> (data, data + size));
     this->inserted += size;
 
-    auto current_size = this->unsynchronized_size ();
-    if (this->top_size < current_size) {
-        this->top_size = current_size;
-    }
-
-    auto current_memory = this->unsynchronized_memory ();
-    if (this->top_memory < current_memory) {
-        this->top_memory = current_memory;
+    auto current = this->unsynchronized_size ();
+    if (this->highwater.n < current.n || this->highwater.bytes < current.bytes) {
+        this->highwater = current;
     }
 }
 
@@ -62,22 +57,14 @@ void raddi::detached::clean (std::uint32_t age) {
     this->data.erase (this->data.begin (), this->data.lower_bound (raddi::now () - age)); // TODO: raddi::older?
 }
 
-std::size_t raddi::detached::unsynchronized_size () const {
-    std::size_t n = 0;
+counter raddi::detached::unsynchronized_size () const {
+    counter counter;
     for (const auto & m : this->data) {
-        n += m.second.size ();
-    }
-    return n;
-}
-
-std::size_t raddi::detached::unsynchronized_memory () const {
-    std::size_t n = sizeof this->data;
-    for (const auto & m : this->data) {
-        n += sizeof m;
+        counter.bytes += sizeof m;
         for (const auto & mm : m.second) {
-            n += sizeof mm;
-            n += mm.second.size ();
+            counter.bytes += sizeof mm;
+            counter += mm.second.size ();
         }
     }
-    return n;
+    return counter;
 }

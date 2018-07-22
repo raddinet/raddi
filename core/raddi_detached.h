@@ -30,9 +30,7 @@ namespace raddi {
         counter inserted;
         counter rejected; // only actively rejected, data dropped by 'clean' = 'inserted' - 'processed' - 'rejected'
         counter processed;
-
-        std::size_t top_size = 0;
-        std::size_t top_memory = 0;
+        counter highwater;
 
     public:
 
@@ -52,7 +50,7 @@ namespace raddi {
         //  - signature must be compatible with: void callback (std::uint8_t *, std::size_t)
         //
         template <typename Callback>
-        void accept (const eid & parent, Callback callback) {
+        bool accept (const eid & parent, Callback callback) {
             this->lock.acquire_exclusive ();
 
             auto mm = this->data.find (parent.timestamp);
@@ -71,14 +69,19 @@ namespace raddi {
                     this->lock.release_exclusive ();
 
                     for (const auto & e : entries) {
-                        callback (e.data (), e.size ());
-                        this->processed += e.size ();
+                        if (callback (e.data (), e.size ())) {
+                            this->processed += e.size ();
+                        } else
+                            return false;
                     }
                 } catch (...) {
                     this->lock.release_exclusive ();
                     throw;
                 }
+            } else {
+                this->lock.release_exclusive ();
             }
+            return true;
         }
 
         // clean
@@ -87,26 +90,17 @@ namespace raddi {
         void clean (std::uint32_t age);
 
         // size
-        //  - returns number of entries currently held
+        //  - returns number of entries currently held and amount of memory used by entries and structures that hold them
+        //  - does not attempt to estimate allocation overhead
         //
-        std::size_t size () const {
+        counter size () const {
             immutability guard (this->lock);
             return this->unsynchronized_size ();
         }
 
-        // memory
-        //  - returns amount of memory used by entries and structures that hold them
-        //  - does not attempt to estimate allocation overhead
-        //
-        std::size_t memory () const {
-            immutability guard (this->lock);
-            return this->unsynchronized_memory ();
-        }
-
     private:
         std::size_t unsynchronized_recursive_erase (const eid & parent, unsigned int iteration = 0);
-        std::size_t unsynchronized_size () const;
-        std::size_t unsynchronized_memory () const;
+        counter unsynchronized_size () const;
     };
 }
 
