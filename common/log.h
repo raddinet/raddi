@@ -57,6 +57,11 @@ namespace raddi {
             disabled = 0xFFFFF
         };
 
+        namespace settings {
+            extern log::level level;
+            extern log::level display;
+        }
+
         // initialize/display
         //  - parses string to determine log path and level
         //    for log file (initialize) or console output (display)

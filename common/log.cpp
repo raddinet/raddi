@@ -17,17 +17,15 @@
 wchar_t raddi::log::path [768];
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
-namespace {
-    namespace settings {
 #ifdef NDEBUG
-        raddi::log::level level = raddi::log::level::error;
-        raddi::log::level display = raddi::log::level::event;
+raddi::log::level raddi::log::settings::level = raddi::log::level::error;
+raddi::log::level raddi::log::settings::display = raddi::log::level::event;
 #else
-        raddi::log::level level = raddi::log::level::event;
-        raddi::log::level display = raddi::log::level::all;
+raddi::log::level raddi::log::settings::level = raddi::log::level::event;
+raddi::log::level raddi::log::settings::display = raddi::log::level::all;
 #endif
-    }
 
+namespace {
     bool compare_prefix (const wchar_t * string, const wchar_t * prefix) {
         auto length = std::wcslen (prefix);
         return !std::wcsncmp (string, prefix, length)
