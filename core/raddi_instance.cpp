@@ -25,6 +25,9 @@ raddi::instance::instance (bool global) {
     SetLastError (this->status);
 }
 
+bool raddi::instance::set (const wchar_t * name, uuid value) {
+    return this->set (name, REG_BINARY, &value, sizeof value);
+}
 bool raddi::instance::set (const wchar_t * name, FILETIME value) {
     return this->set (name, REG_QWORD, &value, sizeof (FILETIME));
 }
@@ -50,6 +53,16 @@ bool raddi::instance::set (const wchar_t * name, DWORD type, const void * data, 
         return false;
 }
 
+template <> uuid raddi::instance::get <uuid> (const wchar_t * name) const {
+    uuid data;
+    DWORD size = sizeof data;
+    if (this->get (name, REG_QWORD, reinterpret_cast <BYTE *> (&data), &size)) {
+        return data;
+    } else {
+        data.null ();
+        return data;
+    }
+}
 template <> FILETIME raddi::instance::get <FILETIME> (const wchar_t * name) const {
     FILETIME data;
     DWORD size = sizeof data;

@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <string>
+#include "..\common\uuid.h"
 
 namespace raddi {
 
@@ -50,6 +51,7 @@ namespace raddi {
             bool set (const wchar_t * name, unsigned long value);
             bool set (const wchar_t * name, unsigned int value);
             bool set (const wchar_t * name, FILETIME value);
+            bool set (const wchar_t * name, uuid value);
 
             // get
             //  - 
@@ -78,11 +80,12 @@ namespace raddi {
     };
 }
 
+template <> uuid               raddi::instance::get <uuid>               (const wchar_t *) const;
 template <> FILETIME           raddi::instance::get <FILETIME>           (const wchar_t *) const;
 template <> unsigned int       raddi::instance::get <unsigned int>       (const wchar_t *) const;
 template <> unsigned long      raddi::instance::get <unsigned long>      (const wchar_t *) const;
 template <> unsigned long long raddi::instance::get <unsigned long long> (const wchar_t *) const;
 
-template <> std::wstring raddi::instance::get <std::wstring> (const wchar_t *) const;
+template <> std::wstring       raddi::instance::get <std::wstring>       (const wchar_t *) const;
 
 #endif
