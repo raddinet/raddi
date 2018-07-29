@@ -152,9 +152,8 @@ raddi::db::shard <Key> * raddi::db::table <Key>::unsynchronized_get_shard (std::
 
     // split shard if size reaches or exceeds set maximum
     // TODO: use middle value, not average, so that we don't end up with empty shard
-    // TODO: commented out because it doesn't seem to be reliable at this point
 
-    /* if (i->cache.size () >= this->db.settings.maximum_shard_size) {
+    if (i->cache.size () >= this->db.settings.maximum_shard_size) {
 
         auto divider = 0uLL;
         auto next = i + 1;
