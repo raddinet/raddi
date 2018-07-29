@@ -28,7 +28,7 @@ namespace raddi {
         //
         void subscribe (const eid &, std::size_t max_individual_subscriptions = (std::size_t) -1);
         void subscribe_to_everything ();
-        void unsubscribe (const eid &);
+        bool unsubscribe (const eid &); // returns true if removed
 
         bool is_subscribed (const eid * begin, const eid * end) const;
 

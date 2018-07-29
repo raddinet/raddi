@@ -21,7 +21,7 @@ void raddi::subscriptions::subscribe (const eid & subscription, std::size_t max_
     // TODO: stream support: stream EIDs need to be added always, if still congested, simply delete oldest
 }
 
-void raddi::subscriptions::unsubscribe (const eid & subscription) {
+bool raddi::subscriptions::unsubscribe (const eid & subscription) {
     if (!this->everything) {
         exclusive guard (this->lock);
 
@@ -30,8 +30,10 @@ void raddi::subscriptions::unsubscribe (const eid & subscription) {
         if ((ii != ie) && (*ii == subscription)) {
             this->data.erase (ii);
             this->changed = true;
+            return true;
         }
     }
+    return false;
 }
 
 void raddi::subscriptions::subscribe_to_everything () {
