@@ -7,6 +7,19 @@
 uuid::uuid () {
     UuidCreate ((UUID *) this->data);
 }
+void uuid::null () {
+    for (auto & byte : this->data) {
+        byte = 0;
+    }
+}
+bool uuid::is_null () const {
+    for (auto & byte : this->data) {
+        if (byte != 0)
+            return false;
+    }
+    return true;
+}
+
 bool uuid::parse (const char * string) {
     if (*string == '{') {
         ++string;

@@ -22,6 +22,9 @@ public:
     inline bool operator >  (const uuid & other) const { return std::memcmp (this->data, other.data, 16) >  0; }
     inline bool operator >= (const uuid & other) const { return std::memcmp (this->data, other.data, 16) >= 0; }
 
+    void null ();
+    bool is_null () const;
+
     bool parse (const char *);
     bool parse (const wchar_t *);
 
