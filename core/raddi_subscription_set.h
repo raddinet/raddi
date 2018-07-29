@@ -68,9 +68,6 @@ namespace raddi {
         //  - saves all subscriptions that has changed
         //
         void flush () const;
-
-    private:
-        std::wstring member (const uuid & app) const;
     };
 }
 

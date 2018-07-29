@@ -68,11 +68,7 @@ void raddi::subscription_set::flush () const {
     immutability guard (this->lock);
     for (const auto & [app, sub] : this->data) {
         if (sub.changed) {
-            sub.save (this->member (app));
+            sub.save (this->path + app.c_wstr ());
         }
     }
-}
-
-std::wstring raddi::subscription_set::member (const uuid & app) const {
-    return this->path + app.c_wstr ();
 }
