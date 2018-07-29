@@ -6,22 +6,20 @@ github repo:
    - release - installer exe in release, separated exe/dlls in subdirs
    - portable
 
+channel subscriptions (coordinator) + reporting history
+channel subscriptions (commands)
+
 sane coordinator status display
 
 more info into overview
-
-channel subscriptions (coordinator) + reporting history
-channel subscriptions (commands)
 
 node::refused -> coordinator? for save/load
 
 bad input reporting in node
 
 tables: test and fix sharding
-
 tables: add code for client app to process external changes, see 'process' member function
-
-test db erase function
+tables: test db erase function
 
 perfect compression dictionary for english text
  - https://sourceforge.net/p/lzmautils/discussion/708858/thread/e40fbf99/

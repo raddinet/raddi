@@ -73,6 +73,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     DATABASE | ERROR | 22   "failed to access storage {1}, error {ERR}"
     DATABASE | ERROR | 23   "file size overflow; 64-bit version needed for shards above {2} MB on current settings, this one is {1} MB"
     DATABASE | ERROR | 24   "entry {2} ({3} bytes) classification failed when inserting into shard ""{1}"""
+    DATABASE | ERROR | 25   "failed to access storage {1}, not an UUID"
 
     // coordinator data errors
     DATABASE | ERROR | 0x20 "not enough memory to load peer addresses"
