@@ -2,6 +2,7 @@
 #define RADDI_SUBSCRIPTION_SET_H
 
 #include "../common/log.h"
+#include "../common/uuid.h"
 #include "raddi_subscriptions.h"
 #include <string>
 #include <map>
@@ -18,9 +19,9 @@ namespace raddi {
     class subscription_set
         : log::provider <component::database> {
 
-        mutable ::lock                          lock;
-        std::map <std::wstring, subscriptions>  data;
-        const std::wstring                      path;
+        mutable ::lock                  lock;
+        std::map <uuid, subscriptions>  data;
+        const std::wstring              path;
 
     public:
         subscription_set (const std::wstring & dbpath, const std::wstring & name)
@@ -31,8 +32,8 @@ namespace raddi {
         //  - add or removes EID from subscription set associated with the 'app'
         //  - 'app' is used for file name used to store these details, so use it carefully
         //
-        void subscribe (const std::wstring & app, const eid &);
-        bool unsubscribe (const std::wstring & app, const eid &);
+        void subscribe (const uuid & app, const eid &);
+        bool unsubscribe (const uuid & app, const eid &);
 
         // is_subscribed
         //  - returns true if any of the app subscriptions contain one of EIDs
@@ -69,7 +70,7 @@ namespace raddi {
         void flush () const;
 
     private:
-        std::wstring member (const std::wstring & app) const;
+        std::wstring member (const uuid & app) const;
     };
 }
 
