@@ -163,25 +163,25 @@ bool raddi::db::insert (const entry * entry, std::size_t size, const root & top,
 
         case raddi::entry::not_an_announcement:
             if ((entry->id == top.thread) && (entry->parent == top.channel)) {
-                return this->threads->insert (entry, size, top, exists);
+                return this->threads->insert (entry, size, top, exists)
+                    && this->data->insert (entry, size, top, exists);
             }
     }
     return this->data->insert (entry, size, top, exists);
 }
 
 bool raddi::db::erase (const eid & entry, bool thorough) {
-    if (entry.identity.timestamp != entry.timestamp)
+    if (entry.identity.timestamp != entry.timestamp) {
+        this->threads->erase (entry, thorough);
         return this->data->erase (entry, thorough)
-            || this->threads->erase (entry, thorough)
             || this->channels->erase (entry, thorough);
-    else
+    } else
         return this->identities->erase (entry.identity, thorough);
 }
 
 bool raddi::db::get (const eid & entry, void * buffer, std::size_t * length) const {
     if (entry.identity.timestamp != entry.timestamp)
         return this->data->get (entry, buffer, length)
-            || this->threads->get (entry, buffer, length)
             || this->channels->get (entry, buffer, length);
     else
         return this->identities->get (entry.identity, buffer, length);
