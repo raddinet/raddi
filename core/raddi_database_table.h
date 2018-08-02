@@ -107,6 +107,7 @@ public:
     // select
     //  - calls 'callback' for entries within provided range that both 'constain' and 'query'
     //    returns true on
+    //  - range 'oldest' - 'latest' is inclusive, entries having those timestamps are returned
     //  - returns number of entries found within the range for which 'constrain' returned true
     //  - signatures:
     //      - bool constrain (const Key &, const auto &);

@@ -21,6 +21,8 @@ namespace raddi {
     class db
         : log::provider <component::database> {
 
+        file lock;
+
     public:
         // root
         //  - top level entry references stored for fast search
@@ -210,20 +212,6 @@ namespace raddi {
         std::wstring table_directory_path (const std::wstring & table) const;
 
     private:
-        file lock;
-
-        // following internal classes are defined in their own headers
-
-        enum class read : unsigned int; // raddi_database_row.h
-
-        // rows
-        //  - raddi_database_row.h
-        //  - more compact, prefixed, rows for special tables
-
-        struct row;
-        struct trow; // threads index row
-        struct crow; // channels index row
-        struct irow; // identities index row
 
         // shards
         //  - raddi_database_shard.h
@@ -239,14 +227,27 @@ namespace raddi {
 
     public:
 
+        // following internal classes are defined in their own headers
+
+        enum class read : unsigned int; // raddi_database_row.h
+
+        // rows
+        //  - raddi_database_row.h
+        //  - more compact, prefixed, rows for special tables
+
+        struct row;
+        struct trow; // threads index row
+        struct crow; // channels index row
+        struct irow; // identities index row
+
         // peers
         //  - raddi_database_peerset.h
 
         class peerset;
 
         // tables
-        //  - data - all data that doesn not belong in any other table
-        //  - threads - root thread entries
+        //  - data - data that are not announcements (channels or identities)
+        //  - threads - root thread entries (copy for fast lookup)
         //  - channels - root channel entries and directly following meta entries
         //  - identities - root identity entries and directly following meta entries
         //  - NOTE: sent entries and private keys are stored by client apps, not nodes

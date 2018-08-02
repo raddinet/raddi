@@ -146,7 +146,7 @@ namespace raddi {
             std::uint32_t threshold;
 
             // flags
-            //  - 0x0001 - if set, peer can (when supported) ask for more details by 'detail_xxx' request
+            //  - TODO: 0x0001 - if set, peer can (when supported) ask for more details by 'detail_xxx' request
             //  - other bits are reserved for future use and should remain 0 by default
             //
             std::uint16_t flags;
@@ -218,20 +218,26 @@ namespace raddi {
 
         // subscription
         //  - content following request header with type == 'subscribe'
-        //  - peer subscribes to receive entries descending 'channel' (or thread?)
+        //  - peer subscribes to receive entries descending 'channel' (can also be thread, TODO: verify)
         //  - NOTE: after too many subscriptions the peers will just send everything
         //
         struct subscription {
             eid                             channel;
             short_history <sizeof (eid)>    history;
 
+            static constexpr std::size_t size (std::size_t length) {
+                return sizeof (eid)
+                     + short_history <sizeof (eid)> ::size (length);
+            }
+
+            static constexpr std::size_t    depth = decltype (history) ::depth;
             static constexpr std::size_t    minimal_size = sizeof (eid)
                                                          + decltype (request::subscription::history)::minimal_size;
         };
         
         // download
         //  - content following request header with type == 'download'
-        //  - peer requests to immediately download all entries that descend 'parent'
+        //  - peer requests to immediately download all entries that descend 'parent' channel or thread
         //    that were created at equal or later time than 'threshold'
         //
         struct download {
