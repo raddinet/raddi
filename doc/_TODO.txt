@@ -6,20 +6,27 @@ github repo:
    - release - installer exe in release, separated exe/dlls in subdirs
    - portable
 
-channel subscriptions (coordinator) + reporting history
-channel subscriptions (commands)
+channel subscriptions (commands) -> raddi.com + test
 
 sane coordinator status display
-
 more info into overview
 
 node::refused -> coordinator? for save/load
 
 bad input reporting in node
 
-tables: test and fix sharding
+node: old data deletion (whole shards?) except 'retained' channels/threads
+
+coordinator: congestion control
+coordinator: small random delay to sends to harden agains origin analysis -> connection.send
+connection::send -> prioritization and delay support
+
+coordinator: support for 'flags' 0x0001 (detail request) in channel/identites history and subscriptions history
+
+tables: test and fix shard splitting
 tables: add code for client app to process external changes, see 'process' member function
 tables: test db erase function
+tables: evaluate proper size limits so the index files fit exactly within whole multiples of a typical cluster size
 
 perfect compression dictionary for english text
  - https://sourceforge.net/p/lzmautils/discussion/708858/thread/e40fbf99/
@@ -35,6 +42,7 @@ perfect compression dictionary for english text
  - compress initial bodies with established dictionary, report results, try different dictionaries, compare results
 
 historical data replay flooding protection in raddi::db::classify case
+ - start rejecting old entries from connection that we did not asked (connection->history_extension)
 
 move connection::request_limiter to separate class
 
