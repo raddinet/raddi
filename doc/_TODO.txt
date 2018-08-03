@@ -8,20 +8,11 @@ github repo:
 
 channel subscriptions (commands) -> raddi.com + test
 
-sane coordinator status display
-more info into overview
+subscriptions/bans: test!!!
 
-node::refused -> coordinator? for save/load
+node::refused -> coordinator for save/load
 
-bad input reporting in node
-
-node: old data deletion (whole shards?) except 'retained' channels/threads
-
-coordinator: congestion control
-coordinator: small random delay to sends to harden agains origin analysis -> connection.send
-connection::send -> prioritization and delay support
-
-coordinator: support for 'flags' 0x0001 (detail request) in channel/identites history and subscriptions history
+report bad inputs (from source) in node
 
 tables: test and fix shard splitting
 tables: add code for client app to process external changes, see 'process' member function
@@ -44,10 +35,23 @@ perfect compression dictionary for english text
 historical data replay flooding protection in raddi::db::classify case
  - start rejecting old entries from connection that we did not asked (connection->history_extension)
 
+sane coordinator status display
+more info into overview
+
 move connection::request_limiter to separate class
+
+old data deletion (whole shards?) except 'retained' channels/threads
+
+coordinator: congestion control
+coordinator: small random delay to sends to harden agains origin analysis -> connection.send
+connection::send -> prioritization and delay support
+coordinator: support for 'flags' 0x0001 (detail request) in channel/identites history and subscriptions history
 
 merge raddi::detached, raddi::noticed and raddi::subscriptions
  - maybe one base template with 3 specializations
+
+split raddi stuff from node.cpp to raddi_node.cpp
+ - rename node.cpp to node_win.cpp
 
 rewrite log as noted in log.cpp or somewhere there in comment
 
@@ -64,10 +68,10 @@ common/string.h
     - node.cpp/raddi.com.cpp -> main args?
 
 consider http server? simple GET/POST support
+ - replace Source functionality?
  - POST - new identity/channel/post/etc.
  - GET - db queries? lists of identities/channels
        - deep tree data fetch?
- - replace Source functionality?
 
 document protocol
  - requirement: synchronized time
