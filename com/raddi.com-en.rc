@@ -39,6 +39,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
     MAIN | DATA  | 0x90 "warning: instance {1} is not broadcasting at the moment"
     MAIN | DATA  | 0x91 "warning: no node instance available"
+    MAIN | DATA  | 0x92 "error: {1} is not valid entry identifier"
 
     MAIN | EVENT | 0x91 "sending {2} bytes through {1}"
     MAIN | ERROR | 0x90 "transmission file {1} creation failed, error {ERR}"

@@ -14,9 +14,11 @@
 #include "../common/lock.h"
 #include "../common/file.h"
 #include "../common/options.h"
-#include "../node/platform.h"
+#include "../common/platform.h"
+
 #include "../core/raddi.h"
 
+uuid app;
 wchar_t buffer [65536];
 volatile bool quit = false;
 
@@ -347,6 +349,59 @@ std::size_t send (const raddi::instance & instance, const raddi::entry & entry, 
     }
 }
 
+// send
+//  - places command into instance's source directory for transmission
+// 
+std::size_t send (const raddi::instance & instance, enum class raddi::command::type & cmd) {
+    if (!instance.get <unsigned int> (L"broadcasting")) {
+        raddi::log::data (0x90, instance.pid);
+        SetLastError (ERROR_CONNECTION_UNAVAIL);
+    }
+
+    auto path = instance.get <std::wstring> (L"source") + std::to_wstring (raddi::microtimestamp ());
+
+    file f;
+    if (f.open (path, file::mode::create, file::access::write, file::share::none, file::buffer::temporary)) {
+        if (f.write (&cmd, sizeof cmd)) {
+            raddi::log::event (0x91, path, sizeof cmd);
+        } else {
+            raddi::log::error (0x91, path, sizeof cmd);
+        }
+        return sizeof cmd;
+    } else {
+        return raddi::log::error (0x90, path);
+    }
+}
+
+// send
+//  - places command and data into instance's source directory for transmission
+// 
+template <typename T>
+std::size_t send (const raddi::instance & instance, enum class raddi::command::type & cmd, const T & payload) {
+    if (!instance.get <unsigned int> (L"broadcasting")) {
+        raddi::log::data (0x90, instance.pid);
+        SetLastError (ERROR_CONNECTION_UNAVAIL);
+    }
+
+    auto path = instance.get <std::wstring> (L"source") + std::to_wstring (raddi::microtimestamp ());
+
+    file f;
+    if (f.open (path, file::mode::create, file::access::write, file::share::none, file::buffer::temporary)) {
+        if (f.write (&cmd, sizeof cmd)) {
+            if (f.write (&payload, sizeof payload)) {
+                raddi::log::event (0x91, path, sizeof cmd + sizeof payload);
+            } else {
+                raddi::log::error (0x91, path, sizeof payload);
+            }
+        } else {
+            raddi::log::error (0x91, path, sizeof cmd);
+        }
+        return sizeof cmd + sizeof payload;
+    } else {
+        return raddi::log::error (0x90, path);
+    }
+}
+
 bool go ();
 
 int wmain (int argc, wchar_t ** argw) {
@@ -402,6 +457,9 @@ int wmain (int argc, wchar_t ** argw) {
 #endif
     raddi::log::event (0xF0, raddi::log::path);
 
+    // TODO: registry storage for our uuid: /RADDI.net/com/uuid
+    // app.parse ();
+
     SetLastError (0);
     if (go ()) {
         return ERROR_SUCCESS;
@@ -429,6 +487,8 @@ bool reply (const wchar_t * opname, const wchar_t * to);
 bool list_identities ();
 bool list_channels ();
 
+bool subscription_command (enum class raddi::command::type, const wchar_t * eid);
+
 bool go () {
 
     // parameters settings global configuration first
@@ -447,10 +507,6 @@ bool go () {
     // TODO: install / uninstall / start / stop ... (service)
     //  - ADD/REMOVE "127.0.0.1 xxx.raddi.net" to c:\Windows\System32\Drivers\etc\hosts 
 
-    // TODO: subscribe/unsubscribe channel:eid?
-    // TODO: unsubscribe all app, remove all blacklists for app
-    // TODO: add/remove blacklisted thread/channel/identity
-
     // TODO: delete:eid database:xxx - TODO: offline or request node server to delete?
     // TODO: notify? - wait on db for an event?
     // TODO: list:instances, list:threads ...
@@ -459,8 +515,6 @@ bool go () {
     // TODO: clear peers (all)
 
     // TODO: set-log-level, set-display-level -> raddi::command
-
-    // TODO: raddi benchmark
 
     // now/timestamp/microtimestamp
     //  - will show current time in raddi format (hexadecimal since 1.1.2018, see raddi_timestamp.h)
@@ -533,9 +587,10 @@ bool go () {
         if (!std::wcscmp (parameter, L"channels")) {
             return list_channels ();
         }
-        // TODO: subscriptions
+        // TODO: threads
         // TODO: bans
         // TODO: rejected
+        // TODO: subscriptions/blacklisted/retained
     }
 
     if (auto parameter = option (argc, argw, L"new")) {
@@ -557,7 +612,41 @@ bool go () {
         return reply (L"reply", parameter);
     }
 
+    if (auto parameter = option (argc, argw, L"subscribe")) {
+        return subscription_command (raddi::command::type::subscribe, parameter);
+    }
+    if (auto parameter = option (argc, argw, L"unsubscribe")) {
+        return subscription_command (raddi::command::type::unsubscribe, parameter);
+    }
+    if (auto parameter = option (argc, argw, L"blacklist")) {
+        return subscription_command (raddi::command::type::blacklist, parameter);
+    }
+    if (auto parameter = option (argc, argw, L"unblacklist")) { // TODO: better name?
+        return subscription_command (raddi::command::type::unblacklist, parameter);
+    }
+    if (auto parameter = option (argc, argw, L"retain")) {
+        return subscription_command (raddi::command::type::retain, parameter);
+    }
+    if (auto parameter = option (argc, argw, L"unretain")) { // TODO: better name?
+        return subscription_command (raddi::command::type::unretain, parameter);
+    }
+    
+
     return false;
+}
+
+bool subscription_command (enum class raddi::command::type cmd, const wchar_t * eid) {
+    raddi::instance instance (option (argc, argw, L"instance"));
+    if (instance.status != ERROR_SUCCESS)
+        return raddi::log::data (0x91);
+
+    raddi::eid channel;
+    if (!channel.parse (eid))
+        return raddi::log::data (0x92, eid);
+
+    option (argc, argw, L"app", app);
+
+    return send (instance, cmd, raddi::command::subscription { channel, app });
 }
 
 template <typename T>
