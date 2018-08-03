@@ -14,6 +14,7 @@
 
 #include "raddi_database.h"
 #include "raddi_database_table.h"
+#include "raddi_database_shard.h"
 
 #include "raddi_instance.h"
 #include "raddi_command.h"

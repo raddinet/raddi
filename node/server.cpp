@@ -1,5 +1,5 @@
 #include "server.h"
-#include "platform.h"
+#include "../common/platform.h"
 
 #include <ws2tcpip.h>
 #include <mstcpip.h>

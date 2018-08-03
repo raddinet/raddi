@@ -2,9 +2,10 @@
 #include "raddi_timestamp.h"
 #include "raddi_eid.h"
 
-#include "../node/platform.h"
 #include "../lib/cuckoocycle.h"
+
 #include "../common/log.h"
+#include "../common/platform.h"
 #include "../common/threadpool.h"
 
 #include <memory>
