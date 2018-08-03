@@ -1,0 +1,139 @@
+#include <windows.h>
+#include "../common/log.h"
+
+// TODO: revamp string numbering
+// TODO: remove levels (EVENT,ERROR,...) and add CLASS below COMPONENT level
+// TODO: levels will be decided in code
+
+STRINGTABLE
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+{
+    MAIN | EVENT | 0x01 "raddi.net {1}.{2} {3}, {4}"
+    MAIN | EVENT | 0x02 "system time change {1} to {2}"
+    MAIN | EVENT | 0x03 "{1:%04u-%02u-%02u}"
+    MAIN | EVENT | 0x04 "low on memory, optimizing"
+    MAIN | EVENT | 0x05 "received command {1} with {2} bytes of data"
+    MAIN | EVENT | 0x20 "bootstrapping from {1}: adding core level node address {2}"
+    MAIN | EVENT | 0x21 "entry {1} broadcasted through {2} connections"
+
+    MAIN | ERROR | 1    "library {1} missing"
+    MAIN | ERROR | 2    "function {2} missing from {1}"
+    MAIN | ERROR | 3    "registry access {1} failed, reporting restricted, error {ERR}"
+    MAIN | ERROR | 4    "resources warning, spun only {1} of {2} thread-pool threads"
+    MAIN | ERROR | 5    "worker {1} ({2}): out of memory"
+    MAIN | ERROR | 6    "worker {1} ({2}): uncaught exception {3}"
+    MAIN | ERROR | 7    "memory warning, won't honor reservation for {1} connections"
+    MAIN | ERROR | 8    "command {1} failed with {2} exception"
+    MAIN | ERROR | 0x20 "bootstrap: failed to parse URL {1}, error {ERR}"
+    MAIN | ERROR | 0x21 "bootstrap: failed to prepare request to {1}:{2}, error {ERR}"
+    MAIN | ERROR | 0x22 "bootstrap: failed to prepare request to {1}:{2}{3}, error {ERR}"
+    MAIN | ERROR | 0x23 "bootstrap: failed to send request, error {ERR}"
+    MAIN | ERROR | 0x24 "bootstrap: failed to set sever credentials, error {ERR}"
+    MAIN | ERROR | 0x25 "bootstrapping from {1}: unable to retrieve data, state {2}, error {ERR}"
+    MAIN | ERROR | 0x26 "bootstrapping from {1}: failed, error {ERR}"
+    MAIN | ERROR | 0x27 "bootstrapping from {1}: failed, server status {2}"
+    MAIN | ERROR | 0x28 "bootstrapping from {1}: unable to add core level node address {2}, not recognized"
+
+    MAIN | NOTE | 1     "applying option {1}: {2}"
+    MAIN | NOTE | 2     "invoking {1}:{2}"
+    MAIN | NOTE | 3     "worker {1} ({2}) started"
+    MAIN | NOTE | 4     "worker {1} ({2}) finished"
+    MAIN | NOTE | 5     "{1} version {2}, linkage: {3}"
+    MAIN | NOTE | 0x10  "" // blank, notes 0x10..0x1F reserved for content creation (raddi.com and raddi.exe)
+
+    MAIN | STOP | 1     "executable corrupted or miscompiled"
+    MAIN | STOP | 4     "management thread failed, terminating, error {ERR}"
+    MAIN | STOP | 5     "winsock extension {1}:{2} unavailable"
+    MAIN | STOP | 7     "worker {1} ({2}): unknown exception"
+
+    SOURCE | NOTE | 1   "changes in directory, {1} bytes" // monitor
+    SOURCE | NOTE | 2   "rescanning directory to process files previously in use" // monitor
+    SOURCE | NOTE | 3   "resizing buffer to {1} bytes to improve performance" // monitor
+    SOURCE | EVENT | 1  "{1}" // input path
+    SOURCE | EVENT | 2  "started"
+    SOURCE | EVENT | 3  "paused"
+    SOURCE | EVENT | 4  "received file {1}"
+    SOURCE | ERROR | 1  "unable to access file {1}, error {ERR}"
+    SOURCE | ERROR | 2  "won't process nor broadcast file {1}, invalid content"
+    SOURCE | ERROR | 3  "unable to access requested source path {1} error {ERR}"
+    SOURCE | ERROR | 4  "failed to create temporary directory {1} error {ERR}"
+    SOURCE | ERROR | 5  "won't process nor broadcast, unable to listen for files in {1} error {ERR}" // monitor and source both
+    SOURCE | ERROR | 6  "listening stopped, failed with error {ERR}" // monitor
+    SOURCE | ERROR | 7  "overflow, rescanning source directory, error {ERR}" // monitor
+    SOURCE | ERROR | 8  "unable to start, error {ERR}"
+    SOURCE | ERROR | 9  "won't process nor broadcast file {1}, truncated"
+
+    SERVER | NOTE | 1       "RCV {3}, MSG {1}, K/A {2}; TRM {4}, DLY {5}"
+    // SERVER | NOTE | 2       "remote peer clock difference {1} seconds"
+    SERVER | NOTE | 3       "reflected connection dropped"
+    SERVER | NOTE | 4       "connecting through SOCKS5t proxy {1}"
+    SERVER | NOTE | 5       "reciprocal connection dropped"
+    SERVER | NOTE | 7       "sending {1} request, {2} + {3} bytes of data"
+    SERVER | NOTE | 8       "peer {4} requests {1} with {2} + {3} bytes of data"
+    // coordinator
+    SERVER | NOTE | 0x20    "peer, known, listens on port {1}"
+    SERVER | NOTE | 0x21    "peer, new, listens on {1}, will try to connect and confirm this later"
+    SERVER | NOTE | 0x22    "peer {1} shares new peer {2}"
+    SERVER | NOTE | 0x23    "core node {1} shares core node address {2}"
+    SERVER | NOTE | 0x24    "broadcasting {2} port {1}" //  (TCP) on port {3} (UDP)
+    SERVER | NOTE | 0x25    "replying with {2} port {1} to {3}"
+    SERVER | NOTE | 0x27    "{1} {2} history span: {5} entries in range {3:x}..{4:x}, we have {6} in this range"
+
+    // coordinator
+    SERVER | DATA | 0x20    "peer {1} exceeded {2} requests per second limit"
+    SERVER | DATA | 0x21    "peer {1} cannot validate own address, suspecting NAT, ignoring"
+    SERVER | DATA | 0x22    "peer {1} cannot validate non public address {2}"
+    SERVER | DATA | 0x23    "wrong protocol, expected {2}, received {1}"
+    SERVER | DATA | 0x24    "packet truncated, expected {2} bytes, received only {1}"
+    SERVER | DATA | 0x25    "peer {1} initial protocol identification failed"
+
+    SERVER | EVENT | 1      "remote peer {1} connection to {2} accepted as {3}"
+    SERVER | EVENT | 2      "remote peer {1} disconnected"
+    SERVER | EVENT | 3      "unable to establish connection" // " to {1}"
+    SERVER | EVENT | 4      "connection established, {1}"
+    SERVER | EVENT | 5      "discovered local peer {1}"
+    // localhost address cache (TODO: reorder to 0x3x -- TODO: maybe another level of named constants?)
+    SERVER | EVENT | 6      "{1}" // new address
+    SERVER | EVENT | 7      "removed: {1}"
+    // connection (again)
+    SERVER | EVENT | 8      "peer unresponsive, timed out, cancelling"
+
+    // coordinator
+    SERVER | EVENT | 0x20   "connection from blacklisted address {1} rejected"
+    SERVER | EVENT | 0x21   "connecting to {1} node {2}..."
+    SERVER | EVENT | 0x22   "remote peer {1} banned for {2} days"
+    SERVER | EVENT | 0x23   "remote peer {1} deemed permanently unavailable"
+    SERVER | EVENT | 0x24   "coordinator started, listening on {1} sockets"
+    SERVER | EVENT | 0x25   "remote peer {1} disconnected; already connected"
+    SERVER | EVENT | 0x26   "history report to {1} of {2} in range {3:x}..{4:x}+ in {5} spans ({8} bytes), total {6} entries in {7} shards"
+    SERVER | EVENT | 0x27   "{1} reports {2} history, range {3:x}..{4:x} in {5} spans ({6} bytes), total {7} entries; wants everything since {8:x}"
+    SERVER | EVENT | 0x28   "remote peer {1} manually unbanned"
+    SERVER | EVENT | 0x29   "history report of {1} in range {2:x}..{3:x}+ in {4} spans ({6} bytes), total {5} entries"
+    
+    // connection
+    SERVER | ERROR | 1      "socket {1}:{2}:{3} creation failed, error {ERR}"
+    SERVER | ERROR | 2      "socket family {1} binding failed, error {ERR}"
+    SERVER | ERROR | 3      "socket connection to {1} failed, error {ERR}"
+    SERVER | ERROR | 4      "receive aborted, error {ERR}"
+    // transmitter
+    SERVER | ERROR | 5      "transmit ({1} bytes) aborted, error {ERR}"
+    SERVER | ERROR | 6      "transmit ({1} bytes) failed, error {ERR}"
+    // listener
+    SERVER | ERROR | 7      "bind to {1} failed, error {ERR}"
+    SERVER | ERROR | 8      "start failed, error {ERR}"
+    SERVER | ERROR | 9      "connection accept failed, error {ERR}"
+    SERVER | ERROR | 10     "{1} is not valid address or port number"
+    // udp point
+    SERVER | ERROR | 11     "data query failed, error {ERR}"
+    SERVER | ERROR | 12     "cannot enable broadcast on UDP port {1}, error {ERR}"
+    SERVER | ERROR | 13     "transmission failed, error {ERR}"
+    // localhost address cache (TODO: reorder to 0x3? and etc, give evry sub-class its 16 entries?)
+    SERVER | ERROR | 14     "update error {ERR}"
+    // SOCKS5t proxy
+    SERVER | ERROR | 15     "invalid proxy response"
+    SERVER | ERROR | 16     "connection through proxy failed, code {1}: {2}"
+
+    // coordinator
+    SERVER | ERROR | 0x20   ""
+    SERVER | STOP | 0x20    "killing {1} stuck connections, crash probable"
+}

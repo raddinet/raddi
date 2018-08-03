@@ -10,6 +10,8 @@ channel subscriptions (commands) -> raddi.com + test
 
 subscriptions/bans: test!!!
 
+core nodes resync: upon start ask for all data since last online
+
 node::refused -> coordinator for save/load
 
 report bad inputs (from source) in node

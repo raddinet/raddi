@@ -1,0 +1,322 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="node.cpp" />
+    <ClCompile Include="..\common\lock.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\log.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_coordinator.cpp">
+      <Filter>Core\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_command.cpp">
+      <Filter>Core\Local</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_instance.cpp">
+      <Filter>Core\Local</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_connection.cpp">
+      <Filter>Core\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_protocol.cpp">
+      <Filter>Core\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_address.cpp">
+      <Filter>Core\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_discovery.cpp">
+      <Filter>Core\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_eid.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_entry.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_channel.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_identity.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_iid.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_timestamp.cpp">
+      <Filter>Core\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_proof.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_request.cpp">
+      <Filter>Core\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="server.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="source.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="localhosts.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="download.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="timers.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database.cpp">
+      <Filter>Core\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database_shard.cpp">
+      <Filter>Core\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database_table.cpp">
+      <Filter>Core\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database_peerset.cpp">
+      <Filter>Core\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\file.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_subscriptions.cpp">
+      <Filter>Core\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_subscription_set.cpp">
+      <Filter>Core\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_noticed.cpp">
+      <Filter>Core\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\directory.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_detached.cpp">
+      <Filter>Core\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\counter.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\uuid.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\platform.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="node-en.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="node-vi.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="node.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\common\log-en.rc">
+      <Filter>Common</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\core\raddi_database.rc">
+      <Filter>Core\Database</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\core\raddi.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\lock.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\log.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\options.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_coordinator.h">
+      <Filter>Core\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_command.h">
+      <Filter>Core\Local</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_instance.h">
+      <Filter>Core\Local</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_connection.h">
+      <Filter>Core\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_protocol.h">
+      <Filter>Core\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\monitor.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_address.h">
+      <Filter>Core\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_discovery.h">
+      <Filter>Core\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_consensus.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_defaults.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_eid.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_entry.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_channel.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_identity.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_iid.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_timestamp.h">
+      <Filter>Core\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_proof.h">
+      <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_request.h">
+      <Filter>Core\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="source.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="server.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="localhosts.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="download.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="timers.h">
+      <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database.h">
+      <Filter>Core\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_row.h">
+      <Filter>Core\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_shard.h">
+      <Filter>Core\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_table.h">
+      <Filter>Core\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_peerset.h">
+      <Filter>Core\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_peer_levels.h">
+      <Filter>Core\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\file.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_subscriptions.h">
+      <Filter>Core\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_subscription_set.h">
+      <Filter>Core\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_noticed.h">
+      <Filter>Core\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\directory.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\cuckoocycle.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\threadpool.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_detached.h">
+      <Filter>Core\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\counter.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\uuid.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\platform.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{1c4141ff-e0b5-4c1d-9d8a-2bc8e8095744}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{24c82bd3-839e-4e23-ad00-98a91757f73a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{292f4eb9-6503-4ddf-9ed4-25978f455cf9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Network">
+      <UniqueIdentifier>{15bc3683-e4bb-4a94-ac75-aa1e9ede04c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Local">
+      <UniqueIdentifier>{59043758-e867-464f-a074-0c03e54bb4be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Utility">
+      <UniqueIdentifier>{736ac154-4187-4b3d-a209-05ca5c298c85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="System">
+      <UniqueIdentifier>{84b7aa0a-70f3-46b4-a698-2d4ea11fb8d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Database">
+      <UniqueIdentifier>{fa92a31c-8685-4567-91a2-3fe22c3032b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Structures">
+      <UniqueIdentifier>{457337f0-7569-460f-8234-b4b09ccc2301}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{4a879bab-a1f4-4da8-915b-6a8db49d65e2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="node.manifest">
+      <Filter>Resources</Filter>
+    </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\common\monitor.tcc">
+      <Filter>Common</Filter>
+    </None>
+    <None Include="..\core\raddi_database.tcc">
+      <Filter>Core\Database</Filter>
+    </None>
+    <None Include="..\core\raddi_database_shard.tcc">
+      <Filter>Core\Database</Filter>
+    </None>
+    <None Include="..\core\raddi_database_table.tcc">
+      <Filter>Core\Database</Filter>
+    </None>
+    <None Include="..\core\raddi_request.tcc">
+      <Filter>Core\Network</Filter>
+    </None>
+    <None Include="..\lib\cuckoocycle.tcc">
+      <Filter>Libraries</Filter>
+    </None>
+    <None Include="..\common\threadpool.tcc">
+      <Filter>Common</Filter>
+    </None>
+  </ItemGroup>
+</Project>
