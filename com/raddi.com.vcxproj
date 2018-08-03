@@ -165,7 +165,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <SwapRunFromCD>true</SwapRunFromCD>
@@ -195,7 +195,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
       <SwapRunFromCD>true</SwapRunFromCD>
@@ -234,7 +234,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
@@ -276,7 +276,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
@@ -319,7 +319,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
@@ -362,7 +362,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
@@ -385,6 +385,8 @@
     <ClCompile Include="..\common\file.cpp" />
     <ClCompile Include="..\common\lock.cpp" />
     <ClCompile Include="..\common\log.cpp" />
+    <ClCompile Include="..\common\platform.cpp" />
+    <ClCompile Include="..\common\uuid.cpp" />
     <ClCompile Include="..\core\raddi_channel.cpp" />
     <ClCompile Include="..\core\raddi_command.cpp" />
     <ClCompile Include="..\core\raddi_database.cpp" />
@@ -397,7 +399,6 @@
     <ClCompile Include="..\core\raddi_instance.cpp" />
     <ClCompile Include="..\core\raddi_proof.cpp" />
     <ClCompile Include="..\core\raddi_timestamp.cpp" />
-    <ClCompile Include="..\node\platform.cpp" />
     <ClCompile Include="raddi.com.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -416,6 +417,8 @@
     <ClInclude Include="..\common\lock.h" />
     <ClInclude Include="..\common\log.h" />
     <ClInclude Include="..\common\options.h" />
+    <ClInclude Include="..\common\platform.h" />
+    <ClInclude Include="..\common\uuid.h" />
     <ClInclude Include="..\core\raddi.h" />
     <ClInclude Include="..\core\raddi_channel.h" />
     <ClInclude Include="..\core\raddi_command.h" />
@@ -433,7 +436,6 @@
     <ClInclude Include="..\core\raddi_proof.h" />
     <ClInclude Include="..\core\raddi_timestamp.h" />
     <ClInclude Include="..\lib\cuckoocycle.h" />
-    <ClInclude Include="..\node\platform.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\img\raddicom.ico" />

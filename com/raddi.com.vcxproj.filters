@@ -44,13 +44,16 @@
     <ClCompile Include="..\core\raddi_proof.cpp">
       <Filter>Core\Structures</Filter>
     </ClCompile>
-    <ClCompile Include="..\node\platform.cpp">
-      <Filter>System</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\file.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\common\directory.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\uuid.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\platform.cpp">
       <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>
@@ -129,9 +132,6 @@
     <ClInclude Include="..\core\raddi_proof.h">
       <Filter>Core\Structures</Filter>
     </ClInclude>
-    <ClInclude Include="..\node\platform.h">
-      <Filter>System</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\file.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -139,6 +139,12 @@
       <Filter>Libraries</Filter>
     </ClInclude>
     <ClInclude Include="..\common\directory.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\uuid.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\platform.h">
       <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
@@ -163,9 +169,6 @@
     </Filter>
     <Filter Include="Core\Structures">
       <UniqueIdentifier>{c2339098-f226-45d8-97d2-701f4e8d554b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="System">
-      <UniqueIdentifier>{72215c57-a01e-47ef-9500-eac2aa3e665a}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries">
       <UniqueIdentifier>{c7394585-f1df-4547-92f6-bc0f2a920d7b}</UniqueIdentifier>
