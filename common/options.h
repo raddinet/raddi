@@ -3,6 +3,7 @@
 
 #include <cwchar>
 #include <cwctype>
+#include "uuid.h"
 
 template <typename F, std::size_t N>
 std::size_t options (unsigned long argc, wchar_t ** argw, const wchar_t (&name) [N], F f) {
@@ -70,6 +71,7 @@ static inline void option_convert (const wchar_t * p, float & v) { v = std::stof
 static inline void option_convert (const wchar_t * p, double & v) { v = std::stod (p); }
 static inline void option_convert (const wchar_t * p, long double & v) { v = std::stold (p); }
 static inline void option_convert (const wchar_t * p, std::wstring & v) { v = p; }
+static inline void option_convert (const wchar_t * p, uuid & v) { v.parse (p); }
 
 template <typename T, std::size_t N>
 void option (unsigned long argc, wchar_t ** argw, const wchar_t (&name) [N], T & value) {
