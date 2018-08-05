@@ -120,6 +120,7 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
 
         case raddi::entry::not_an_announcement:
             raddi::db::row r;
+            raddi::db::trow tr;
 
             if (this->channels->get (entry->parent)
                     || ((entry->parent.timestamp == entry->parent.identity.timestamp) && this->identities->get (entry->parent.identity))) {
@@ -130,10 +131,10 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
                 return raddi::db::classify;
 
             } else
-            if (this->threads->get (entry->parent, &r)) {
+            if (this->threads->get (entry->parent, &tr)) {
 
                 // parent is thread: entry is a top level comment within a thread (or vote on the thread)
-                top->channel = r.parent;
+                top->channel = tr.parent;
                 top->thread = entry->parent;
                 return raddi::db::classify;
 
