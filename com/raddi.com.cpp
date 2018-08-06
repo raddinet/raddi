@@ -17,6 +17,7 @@
 #include "../common/platform.h"
 
 #include "../core/raddi.h"
+#include "../core/raddi_request.h"
 
 uuid app;
 wchar_t buffer [65536];
@@ -377,7 +378,7 @@ std::size_t send (const raddi::instance & instance, enum class raddi::command::t
 //  - places command and data into instance's source directory for transmission
 // 
 template <typename T>
-std::size_t send (const raddi::instance & instance, enum class raddi::command::type & cmd, const T & payload) {
+std::size_t send (const raddi::instance & instance, enum class raddi::command::type cmd, const T & payload) {
     if (!instance.get <unsigned int> (L"broadcasting")) {
         raddi::log::data (0x90, instance.pid);
         SetLastError (ERROR_CONNECTION_UNAVAIL);
@@ -637,7 +638,10 @@ bool go () {
         return peer_command (raddi::command::type::connect_peer, parameter);
     }
 
-    // TODO: download
+    if (auto parameter = option (argc, argw, L"download")) {
+        return download_command (parameter);
+    }
+
     // TODO: erase
 
     if (auto parameter = option (argc, argw, L"subscribe")) {
@@ -701,9 +705,23 @@ bool subscription_command (enum class raddi::command::type cmd, const wchar_t * 
 }
 
 bool download_command (const wchar_t * what) {
+    raddi::instance instance (option (argc, argw, L"instance"));
+    if (instance.status != ERROR_SUCCESS)
+        return raddi::log::data (0x91);
 
+    raddi::eid channel;
+    if (std::wcscmp (what, L"all") == 0) {
+        channel.timestamp = 0;
+        channel.identity.timestamp = 0;
+        channel.identity.nonce = 0;
+    } else
+        if (!channel.parse (what))
+            return raddi::log::data (0x92, what);
 
-    return false;
+    std::uint32_t threshold = raddi::now () - 31 * 86400;
+    option (argc, argw, L"threshold", threshold);
+
+    return send (instance, raddi::command::type::download, raddi::request::download { channel, threshold });
 }
 
 template <typename T>

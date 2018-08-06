@@ -319,6 +319,13 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
 
             // data
 
+            case raddi::command::type::download:
+                if ((coordinator != nullptr) && (size >= sizeof (raddi::request::download))) {
+                    coordinator->broadcast (raddi::request::type::download,
+                                            cmd->content (), sizeof (raddi::request::download));
+                }
+                break;
+
             case raddi::command::type::erase:
             case raddi::command::type::erase_thorough:
                 if ((database != nullptr) && (size >= sizeof (raddi::eid))) {

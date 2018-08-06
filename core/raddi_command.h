@@ -43,7 +43,7 @@ namespace raddi {
 
             // data tables: 0x2x
 
-            // download            = 0x20, // TODO: data: 'eid' or nothing for 'all' ...threshold?
+            download            = 0x20, // data: 'raddi::request::download'
             erase               = 0x21, // data: 'eid'
             erase_thorough      = 0x22, // data: 'eid'
 
