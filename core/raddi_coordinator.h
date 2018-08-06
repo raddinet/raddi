@@ -264,6 +264,14 @@ namespace raddi {
         //
         std::size_t broadcast (const db::root &, const entry * data, std::size_t size);
 
+        // broadcast
+        //  - 
+        //
+        std::size_t broadcast (enum class raddi::request::type, const void * data, std::size_t size);
+        std::size_t broadcast (enum class raddi::request::type rq) {
+            return this->broadcast (rq, nullptr, 0);
+        }
+
         // keepalive
         //  - transmit keep-alive packet to eligible/idle connections
         //  - returns time delay (us) for which it's not neccessary to call this function

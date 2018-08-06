@@ -205,11 +205,7 @@ void raddi::coordinator::operator() () {
         if (n) {
             if (raddi::older (this->last_peers_query, now - this->settings.more_peers_query_delay)) {
                 this->last_peers_query = now;
-                for (auto & connection : this->connections) {
-                    if (connection.secured && !connection.retired) {
-                        connection.send (request::type::peers);
-                    }
-                }
+                this->broadcast (request::type::peers);
             }
         } else {
             this->last_peers_query = now;
@@ -833,6 +829,18 @@ std::size_t raddi::coordinator::broadcast (const db::root & top, const entry * d
     return n;
 }
 
+std::size_t raddi::coordinator::broadcast (enum class raddi::request::type rq, const void * data, std::size_t size) {
+    std::size_t n = 0;
+
+    immutability guard (this->lock);
+    for (auto & connection : this->connections) {
+        if (connection.secured && !connection.retired) {
+            n += connection.send (rq, data, size);
+        }
+    }
+    return n;
+}
+
 void raddi::coordinator::established (connection * connection) {
 
     // exchange protocol strings to verify encryption works correctly
@@ -924,13 +932,7 @@ void raddi::coordinator::subscribe (const uuid & app, const eid & subscription) 
 
         request::subscription packet;
         if (auto size = this->gather_history (subscription, &packet)) {
-
-            immutability guard (this->lock);
-            for (auto & connection : this->connections) {
-                if (connection.secured && !connection.retired) {
-                    connection.send (request::type::subscribe, &packet, size);
-                }
-            }
+            this->broadcast (request::type::subscribe, &packet, size);
         }
     }
 }
@@ -944,13 +946,7 @@ bool raddi::coordinator::unsubscribe (const uuid & app, const eid & subscription
 
         if (!this->settings.network_propagation_participation) {
             if (!this->subscriptions.is_subscribed ({ subscription })) {
-
-                immutability guard (this->lock);
-                for (auto & connection : this->connections) {
-                    if (connection.secured && !connection.retired) {
-                        connection.send (request::type::unsubscribe, &subscription, sizeof subscription);
-                    }
-                }
+                this->broadcast (request::type::unsubscribe, &subscription, sizeof subscription);
             }
         }
         return true;
