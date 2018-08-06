@@ -85,6 +85,12 @@ public:
     //
     std::size_t size (const db::table <Key> *) const;
 
+    // top
+    //  - retrieves key of latest (youngest) inserted entry (parameter)
+    //  - returns false if shard is closed or empty
+    //
+    bool top (Key *) const;
+
     // split
     //  - splits a new shard containing entries as old as 'timestamp' or older
     //  - resulting shard can be empty

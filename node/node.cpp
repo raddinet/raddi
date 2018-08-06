@@ -757,6 +757,9 @@ namespace {
             coordinator.settings.min_core_connections += raddi::defaults::coordinator_additional_leaf_min_core_connections;
             coordinator.settings.max_core_connections += raddi::defaults::coordinator_additional_leaf_max_core_connections;
         }
+        if (core) {
+            coordinator.settings.full_database_downloads_allowed = true;
+        }
 
         option (argc, argw, L"connections", coordinator.settings.connections);
         option (argc, argw, L"max-connections", coordinator.settings.max_connections);
@@ -765,7 +768,9 @@ namespace {
         option (argc, argw, L"min-core-connections", coordinator.settings.min_core_connections);
         option (argc, argw, L"network-propagation-participation", coordinator.settings.network_propagation_participation);
         option (argc, argw, L"channels-synchronization-participation", coordinator.settings.channels_synchronization_participation);
-        
+        option (argc, argw, L"full-database-downloads", coordinator.settings.full_database_downloads_allowed);
+        option (argc, argw, L"full-database-download-limit", coordinator.settings.full_database_download_limit);
+
         option (argc, argw, L"keep-alive", coordinator.settings.keep_alive_period);
 
         // option (argc, argw, L"", coordinator.settings.announcement_sample_size);

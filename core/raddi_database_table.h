@@ -91,6 +91,12 @@ public:
         return this->get (entry, read::everything, buffer, length, demand);
     }
 
+    // top
+    //  - retrieves key of latest (youngest) inserted entry (parameter)
+    //  - returns true if provided, false if table is empty
+    //
+    bool top (Key *) const;
+
     // stats
     //  - computes some basic resource demands and statistics for the table
     //

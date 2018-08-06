@@ -95,6 +95,17 @@ Node parameters:
 		- generally users with data plan should disable this feature to conserve
 		  bandwidth, preferably by using the 'leaf' option
 		- default is true
+	- full-database-downloads:<0|1|false|true>
+		- allows peers to query and download all data, regardless of channels,
+		  currently in local database
+		- generally used by core nodes to fully synchronize among themselves, not
+		  to be used by privacy concerned users as it can reveal subscriptions
+		  and accounts connected to a particular IP address
+		- default is false
+	- full-database-download-limit:<#>
+		- responses to full database download requests will never return data
+		  older than this limit, regardless of request's threshold
+		- default is 62 days (62 * 86400 seconds)
 	- proof-complexity-requirements-adjustment:<#>
 		- adjusts (increases or decreases) minimal required PoW complexity for
 		  both identity/channels (default 27) and other entries (default 26)
@@ -108,6 +119,7 @@ Node parameters:
 	- core
 		- affected options:
 			- database-store-everything = 1
+			- full-database-downloads = 1
 	- leaf
 		- affected options:
 			- max-core-connections += 1

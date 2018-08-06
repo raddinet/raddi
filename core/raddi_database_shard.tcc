@@ -103,6 +103,18 @@ std::size_t raddi::db::shard <Key>::size (const db::table <Key> * table) const {
 }
 
 template <typename Key>
+bool raddi::db::shard <Key>::top (Key * row) const {
+    immutability guard (this->lock);
+    if (!this->index.closed ()) {
+        if (!this->cache.empty ()) {
+            *row = this->cache.back ();
+            return true;
+        }
+    }
+    return false;
+}
+
+template <typename Key>
 bool raddi::db::shard <Key>::unsynchronized_advance (const db::table <Key> * table) {
     file::mode open;
     file::share share;

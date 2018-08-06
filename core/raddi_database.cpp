@@ -119,9 +119,10 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
             return raddi::db::required;
 
         case raddi::entry::not_an_announcement:
-            raddi::db::row r;
-            raddi::db::trow tr;
-
+            union {
+                raddi::db::row r;
+                raddi::db::trow tr;
+            };
             if (this->channels->get (entry->parent)
                     || ((entry->parent.timestamp == entry->parent.identity.timestamp) && this->identities->get (entry->parent.identity))) {
 

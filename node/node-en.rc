@@ -78,6 +78,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SERVER | NOTE | 0x24    "broadcasting {2} port {1}" //  (TCP) on port {3} (UDP)
     SERVER | NOTE | 0x25    "replying with {2} port {1} to {3}"
     SERVER | NOTE | 0x27    "{1} {2} history span: {5} entries in range {3:x}..{4:x}, we have {6} in this range"
+    SERVER | NOTE | 0x28    "peer {1} requested download of entries of channel {4} in range {2:x}..{3:x}"
+    SERVER | NOTE | 0x29    "peer {1} requested download of all entries in range {2:x}..{3:x}"
 
     // coordinator
     SERVER | DATA | 0x20    "peer {1} exceeded {2} requests per second limit"
@@ -86,6 +88,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SERVER | DATA | 0x23    "wrong protocol, expected {2}, received {1}"
     SERVER | DATA | 0x24    "packet truncated, expected {2} bytes, received only {1}"
     SERVER | DATA | 0x25    "peer {1} initial protocol identification failed"
+    SERVER | DATA | 0x26    "peer {1} requests for all data denied, not enabled"
 
     SERVER | EVENT | 1      "remote peer {1} connection to {2} accepted as {3}"
     SERVER | EVENT | 2      "remote peer {1} disconnected"

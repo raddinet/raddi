@@ -101,6 +101,12 @@ namespace raddi {
         //
         bool connect_one_more_announced_node = false;
 
+        // core_sync...
+        //  - data for synchronization among core nodes...
+
+        std::uint32_t core_sync_threshold;
+        std::uint32_t core_sync_count = 3; // ???
+
     public:
 
         // settings
@@ -116,6 +122,7 @@ namespace raddi {
 
             bool network_propagation_participation = true;
             bool channels_synchronization_participation = true;
+            bool full_database_downloads_allowed = false;
 
             unsigned int keep_alive_period = raddi::defaults::connection_keep_alive_timeout;
 
@@ -126,6 +133,7 @@ namespace raddi {
             unsigned int max_individual_subscriptions = 65536; // also streams limit
             unsigned int local_peer_discovery_period = 60;
             unsigned int more_peers_query_delay = 180;
+            unsigned int full_database_download_limit = 62 * 86400;
 
             // TODO: how many peers should I broadcast requests for data? everyone?
         } settings;

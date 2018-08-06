@@ -37,12 +37,19 @@ namespace raddi {
         //
         std::size_t parse (const wchar_t *);
 
+        // isnull
+        //  - are both members 0, thus null, invalid, special meaning
+        //
+        inline bool isnull () const {
+            return this->timestamp == 0
+                && this->nonce == 0;
+        }
+
         // erased
         //  - deletion within database is done by zeroing the record
         //
         inline bool erased () const {
-            return this->timestamp == 0
-                && this->nonce == 0;
+            return this->isnull ();
         }
     };
 

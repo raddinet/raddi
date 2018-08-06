@@ -100,6 +100,29 @@ bool raddi::db::table <Key>::get (const decltype (Key::id) & entry, read what,
 }
 
 template <typename Key>
+bool raddi::db::table <Key>::top (Key * row) const {
+    immutability guard (this->lock);
+
+    // looping through shards to find top because shard may be empty due to deletions
+
+    auto i = this->shards.rbegin ();
+    auto e = this->shards.rend ();
+    
+    while (i != e) {
+        auto shard = &*i;
+
+        if (this->need_shard_to_advance (shard)) {
+            shard->advance (this);
+        }
+        if (shard->top (row))
+            return true;
+
+        ++i;
+    }
+    return false;
+}
+
+template <typename Key>
 bool raddi::db::table <Key>::need_shard_to_advance (const shard <Key> * s) const {
     if (s->closed ())
         return true;

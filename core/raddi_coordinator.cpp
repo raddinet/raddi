@@ -14,6 +14,15 @@ raddi::coordinator::coordinator (db & database)
     , blacklist (database.path, L"blacklist")
     , retained (database.path, L"retained") {
 
+    if (database.settings.store_everything) {
+        db::row top;
+        if (database.data->top (&top)) {
+            this->core_sync_threshold = top.id.timestamp - database.settings.synchronization_base_offset;
+        } else {
+            this->core_sync_threshold = raddi::now () - database.settings.synchronization_threshold;
+        }
+    }
+
     auto path = database.path + L"\\network";
     if (directory::create (path.c_str ())) {
         try {
@@ -586,26 +595,38 @@ bool raddi::coordinator::process_history (const raddi::request::subscription * s
 }
 
 void raddi::coordinator::process_download_request (const request::download * download, connection * connection) {
+    auto now = raddi::now ();
     auto parent = download->parent;
     auto threshold = download->threshold;
 
-    // if it's nested entry, provide whole thread
+    if (parent.isnull ()) {
+        if (!this->settings.full_database_downloads_allowed) {
+            this->report (log::level::data, 0x26, connection->peer);
+            return;
+        }
 
-    db::row row;
-    if (this->database.data->get (download->parent, &row)) {
-        parent = row.top ().thread;
+        // check against limit for full download
+
+        if (now - threshold > this->settings.full_database_download_limit) {
+            threshold = now - this->settings.full_database_download_limit;
+        }
+        
+    } else {
+
+        // if it's nested entry, provide whole thread
+
+        db::row row;
+        if (this->database.data->get (download->parent, &row)) {
+            parent = row.top ().thread;
+        }
+
+        // descending entries cannot be older than their parent
+
+        if (raddi::older (threshold, parent.timestamp)) {
+            threshold = parent.timestamp;
+        }
     }
 
-    // descending entries cannot be older than their parent
-
-    if (raddi::older (threshold, parent.timestamp)) {
-        threshold = parent.timestamp;
-    }
-
-    auto constrain = [parent] (const auto & row, const auto & detail) {
-        return parent == row.top ().channel
-            || parent == row.top ().thread;
-    };
     auto decission = [] (const auto & row, const auto & detail) {
         return true;
     };
@@ -613,7 +634,21 @@ void raddi::coordinator::process_download_request (const request::download * dow
         connection->send (data, (std::size_t) row.data.length + sizeof (raddi::entry));
     };
 
-    this->database.data->select (threshold, raddi::now (), constrain, decission, transmitter);
+    if (parent.isnull ()) {
+        auto unconstrained = [] (const auto & row, const auto & detail) {
+            return true;
+        };
+        this->report (log::level::note, 0x29, connection->peer, threshold, now);
+        this->database.data->select (threshold, now, unconstrained, decission, transmitter);
+
+    } else {
+        auto constrain = [parent] (const auto & row, const auto & detail) {
+            return parent == row.top ().channel
+                || parent == row.top ().thread;
+        };
+        this->report (log::level::note, 0x28, connection->peer, threshold, now, parent);
+        this->database.data->select (threshold,  now, constrain, decission, transmitter);
+    }
 }
 
 void raddi::coordinator::move (const address & address, level new_level, std::uint16_t assessment) {
@@ -837,6 +872,24 @@ void raddi::coordinator::established (connection * connection) {
                 }
             }
         });
+    }
+
+    // core nodes sync
+    //  - if connected to core node, and we allow full download queries, send one
+
+    if ((connection->level == core_nodes) && this->settings.full_database_downloads_allowed) {
+        if (auto ncs = this->core_sync_count) {
+
+            request::download download;
+            download.parent.timestamp = 0;
+            download.parent.identity.timestamp = 0;
+            download.parent.identity.nonce = 0;
+            download.threshold = this->core_sync_threshold;
+            
+            if (connection->send (request::type::download, &download, sizeof download)) {
+                this->core_sync_count = ncs - 1;
+            }
+        }
     }
 }
 
