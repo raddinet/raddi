@@ -8,8 +8,8 @@ namespace raddi {
         static constexpr std::uint32_t max_entry_skew_allowed = 180; // seconds into the future
         static constexpr std::uint32_t max_entry_age_allowed = 600; // seconds old for network propagation
 
-        static constexpr std::uint32_t max_request_skew_allowed = 60; // seconds into the future
-        static constexpr std::uint32_t max_request_age_allowed = 180; // seconds old
+        static constexpr std::uint32_t max_request_skew_allowed = 180; // seconds into the future
+        static constexpr std::uint32_t max_request_age_allowed = 240; // seconds old
 
         // max_xxx_name_size
         //  - restriction in naming new identities and channels serve several purposes:
