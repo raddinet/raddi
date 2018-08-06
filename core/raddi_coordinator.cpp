@@ -341,7 +341,14 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
 
         const auto r = reinterpret_cast <const request *> (data);
 
-        this->report (log::level::note, 8, r->type, sizeof (request), size - sizeof (request), connection->peer);
+        switch (r->type) {
+            case request::type::ipv4peer:
+            case request::type::ipv6peer:
+                break; // reported below separately
+            default:
+                this->report (log::level::note, 8, r->type, sizeof (request), size - sizeof (request), connection->peer);
+        }
+
         switch (r->type) {
 
             // initial
@@ -412,6 +419,8 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
                 } else {
                     a.port = 0;
                 }
+
+                this->report (log::level::note, 9, r->type, sizeof (request), size - sizeof (request), connection->peer, a);
 
                 if (a != connection->peer) {
                     if (a.port == 0) {
@@ -1153,7 +1162,7 @@ void raddi::coordinator::announce (const address & a, bool only, connection * cx
     } else {
         immutability guard (this->lock);
         for (auto & c : this->connections) {
-            if (c.secured && (&c != cx))
+            if (c.secured && !c.retired && (&c != cx))
                 c.send (rt, &r, rcb);
         }
     }

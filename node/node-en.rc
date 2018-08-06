@@ -70,6 +70,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SERVER | NOTE | 5       "reciprocal connection dropped"
     SERVER | NOTE | 7       "sending {1} request, {2} + {3} bytes of data"
     SERVER | NOTE | 8       "peer {4} requests {1} with {2} + {3} bytes of data"
+    SERVER | NOTE | 9       "peer {4} announces {1} address {5}"
     // coordinator
     SERVER | NOTE | 0x20    "peer, known, listens on port {1}"
     SERVER | NOTE | 0x21    "peer, new, listens on {1}, will try to connect and confirm this later"
