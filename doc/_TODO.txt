@@ -6,11 +6,7 @@ github repo:
    - release - installer exe in release, separated exe/dlls in subdirs
    - portable
 
-channel subscriptions (commands) -> raddi.com + test
-
 subscriptions/bans: test!!!
-
-core nodes resync: upon start ask for all data since last online
 
 node::refused -> coordinator for save/load
 
@@ -56,6 +52,9 @@ split raddi stuff from node.cpp to raddi_node.cpp
  - rename node.cpp to node_win.cpp
 
 rewrite log as noted in log.cpp or somewhere there in comment
+
+SETTINGS GUIDE: settings for most privacy concerned users
+SETTINGS GUIDE: running multiple nodes on single machine
 
 TBD app: https://msdn.microsoft.com/en-us/library/aa767914(VS.85).aspx#app_reg
 TBD ext: raddi://a29e7568b5da6a-b5e418[.txt/.html/.xml/.md]
