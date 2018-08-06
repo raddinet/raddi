@@ -18,5 +18,6 @@
 
 #include "raddi_instance.h"
 #include "raddi_command.h"
+#include "raddi_address.h"
 
 #endif

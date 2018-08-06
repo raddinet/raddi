@@ -36,13 +36,14 @@ namespace raddi {
 
             add_peer            = 0x10, // data: 'address'
             rem_peer            = 0x11, // data: 'address'
-            ban_peer            = 0x12, // data: 'address' + uint16_t (days)
+            ban_peer            = 0x12, // data: 'address' ...TODO: + optionally uint16_t (days)
             unban_peer          = 0x13, // data: 'address'
             add_core_peer       = 0x1A, // data: 'address'
             connect_peer        = 0x1C, // data: 'address'
 
             // data tables: 0x2x
 
+            // download            = 0x20, // TODO: data: 'eid' or nothing for 'all' ...threshold?
             erase               = 0x21, // data: 'eid'
             erase_thorough      = 0x22, // data: 'eid'
 

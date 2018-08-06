@@ -56,6 +56,9 @@
     <ClCompile Include="..\common\platform.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\core\raddi_address.cpp">
+      <Filter>Core\Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="raddi.com-en.rc">
@@ -146,6 +149,9 @@
     </ClInclude>
     <ClInclude Include="..\common\platform.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_address.h">
+      <Filter>Core\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

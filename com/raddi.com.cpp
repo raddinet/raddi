@@ -460,6 +460,9 @@ int wmain (int argc, wchar_t ** argw) {
     // TODO: registry storage for our uuid: /RADDI.net/com/uuid
     // app.parse ();
 
+    WSADATA wsa;
+    WSAStartup (0x0202, &wsa);
+
     SetLastError (0);
     if (go ()) {
         return ERROR_SUCCESS;
@@ -487,6 +490,8 @@ bool reply (const wchar_t * opname, const wchar_t * to);
 bool list_identities ();
 bool list_channels ();
 
+bool download_command (const wchar_t * what);
+bool peer_command (enum class raddi::command::type, const wchar_t * address);
 bool subscription_command (enum class raddi::command::type, const wchar_t * eid);
 
 bool go () {
@@ -612,6 +617,29 @@ bool go () {
         return reply (L"reply", parameter);
     }
 
+    // TODO: document
+
+    if (auto parameter = option (argc, argw, L"add")) {
+        bool core = false;
+        option (argc, argw, L"core", core);
+        return peer_command (core ? raddi::command::type::add_core_peer : raddi::command::type::add_peer, parameter);
+    }
+    if (auto parameter = option (argc, argw, L"remove")) {
+        return peer_command (raddi::command::type::rem_peer, parameter);
+    }
+    if (auto parameter = option (argc, argw, L"ban")) {
+        return peer_command (raddi::command::type::ban_peer, parameter);
+    }
+    if (auto parameter = option (argc, argw, L"unban")) {
+        return peer_command (raddi::command::type::unban_peer, parameter);
+    }
+    if (auto parameter = option (argc, argw, L"connect")) {
+        return peer_command (raddi::command::type::connect_peer, parameter);
+    }
+
+    // TODO: download
+    // TODO: erase
+
     if (auto parameter = option (argc, argw, L"subscribe")) {
         return subscription_command (raddi::command::type::subscribe, parameter);
     }
@@ -635,6 +663,29 @@ bool go () {
     return false;
 }
 
+bool StringToAddress (SOCKADDR_INET & address, const wchar_t * string) noexcept {
+    std::memset (&address, 0, sizeof address);
+    INT length = sizeof address;
+    return WSAStringToAddress (const_cast <wchar_t *> (string), AF_INET6, NULL, reinterpret_cast <SOCKADDR *> (&address.Ipv6), &length) == 0
+        || WSAStringToAddress (const_cast <wchar_t *> (string), AF_INET, NULL, reinterpret_cast <SOCKADDR *> (&address.Ipv4), &length) == 0;
+}
+
+bool peer_command (enum class raddi::command::type cmd, const wchar_t * addr) {
+    raddi::instance instance (option (argc, argw, L"instance"));
+    if (instance.status != ERROR_SUCCESS)
+        return raddi::log::data (0x91);
+
+    SOCKADDR_INET sa;
+    if (!StringToAddress (sa, addr))
+        return raddi::log::data (0x93, addr);
+
+    if (cmd == raddi::command::type::ban_peer) {
+        // TODO: days
+    }
+
+    return send (instance, cmd, raddi::address (sa));
+}
+
 bool subscription_command (enum class raddi::command::type cmd, const wchar_t * eid) {
     raddi::instance instance (option (argc, argw, L"instance"));
     if (instance.status != ERROR_SUCCESS)
@@ -647,6 +698,12 @@ bool subscription_command (enum class raddi::command::type cmd, const wchar_t * 
     option (argc, argw, L"app", app);
 
     return send (instance, cmd, raddi::command::subscription { channel, app });
+}
+
+bool download_command (const wchar_t * what) {
+
+
+    return false;
 }
 
 template <typename T>

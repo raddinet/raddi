@@ -237,15 +237,28 @@ void raddi::coordinator::operator() () {
             }
         }
 
-        // try addresses requested by user or otherwisefrom the outside
+        // try addresses requested by user or otherwise from the outside
 
-        this->lock.acquire_exclusive ();
-        while ((n > 0) && !this->connect_requests.empty ()) {
-            addresses.insert ({ *this->connect_requests.begin (), announced_nodes });
-            this->connect_requests.erase (this->connect_requests.begin ());
-            --n;
+        if ((n > 0) && !this->connect_requests.empty ()) {
+            exclusive guard (this->lock);
+
+            // clean connect requests set
+            //  - don't connect to addresses already connected to
+
+            for (const auto & connection : connections) {
+                if (!connection.retired) {
+                    this->connect_requests.erase (connection.peer);
+                }
+            }
+
+            // insert
+
+            while ((n > 0) && !this->connect_requests.empty ()) {
+                addresses.insert ({ *this->connect_requests.begin (), announced_nodes });
+                this->connect_requests.erase (this->connect_requests.begin ());
+                --n;
+            }
         }
-        this->lock.release_exclusive ();
 
         // okay, try next node categories
 
