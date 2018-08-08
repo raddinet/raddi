@@ -438,7 +438,7 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
 
                     // accept local network addresses only from peers on local network
 
-                    if (a.accessible () || !connection->peer.accessible ()) {
+                    if (a.accessible () || !connection->peer.accessible (address::validation::allow_null_port)) {
 
                         // core nodes may announce other core node
                         //  - if we already know that node, upgrade it's status
@@ -458,7 +458,7 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
                     }
                 } else {
                     // don't display warning within local network
-                    if (connection->peer.accessible ()) {
+                    if (connection->peer.accessible (address::validation::allow_null_port)) {
                         this->report (log::level::data, 0x21, connection->peer);
                     }
                 }
@@ -1189,9 +1189,9 @@ void raddi::coordinator::announce_random_peers (connection * c) {
                 address addr = this->database.peers [level]->select (this->random_distribution (this->random_generator), &assessment);
 
                 // distribute local addresses only to other peers on local network
-                //  - TODO: BUG, somehow we still announce local addressed to internet peers, NOTE this bug may have been fixed, test it
-
-                if (addr.accessible () || !c->peer.accessible ()) {
+                //  - 'allow_null_port' because peer.port is 0 for inbound connections
+                
+                if (addr.accessible () || !c->peer.accessible (address::validation::allow_null_port)) {
 
                     // only insert addresses that are fresh or already validated
                     //  - this prevents endless re-sharing addresses of long dead peers

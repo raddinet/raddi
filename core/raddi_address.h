@@ -39,13 +39,18 @@ namespace raddi {
         static std::size_t size (int family);
         static std::wstring name (int family);
 
-        bool valid () const;
+        enum class validation {
+            full,
+            allow_null_port, // don't test port number against 0
+        };
+
+        bool valid (validation = validation::full) const;
 
         // accessible
         //  - returns true if the address is valid
         //    and internet-accessible (non-intranet)
         //
-        bool accessible () const;
+        bool accessible (validation = validation::full) const;
 
         // data/size
         //  - for serialization (without storing the 'family' member)

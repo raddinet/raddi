@@ -104,10 +104,10 @@ namespace {
     }
 }
 
-bool raddi::address::valid () const {
+bool raddi::address::valid (validation mode) const {
     switch (this->family) {
         case AF_INET:
-            return (this->port != 0)
+            return (mode == validation::allow_null_port || this->port != 0)
                 && (this->address4.s_addr != 0x00000000)
                 && (this->address4.s_addr != 0xFFFFFFFF) // limited broadcast
                 && (this->address4.s_addr & 0x00FFFFFF) != 0x00000000 // 0.0.0.0/24
@@ -130,8 +130,8 @@ bool raddi::address::valid () const {
     }
     return false;
 }
-bool raddi::address::accessible () const {
-    if (this->valid ())
+bool raddi::address::accessible (validation mode) const {
+    if (this->valid (mode))
         switch (this->family) {
             case AF_INET:
                 return (this->address4.s_addr & 0x000000FF) != 0x0000007F // 127.0.0.0/8
