@@ -6,7 +6,9 @@ github repo:
    - release - installer exe in release, separated exe/dlls in subdirs
    - portable
 
-subscriptions/bans: test!!!
+commands: loglevels
+commands: optimize
+commands: erase
 
 node::refused -> coordinator for save/load
 
@@ -73,6 +75,7 @@ consider http server? simple GET/POST support
  - POST - new identity/channel/post/etc.
  - GET - db queries? lists of identities/channels
        - deep tree data fetch?
+       - get node status (for status button/iframe on website)
 
 document protocol
  - requirement: synchronized time
