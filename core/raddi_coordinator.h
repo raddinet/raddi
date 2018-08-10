@@ -225,8 +225,7 @@ namespace raddi {
         // find
         //  - determines if we know the address and optionally on what level
         //
-        bool find (const address &) const;
-        bool find (const address &, level &) const;
+        bool find (const address &, level * = nullptr) const;
 
         // status
         //  - requests status display of all connections
@@ -322,7 +321,9 @@ namespace raddi {
         std::size_t gather_history (const eid &, request::subscription *) const;
         bool process_history (const raddi::request::subscription * history, std::size_t size, connection *);
 
-        void move (const address &, level, std::uint16_t = db::peerset::new_record_assessment);
+        bool move (const address &, level, std::uint16_t = db::peerset::new_record_assessment);
+        bool move (connection *, level, std::uint16_t = db::peerset::new_record_assessment);
+
         std::size_t select_unused_addresses (level, std::size_t n, std::map <address, level> & addresses) const;
     };
 }

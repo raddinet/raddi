@@ -42,14 +42,13 @@ raddi::coordinator::coordinator (db & database)
     this->retained.load ();
 };
 
-bool raddi::coordinator::find (const address & a) const {
-    level unused;
-    return this->find (a, unused);
-}
-bool raddi::coordinator::find (const address & a, level & result) const {
+
+bool raddi::coordinator::find (const address & a, level * result) const {
     for (auto l = levels - 1; l >= 0; --l) {
         if (this->database.peers [l]->count (a)) {
-            result = (level) l;
+            if (result) {
+                *result = (level) l;
+            }
             return true;
         }
     }
@@ -444,8 +443,9 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
                         //  - if we already know that node, upgrade it's status
 
                         if ((reinterpret_cast <const request::newpeer *> (r->content ())->flags & 0x0001) && (connection->level == core_nodes)) {
-                            this->move (a, core_nodes);
-                            this->report (log::level::note, 0x23, connection->peer, a);
+                            if (this->move (a, core_nodes)) {
+                                this->report (log::level::note, 0x23, connection->peer, a);
+                            }
                         } else {
                             this->database.peers [announced_nodes]->erase (a);
                             if (!this->find (a)) {
@@ -669,12 +669,24 @@ void raddi::coordinator::process_download_request (const request::download * dow
     }
 }
 
-void raddi::coordinator::move (const address & address, level new_level, std::uint16_t assessment) {
+bool raddi::coordinator::move (connection * connection, level new_level, std::uint16_t assessment) {
+    if (this->move (connection->peer, new_level, assessment)) {
+        connection->level = new_level;
+        return true;
+    } else
+        return false;
+}
+
+bool raddi::coordinator::move (const address & address, level new_level, std::uint16_t assessment) {
     level level;
-    while (this->find (address, level)) {
+    while (this->find (address, &level)) {
+        if (level == blacklisted_nodes)
+            return false;
+
         this->database.peers [level]->erase (address);
     }
     this->database.peers [new_level]->insert (address, assessment);
+    return true;
 }
 
 void raddi::coordinator::ban (const address & address, std::uint16_t days) {
@@ -727,7 +739,7 @@ bool raddi::coordinator::empty (level level) const {
 
 void raddi::coordinator::add (level where, const address & address) {
     level previous;
-    if (this->find (address, previous)) {
+    if (this->find (address, &previous)) {
         if (previous > where) {
             this->move (address, where);
         }
@@ -856,14 +868,12 @@ void raddi::coordinator::established (connection * connection) {
 
             case validated_nodes:
                 if (this->database.peers [connection->level]->adjust (connection->peer, +1) >= 0xFF) {
-                    connection->level = established_nodes;
-                    this->move (connection->peer, established_nodes);
+                    this->move (connection, established_nodes);
                 }
                 break;
 
             case announced_nodes:
-                connection->level = validated_nodes;
-                this->move (connection->peer, validated_nodes);
+                this->move (connection, validated_nodes);
                 this->announce (connection->peer, false, connection);
                 break;
         }
