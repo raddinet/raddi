@@ -71,7 +71,7 @@ namespace raddi {
             // minimum_shard_size (entries)
             //  - number of rows in the latest shard, before creating a new one is considered
             //
-            unsigned int minimum_shard_size = 2; // 2048;
+            unsigned int minimum_shard_size = 2048;
 
             // maximum_shard_size (entries)
             //  - number of rows, hard limit, attempt to insert will make the table to split the shard
