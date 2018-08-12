@@ -14,7 +14,6 @@ namespace raddi {
     // detached
     //  - special cache for reordering entries that arrived before their parent entries
     //  - optimized for efficiently dropping too old entries
-    //  - TODO: report usage, top usage (and time of top usage)
     //
     class detached {
         mutable ::lock lock;
@@ -31,6 +30,7 @@ namespace raddi {
         counter rejected; // only actively rejected, data dropped by 'clean' = 'inserted' - 'processed' - 'rejected'
         counter processed;
         counter highwater;
+        std::uint32_t highwater_time = 0;
 
     public:
 

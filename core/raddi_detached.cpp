@@ -14,6 +14,7 @@ void raddi::detached::insert (const eid & parent, const entry * entry, std::size
     auto current = this->unsynchronized_size ();
     if (this->highwater.n < current.n || this->highwater.bytes < current.bytes) {
         this->highwater = current;
+        this->highwater_time = raddi::now ();
     }
 }
 
