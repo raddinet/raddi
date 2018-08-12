@@ -34,6 +34,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 0x27 "bootstrapping from {1}: failed, server status {2}"
     MAIN | ERROR | 0x28 "bootstrapping from {1}: unable to add core level node address {2}, not recognized"
 
+    MAIN | DATA | 8     "command rejected, unknown type {1}"
+
     MAIN | NOTE | 1     "applying option {1}: {2}"
     MAIN | NOTE | 2     "invoking {1}:{2}"
     MAIN | NOTE | 3     "worker {1} ({2}) started"
@@ -139,5 +141,5 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
     // coordinator
     SERVER | ERROR | 0x20   ""
-    SERVER | STOP | 0x20    "killing {1} stuck connections, crash probable"
+    SERVER | STOP | 0x20    "killing {1} stuck connections, this may crash..."
 }

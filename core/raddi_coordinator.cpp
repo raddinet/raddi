@@ -284,6 +284,9 @@ void raddi::coordinator::operator() () {
         }
     }
 
+    this->recent.clean (raddi::consensus::max_entry_age_allowed);
+    this->detached.clean (raddi::consensus::max_entry_age_allowed + raddi::consensus::max_entry_skew_allowed + 1);
+
     this->flush ();
 }
 

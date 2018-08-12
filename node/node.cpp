@@ -372,6 +372,10 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
                     }
                 }
                 break;
+
+            default:
+                raddi::log::data (raddi::component::main, 8, (unsigned int) cmd->type);
+                return false;
         }
         return true;
 
@@ -382,26 +386,6 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
 }
 
 namespace {
-
-    // recent
-    //  - immediate history of entries propagated through network
-    //  - stops broadcast of entries already broadcasted
-    //  - erased after raddi::consensus::max_entry_age_allowed
-    //
-    raddi::noticed recent;
-
-    // refused
-    //  - cache for EIDs that were refused for some reason
-    //  - used to keep it's descendants from 'detached' buffers
-    //  - TODO: clean when? how? save/load? -> part of database then, clean after 0x20000000 (or what's in raddi validate)
-    //          should save, otherwise 'detached' can get very clogged
-    //
-    raddi::noticed refused;
-
-    // detached
-    //  - insertion cache for reordering detached entries
-    //
-    raddi::detached detached;
 
     // assess_proof_requirements
     //  - checks if proof parameters match minimum required parameters for that entry type,
@@ -417,7 +401,7 @@ namespace {
         if ((proof->complexity + proof->complexity_bias)
                 < (entry->default_requirements ().complexity + settings.proof_complexity_requirements_adjustment)) {
 
-            refused.insert (entry->id);
+            coordinator->refused.insert (entry->id);
             raddi::log::data (raddi::component::database, 0x17, entry->id, proof->complexity + proof->complexity_bias,
                               entry->default_requirements ().complexity + settings.proof_complexity_requirements_adjustment,
                               entry->default_requirements ().complexity, settings.proof_complexity_requirements_adjustment);
@@ -444,7 +428,7 @@ namespace {
 
             case raddi::db::rejected:
                 if (source != nullptr) {
-                    detached.reject (entry->id);
+                    coordinator->detached.reject (entry->id);
 
                     if (++source->rejected > coordinator->settings.max_allowed_rejected_entries)
                         return false;
@@ -460,15 +444,16 @@ namespace {
                     //  - also old data downloads must come back sorted
 
                     if (!old) {
-                        if (refused.count (entry->parent)) {
+                        if (coordinator->refused.count (entry->parent)) {
                             // the entry->parent was refused then also refuse entry->id
-                            refused.insert (entry->id);
-                            detached.reject (entry->id);
+                            coordinator->refused.insert (entry->id);
+                            coordinator->detached.reject (entry->id);
 
                         } else {
                             // put to temporary cache for reordering
-                            detached.insert (entry->parent, entry, size);
-                            raddi::log::note (raddi::component::database, 7, entry->id, entry->parent, detached.size (), detached.highwater);
+                            coordinator->detached.insert (entry->parent, entry, size);
+                            raddi::log::note (raddi::component::database, 7, entry->id, entry->parent,
+                                              coordinator->detached.size (), coordinator->detached.highwater);
 
                             // redistribute to other connections even if detached, others may already have the parent
                             if (broadcast) {
@@ -489,7 +474,7 @@ namespace {
 
                 // ignore the ones we already processed recently
 
-                if (!(inserted = recent.insert (entry->id)))
+                if (!(inserted = coordinator->recent.insert (entry->id)))
                     break;
 
                 // ensure data comming from other connections are current and not being a flood of historical playback
@@ -516,10 +501,11 @@ namespace {
                 }
 
                 // is thread, channel, entry (stream) or it's identity blacklisted
+                //  - TODO: make function
 
                 if (coordinator->blacklist.is_subscribed ({ top.channel, top.thread, entry->id, (raddi::eid) entry->id.identity })) {
-                    refused.insert (entry->id);
-                    detached.reject (entry->id);
+                    coordinator->refused.insert (entry->id);
+                    coordinator->detached.reject (entry->id);
                     return true;
                 }
 
@@ -571,7 +557,7 @@ namespace {
                         //  - might have been already inserted into 'recent' in 'classify' case above
 
                         if (!inserted) {
-                            inserted = recent.insert (entry->id);
+                            inserted = coordinator->recent.insert (entry->id);
                         }
 
                         // process further only when seen for the first time
@@ -593,7 +579,7 @@ namespace {
                             //  - detached entries have already been validated
                             //  - TODO: evaluate for race conditions possibility on parallel insertions and embraces here:
 
-                            return detached.accept (entry->id, [source, nesting] (const std::uint8_t * data, std::size_t size) {
+                            return coordinator->detached.accept (entry->id, [source, nesting] (const std::uint8_t * data, std::size_t size) {
                                 auto entry = reinterpret_cast <const raddi::entry *> (data);
                                 raddi::log::note (raddi::component::database, 6, entry->id, entry->parent);
                                 return embrace (source, entry, size, nesting + 1);
@@ -1115,9 +1101,6 @@ namespace {
                             localhosts->refresh ();
                             database.optimize ();
 
-                            recent.clean (raddi::consensus::max_entry_age_allowed);
-                            detached.clean (raddi::consensus::max_entry_age_allowed + raddi::consensus::max_entry_skew_allowed + 1);
-
                         } catch (const std::bad_alloc &) {
                             SetEvent (optimize);
                         } catch (const std::exception &) {
@@ -1138,8 +1121,8 @@ namespace {
                     overview.set (L"rejected", Listener::total.rejected);
                     overview.set (L"processed", source.total);
 
-                    overview.set (L"detached", detached.size ().bytes);
-                    overview.set (L"detached highwater", detached.highwater.bytes);
+                    overview.set (L"detached", coordinator.detached.size ().bytes);
+                    overview.set (L"detached highwater", coordinator.detached.highwater.bytes);
 
                     auto stats = database.stats ();
                     overview.set (L"shards", stats.shards.active);

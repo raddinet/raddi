@@ -14,6 +14,7 @@
 #include "raddi_subscription_set.h"
 #include "raddi_request.h"
 #include "raddi_defaults.h"
+#include "raddi_noticed.h"
 
 #include <string>
 #include <random>
@@ -28,7 +29,6 @@ namespace raddi {
 
         // database
         //  - reference to database instance
-        //  - TODO: consider moving 'subscriptions' etc. to 'database'
         //
         db & database;
 
@@ -70,6 +70,8 @@ namespace raddi {
 
         // subscriptions
         //  - threads/channels subscribed to by client apps
+        //  - subscription data (and other) are here, instead in database, because database
+        //    is also used by client apps (in order to keep database class minimal)
         //
         raddi::subscription_set subscriptions;
 
@@ -84,6 +86,28 @@ namespace raddi {
         //  - TODO: timely data deletion is not implemented yet, so this is unused for now
         //
         raddi::subscription_set retained;
+
+        // recent
+        //  - immediate history of entries propagated through network
+        //  - stops broadcast of entries already broadcasted
+        //  - erased after raddi::consensus::max_entry_age_allowed
+        //  - TODO: move to future raddi::node
+        //
+        raddi::noticed recent;
+
+        // detached
+        //  - insertion cache for reordering detached entries
+        //  - TODO: move to future raddi::node
+        //
+        raddi::detached detached;
+
+        // refused
+        //  - cache for EIDs that were refused for some reason
+        //  - used to keep it's descendants from 'detached' buffers
+        //  - TODO: clean when? how? save/load? -> part of database then, clean after 0x20000000 (or what's in raddi validate)
+        //          should save, otherwise 'detached' can get very clogged
+        //
+        raddi::noticed refused;
 
     private:
         mutable lock lock;
