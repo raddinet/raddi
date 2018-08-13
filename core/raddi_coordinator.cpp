@@ -40,6 +40,7 @@ raddi::coordinator::coordinator (db & database)
     this->subscriptions.load ();
     this->blacklist.load ();
     this->retained.load ();
+    this->refused.load (this->database.path + L"\\refused\\");
 };
 
 
@@ -99,6 +100,7 @@ void raddi::coordinator::flush () {
     this->subscriptions.flush ();
     this->blacklist.flush ();
     this->retained.flush ();
+    this->refused.save (this->database.path + L"\\refused\\");
 }
 
 void raddi::coordinator::optimize () {

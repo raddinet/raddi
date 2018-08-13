@@ -14,6 +14,8 @@
 #include "raddi_subscription_set.h"
 #include "raddi_request.h"
 #include "raddi_defaults.h"
+
+#include "raddi_detached.h"
 #include "raddi_noticed.h"
 
 #include <string>

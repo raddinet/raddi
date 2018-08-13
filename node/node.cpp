@@ -34,7 +34,6 @@
 #include "../core/raddi_command.h"
 #include "../core/raddi_request.h"
 #include "../core/raddi_noticed.h"
-#include "../core/raddi_detached.h"
 #include "../core/raddi_consensus.h"
 #include "../core/raddi_instance.h"
 

@@ -10,7 +10,7 @@ commands: loglevels
 commands: optimize
 commands: erase
 
-node::refused -> coordinator for save/load
+simple database encryption
 
 report bad inputs (from source) in node
 

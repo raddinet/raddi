@@ -14,7 +14,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     DATABASE | NOTE | 13    "loaded {1} entries"
     DATABASE | NOTE | 14    "entry {2} inserted"//" to {1}"
     DATABASE | NOTE | 15    "shard split initiated with threshold {1:x}"
-    DATABASE | NOTE | 16    "loaded {1} entries from {3}"
+    DATABASE | NOTE | 16    "loaded {1} entries from {2}"
 
     DATABASE | NOTE | 0x20  "loaded {2} {3} addresses from {1}, having total {4} addresses of this level"
     DATABASE | NOTE | 0x21  "saved {3} {2} addresses to {1}"

@@ -15,6 +15,7 @@ namespace raddi {
     class noticed {
         mutable ::lock                                  lock;
         std::map <std::uint32_t, std::set <raddi::iid>> data;
+        mutable std::set <std::uint32_t>                changed; // changed since last successful save
 
     public:
 
@@ -38,6 +39,15 @@ namespace raddi {
         //  - returns total number of EIDs in the cache
         //
         std::size_t size () const;
+
+        // load/save
+        //  - loads or saves data to file at 'path'
+        //
+        bool load (const std::wstring & path);
+        void save (const std::wstring & path) const;
+
+    private:
+        static bool parse (const wchar_t * string, std::uint32_t * output);
     };
 }
 
