@@ -22,6 +22,7 @@ namespace raddi {
         : log::provider <component::database> {
 
         file lock;
+        std::vector <std::uint8_t> mask; // XOR mask for data
 
     public:
         // root
@@ -102,6 +103,13 @@ namespace raddi {
             //  - 
             //
             unsigned int disk_flush_interval = 4000; // 4s
+
+            // xor_mask_size
+            //  - database content masking random data size
+            //  - used only on first run when creating the mask file,
+            //    at subsequent starts the actual file size is used
+            //
+            unsigned int xor_mask_size = 256;
 
         } settings;
 

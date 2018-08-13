@@ -50,6 +50,33 @@ raddi::db::db (file::access mode, const std::wstring & path)
             this->threads->reload ();
             this->channels->reload ();
             this->identities->reload ();
+
+            file f;
+            if (f.open (path + L"\\xor", file::mode::always, mode, file::share::read, file::buffer::sequential)) {
+                if (f.created ()
+                    && mode == file::access::write
+                    && this->identities->empty ()
+                    && this->channels->empty ()
+                    && this->threads->empty ()
+                    && this->data->empty ()) {
+
+                    auto n = 256;
+                    this->mask.resize (n);
+                    randombytes_buf (&this->mask [0], n);
+                    if (!f.write (&this->mask [0], n)) {
+                        this->mask.clear ();
+                    }
+                } else {
+                    if (auto n = (std::size_t) f.size ()) {
+                        this->mask.resize (n);
+                        if (!f.read (&this->mask [0], n)) {
+                            this->mask.clear ();
+                        }
+                    }
+                }
+                f.close ();
+            }
+
         } else {
             this->report (log::level::error, 2, path);
         }

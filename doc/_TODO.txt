@@ -9,7 +9,7 @@ github repo:
 commands: loglevels
 commands: optimize
 
-simple database encryption
+raddi.com: simple reading support
 
 report bad inputs (from source) in node
 

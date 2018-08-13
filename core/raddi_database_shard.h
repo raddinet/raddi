@@ -67,7 +67,7 @@ public:
     //  - finds 'entry' in this shard, optionally retrieves remaining row details
     //  - returns true if such entry exists, false otherwise
     //
-    bool get (const decltype (Key::id) & entry, Key * = nullptr);
+    bool get (const db::table <Key> *, const decltype (Key::id) & entry, Key * = nullptr);
 
     // get
     //  - finds 'entry' in this shard, reconstruct entry for transmission
@@ -77,7 +77,7 @@ public:
     //  - demand - if nonzero, only 'demand' bytes of 'content' is written into 'buffer'
     //  - returns true if such entry exists, false otherwise
     //
-    bool get (const decltype (Key::id) & entry, read what, void * buffer, std::size_t * length, std::size_t demand = 0u);
+    bool get (const db::table <Key> *, const decltype (Key::id) & entry, read what, void * buffer, std::size_t * length, std::size_t demand = 0u);
 
     // size
     //  - returns number of rows in the shard
@@ -103,7 +103,7 @@ public:
     //     - first called with second argument nullptr, if returns true, second call provides data
     //
     template <typename F>
-    void enumerate (F callback);
+    void enumerate (const db::table <Key> * table, F callback);
 
 public:
     friend bool operator < (const shard & a, const shard & b) { return a.base < b.base; }
@@ -117,9 +117,9 @@ private:
     bool unsynchronized_advance (const db::table <Key> *);
     void unsynchronized_insert_to_cache (const Key &);
 
-    bool unsynchronized_get (const decltype (Key::id) &, Key * = nullptr,
+    bool unsynchronized_get (const db::table <Key> *, const decltype (Key::id) &, Key * = nullptr,
                              read = read::nothing, void * = nullptr, std::size_t * = nullptr, std::size_t = 0u);
-    bool unsynchronized_read (typename std::vector <Key>::const_iterator i,
+    bool unsynchronized_read (const db::table <Key> *, typename std::vector <Key>::const_iterator i,
                               read = read::nothing, void * = nullptr, std::size_t = 0u);
     bool unsynchronized_insert (const db::table <Key> *, const entry * data, std::size_t size, const root &);
 };

@@ -237,13 +237,13 @@ bool raddi::db::shard <Key>::insert (const db::table <Key> * table, const entry 
     exclusive guard (this->lock);
 
     if (!table->db.settings.reinsertion_validation) {
-        exists = this->unsynchronized_get ((const decltype (Key::id)) entry->id);
+        exists = this->unsynchronized_get (table, (const decltype (Key::id)) entry->id);
 
     } else {
         std::uint8_t buffer [sizeof (raddi::entry) + raddi::entry::max_content_size];
         std::size_t length;
 
-        exists = this->unsynchronized_get ((const decltype (Key::id)) entry->id, nullptr, read::everything, buffer, &length);
+        exists = this->unsynchronized_get (table, (const decltype (Key::id)) entry->id, nullptr, read::everything, buffer, &length);
 
         if (exists) {
             if (size != length) {
@@ -274,7 +274,23 @@ bool raddi::db::shard <Key>::unsynchronized_insert (const db::table <Key> * tabl
             const auto iposition = this->index.tell ();
             const auto cposition = this->content.tell ();
 
-            if (!this->content.write (reinterpret_cast <const char *> (entry) + prefix, size - prefix)) {
+            const void * write_ptr = nullptr;
+            const auto   write_size = size - prefix;
+            std::uint8_t masked [sizeof (raddi::entry) + raddi::entry::max_content_size];
+
+            if (const auto mask_size = table->db.mask.size ()) {
+                const auto source = reinterpret_cast <const std::uint8_t *> (entry) + prefix;
+
+                for (auto i = 0u; i != write_size; ++i) {
+                    masked [i] = source [i] ^ table->db.mask [(cposition + i) % mask_size];
+                }
+
+                write_ptr = masked;
+            } else {
+                write_ptr = reinterpret_cast <const char *> (entry) + prefix;
+            }
+
+            if (!this->content.write (write_ptr, write_size)) {
                 this->content.resize (cposition);
                 return this->report (log::level::error, 15, this->path (table));
             }
@@ -350,19 +366,21 @@ bool raddi::db::shard <Key>::erase (const db::table <Key> * table, const decltyp
 }
 
 template <typename Key>
-bool raddi::db::shard <Key>::get (const decltype (Key::id) & e, Key * r) {
+bool raddi::db::shard <Key>::get (const db::table <Key> * table, const decltype (Key::id) & e, Key * r) {
     immutability guard (this->lock);
-    return this->unsynchronized_get (e, r);
+    return this->unsynchronized_get (table, e, r);
 }
 
 template <typename Key>
-bool raddi::db::shard <Key>::get (const decltype (Key::id) & e, read what, void * buffer, std::size_t * length, std::size_t demand) {
+bool raddi::db::shard <Key>::get (const db::table <Key> * table,
+                                  const decltype (Key::id) & e, read what, void * buffer, std::size_t * length, std::size_t demand) {
     immutability guard (this->lock);
-    return this->unsynchronized_get (e, nullptr, what, buffer, length, demand);
+    return this->unsynchronized_get (table, e, nullptr, what, buffer, length, demand);
 }
 
 template <typename Key>
-bool raddi::db::shard <Key>::unsynchronized_get (const decltype (Key::id) & id, Key * row,
+bool raddi::db::shard <Key>::unsynchronized_get (const db::table <Key> * table,
+                                                 const decltype (Key::id) & id, Key * row,
                                                  read what, void * entry, std::size_t * size, std::size_t demand) {
     auto ie = this->cache.end ();
     auto ii = std::lower_bound (this->cache.begin (), ie, Key { id });
@@ -376,13 +394,14 @@ bool raddi::db::shard <Key>::unsynchronized_get (const decltype (Key::id) & id, 
         }
 
         this->accessed = raddi::now ();
-        return this->unsynchronized_read (ii, what, entry, demand);
+        return this->unsynchronized_read (table, ii, what, entry, demand);
     } else
         return false;
 }
 
 template <typename Key>
-bool raddi::db::shard <Key>::unsynchronized_read (typename std::vector <Key>::const_iterator ii,
+bool raddi::db::shard <Key>::unsynchronized_read (const db::table <Key> * table,
+                                                  typename std::vector <Key>::const_iterator ii,
                                                   read what, void * entry, std::size_t demand) {
     if ((what != read::nothing) && (entry != nullptr)) {
         switch (what) {
@@ -428,9 +447,17 @@ bool raddi::db::shard <Key>::unsynchronized_read (typename std::vector <Key>::co
         auto target = reinterpret_cast <std::uint8_t *> (entry)
                     + sizeof (raddi::entry::id) + sizeof (raddi::entry::parent)
                     + offset;
+        auto position = ii->data.offset + offset;
 
-        if (!this->content.read (ii->data.offset + offset, target, length)) {
-            this->report (log::level::error, 17, ii->data.offset + offset, length);
+        if (this->content.read (position, target, length)) {
+
+            if (auto mask_size = table->db.mask.size ()) {
+                for (auto i = 0u; i != length; ++i) {
+                    target [i] ^= table->db.mask [(position + i) % mask_size];
+                }
+            }
+        } else {
+            this->report (log::level::error, 17, position, length);
             this->unsynchronized_close (); // corrupted db, force reload
             return false;
         }
@@ -470,7 +497,7 @@ raddi::db::shard <Key> raddi::db::shard <Key>::split (const db::table <Key> * ta
                 std::uint8_t description [raddi::entry::max_content_size];
             } data;
 
-            if (this->unsynchronized_get (row.id, nullptr, read::everything, &data, &size)) {
+            if (this->unsynchronized_get (table, row.id, nullptr, read::everything, &data, &size)) {
                 if (!row.id.erased ()) {
                     if (row.id.timestamp >= timestamp) {
                         if (separated.unsynchronized_insert (table, &data, size, row.top ())) {
@@ -502,7 +529,7 @@ raddi::db::shard <Key> raddi::db::shard <Key>::split (const db::table <Key> * ta
 
 template <typename Key>
     template <typename F>
-void raddi::db::shard <Key> ::enumerate (F callback) {
+void raddi::db::shard <Key> ::enumerate (const db::table <Key> * table, F callback) {
     immutability guard (this->lock);
 
     auto i = this->cache.cbegin ();
@@ -511,7 +538,7 @@ void raddi::db::shard <Key> ::enumerate (F callback) {
     for (; i != e; ++i) {
         if (callback (*i, nullptr)) {
             std::uint8_t data [raddi::protocol::max_payload];
-            if (this->unsynchronized_read (i, read::everything, data)) {
+            if (this->unsynchronized_read (table, i, read::everything, data)) {
                 callback (*i, data);
             }
         }

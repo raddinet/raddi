@@ -81,7 +81,7 @@ bool raddi::db::table <Key>::get (const decltype (Key::id) & entry, Key * r) con
         if (this->need_shard_to_advance (shard)) {
             shard->advance (this);
         }
-        return shard->get (entry, r);
+        return shard->get (this, entry, r);
     } else
         return false;
 }
@@ -94,7 +94,7 @@ bool raddi::db::table <Key>::get (const decltype (Key::id) & entry, read what,
         if (this->need_shard_to_advance (shard)) {
             shard->advance (this);
         }
-        return shard->get (entry, what, buffer, length, demand);
+        return shard->get (this, entry, what, buffer, length, demand);
     } else
         return false;
 }
@@ -343,7 +343,7 @@ std::size_t raddi::db::table <Key>::select (std::uint32_t oldest, std::uint32_t 
         info.index = 0;
         info.count = shard.size (this);
 
-        shard.enumerate ([&info, oldest, latest, constrain, query, callback] (const Key & row, std::uint8_t * data) -> bool {
+        shard.enumerate (this, [&info, oldest, latest, constrain, query, callback] (const Key & row, std::uint8_t * data) -> bool {
             bool r = false;
             if (data) {
                 callback (row, info, data);

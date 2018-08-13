@@ -97,6 +97,13 @@ public:
     //
     bool top (Key *) const;
 
+    // empty
+    //  -
+    //
+    bool empty () const {
+        return this->shards.empty ();
+    }
+
     // stats
     //  - computes some basic resource demands and statistics for the table
     //
