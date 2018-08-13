@@ -1,6 +1,11 @@
 Command-line parameters
 =======================
 
+Notes:
+	- parameters that take boolean value, usually denoted with <0|1|false|true> below
+	  are generally false by default, unless specified otherwise; when specified
+	  without value, true is assumed
+
 Common parameters:
 	- log:<default|all|everything|event(s)|data|error(s)|stop(s)|disable(d)>[:<path>]
 		- selects events written into the log file
@@ -141,7 +146,7 @@ Node database behavior parameters:
 		  everything (core network nodes are typically configured as such)
 		- default is 0 when parameter is missing, 1 if no value is provided
 
-RADDI.com utility parameters:
+RADDI.com utility functions:
 	- timestamp
 	- timestamp:<N>
 		- 'timestamp' displays current timestamp as hexadecimal lowecase number
@@ -163,12 +168,84 @@ RADDI.com utility parameters:
 		- attempts to generate proof-of-work of all supported complexities on
 		  predefined input, verifies that the results are as expected and reports
 		  time it took to generate them
+	- deepscan
+		- performs revalidation of the entire database; enumerates all entries
+		  and validates their correctness and verifies their proof-of-work and
+		  signatures
+		- debugging feature, may disappear in the future
+	- new:identity
+		- creates new identity announcement with specified content (text/content)
+		  and transmits it through active instance (specified, or first found)
+		- NOTE: requires higher complexity PoW that may take more time to compute
+		- prints identity identifier (hexadecimal format) followed by colon (:)
+		  and private key (64 lowercase hexadecimal characters)
+	- new:channel
+		- creates new channel announcement with specified content (text/content)
+		  and transmits it through active instance (specified, or first found)
+		- NOTE: requires higher complexity PoW that may take more time to compute
+		- required parameters:
+			- identity
+		- prints single line:
+			- entry identifier of the channel, in lowercase hexadecimals
+	- new:thread
+		- creates new top-level thread entry with specified content(text/content)
+		  and transmits it through active instance (specified, or first found)
+		- "new:thread channel:<eid>" is actually just an alias for "reply:<eid>"
+		   - channel parameter is not verified to actually describe a channel
+		- required parameters:
+			- identity, channel
+		- prints single line:
+			- entry identifier of the thread, in lowercase hexadecimals
+	- reply:<eid>
+		- creates new response entry to the <eid> entry and transmits it through
+		  active instance (specified, or first found)
+		- NOTE: due to rate limit imposed by the EID format, the command may fail
+		        if called in rapid succession; one second delay is sufficient to
+		        wait before retrying
+		- required parameters:
+			- identity
+			- text or content in case of reply response
+		- prints single line:
+			- new entry identifier (eid), in lowercase hexadecimals
+	- erase:<eid>
+		- deletes the <eid> entry from database
+		- optional parameters:
+			- quick
+	- download:<eid|"all">
+		- requests, from all connected nodes, all data for the specified channel
+		  or thread, or totally all data
+		- eid - channel, thread or nested entry (then whole thread is downloaded)
+			- if "all" is specified, requests to download all data the peers
+			  have; note that non-core node peers will usually deny this
+		- optional parameters:
+			- threshold - default threshold is 31 days (now-31*86400)
+
+	- list:identities
+	- list:channels
+
+	- add:<IP>
+	- remove:<IP>
+	- ban:<IP>
+	- unban:<IP>
+	- connect:<IP>
+
+	- subscribe:<eid>
+	- unsubscribe:<eid>
+	- blacklist:<eid>
+	- unblacklist:<eid>
+	- retain:<eid>
+	- unretain:<eid>
+
+
+RADDI.com utility optional parameters to functions:
 	- instance:<pid>
 		- specifies active instance, identified by PID number, to operate on
 		- otherwise first instance found is used, searched in following order:
 			1) raddi node service
 			2) raddi node running under same user account
 			3) raddi node running under other user account
+		- applies to every function, except:
+			- timestamp, microtimestamp, benchmark
 	- text:<text>
 		- <text> is converted to UTF-8 and appended to content of the new entry
 		  without adding any additional characters
@@ -224,51 +301,25 @@ RADDI.com utility parameters:
 		- easiest use is to just provide output of the 'new:identity' command
 		- applies to:
 			- new:channel, new:thread, new:thread, reply
-	- new:identity
-		- creates new identity announcement with specified content (text/content)
-		  and transmits it through active instance (specified, or first found)
-		- NOTE: requires higher complexity PoW that may take more time to compute
-		- prints identity identifier (hexadecimal format) followed by colon (:)
-		  and private key (64 lowercase hexadecimal characters)
-	- new:channel
-		- creates new channel announcement with specified content (text/content)
-		  and transmits it through active instance (specified, or first found)
-		- NOTE: requires higher complexity PoW that may take more time to compute
-		- required parameters:
-			- identity
-		- prints single line:
-			- entry identifier of the channel, in lowercase hexadecimals
-	- new:thread
-		- creates new top-level thread entry with specified content(text/content)
-		  and transmits it through active instance (specified, or first found)
-		- "new:thread channel:<eid>" is actually just an alias for "reply:<eid>"
-		   - channel parameter is not verified to actually describe a channel
-		- required parameters:
-			- identity, channel
-		- prints single line:
-			- entry identifier of the thread, in lowercase hexadecimals
+	- verify-identity-private-key:<0|1|false|true>
+		- performs additional validation of the key before creating new entry
+		- optional, attempt to use invalid key might get caught by sign/verify
+		- applies to:
+			- new:channel, new:thread, new:thread, reply
 	- channel:<eid>
 		- specifies channel entry identitifer for new:thread command
 		- applies to:
 			- new:thread
-	- reply:<eid>
-		- creates new response entry to the <eid> entry and transmits it through
-		  active instance (specified, or first found)
-		- NOTE: due to rate limit imposed by the EID format, the command may fail
-		        if called in rapid succession; one second delay is sufficient to
-		        wait before retrying
-		- required parameters:
-			- identity
-			- text or content in case of reply response
-		- prints single line:
-			- new entry identifier (eid), in lowercase hexadecimals
-	- list:identities
-	- list:channels
-
-	- verify-identity-private-key
-		- performs additional validation of the key before creating new entry
-		- optional, attempt to use invalid key might get caught by sign/verify
-	- deepscan
-		- performs revalidation of the entire database; enumerates all entries
-		  and validates their correctness and verifies their proof-of-work and
-		  signatures
+	- quick:<0|1|false|true>
+		- setting to true for 'erase' function, the deletion will not be thorough
+		  i.e. only index entry is deleted; normally the content is overwritten
+		  with zero bytes
+		- applies to:
+			- erase
+	- threshold:<timestamp>
+		- timestamp of oldest data requested
+		- the threshold is purely advisory, peers will generally return older
+		  data if it is necessary to return whole thread, or reduce the threshold
+		  if there's too much data
+		- applies to:
+			- download

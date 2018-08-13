@@ -8,7 +8,6 @@ github repo:
 
 commands: loglevels
 commands: optimize
-commands: erase
 
 simple database encryption
 

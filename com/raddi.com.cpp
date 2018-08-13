@@ -353,7 +353,7 @@ std::size_t send (const raddi::instance & instance, const raddi::entry & entry, 
 // send
 //  - places command into instance's source directory for transmission
 // 
-std::size_t send (const raddi::instance & instance, enum class raddi::command::type & cmd) {
+std::size_t send (const raddi::instance & instance, enum class raddi::command::type cmd) {
     if (!instance.get <unsigned int> (L"broadcasting")) {
         raddi::log::data (0x90, instance.pid);
         SetLastError (ERROR_CONNECTION_UNAVAIL);
@@ -458,8 +458,19 @@ int wmain (int argc, wchar_t ** argw) {
 #endif
     raddi::log::event (0xF0, raddi::log::path);
 
-    // TODO: registry storage for our uuid: /RADDI.net/com/uuid
-    // app.parse ();
+    // apps need their UUID for daemon to distinguish them:
+    //  - either hard-code the UUID, every app different!
+    //  - or generate on first run and store in app's settings, like this:
+
+    HKEY registry;
+    if (RegCreateKeyEx (HKEY_CURRENT_USER, L"SOFTWARE\\RADDI.net", 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &registry, NULL) == ERROR_SUCCESS) {
+        DWORD size = sizeof app;
+        if (RegQueryValueEx (registry, L"raddi.com", NULL, NULL, (LPBYTE) &app, &size) != ERROR_SUCCESS) {
+            RegSetValueEx (registry, L"raddi.com", 0, REG_BINARY, (LPBYTE) &app, sizeof app);
+        }
+        RegCloseKey (registry);
+        registry = NULL;
+    }
 
     WSADATA wsa;
     WSAStartup (0x0202, &wsa);
@@ -492,6 +503,7 @@ bool list_identities ();
 bool list_channels ();
 
 bool download_command (const wchar_t * what);
+bool erase_command (const wchar_t * what);
 bool peer_command (enum class raddi::command::type, const wchar_t * address);
 bool subscription_command (enum class raddi::command::type, const wchar_t * eid);
 
@@ -509,14 +521,10 @@ bool go () {
         }
     }
 
-    // TODO: ver/version/status (raddi::protocol::magic) ... display:all already does this
     // TODO: install / uninstall / start / stop ... (service)
     //  - ADD/REMOVE "127.0.0.1 xxx.raddi.net" to c:\Windows\System32\Drivers\etc\hosts 
 
-    // TODO: delete:eid database:xxx - TODO: offline or request node server to delete?
-    // TODO: notify? - wait on db for an event?
     // TODO: list:instances, list:threads ...
-    
     // TODO: clear blacklist, list blacklist, ban:IP?
     // TODO: clear peers (all)
 
@@ -584,9 +592,9 @@ bool go () {
     }
 
     if (auto parameter = option (argc, argw, L"list")) {
-        if (!std::wcscmp (parameter, L"instances")) {
+        /*if (!std::wcscmp (parameter, L"instances")) {
             // TODO
-        }
+        }*/
         if (!std::wcscmp (parameter, L"identities")) {
             return list_identities ();
         }
@@ -641,8 +649,9 @@ bool go () {
     if (auto parameter = option (argc, argw, L"download")) {
         return download_command (parameter);
     }
-
-    // TODO: erase
+    if (auto parameter = option (argc, argw, L"erase")) {
+        return erase_command (parameter);
+    }
 
     if (auto parameter = option (argc, argw, L"subscribe")) {
         return subscription_command (raddi::command::type::subscribe, parameter);
@@ -723,6 +732,22 @@ bool download_command (const wchar_t * what) {
 
     return send (instance, raddi::command::type::download, raddi::request::download { channel, threshold });
 }
+
+bool erase_command (const wchar_t * what) {
+    raddi::instance instance (option (argc, argw, L"instance"));
+    if (instance.status != ERROR_SUCCESS)
+        return raddi::log::data (0x91);
+
+    raddi::eid entry;
+    if (!entry.parse (what))
+        return raddi::log::data (0x92, what);
+
+    bool quick = false;
+    option (argc, argw, L"quick", quick);
+
+    return send (instance, quick ? raddi::command::type::erase : raddi::command::type::erase_thorough);
+}
+
 
 template <typename T>
 std::size_t sign_and_validate (const wchar_t * step, T & entry, std::size_t size,
