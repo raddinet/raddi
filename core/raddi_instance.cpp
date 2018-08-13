@@ -170,7 +170,7 @@ HKEY raddi::instance::find_pid (HKEY hBase) {
     HKEY hInstance = NULL;
     DWORD i = 0;
 
-    wchar_t sub [12];
+    wchar_t sub [40];
     DWORD n = sizeof sub / sizeof sub [0];
     while (RegEnumKeyEx (hBase, i++, sub, &n, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
         n = sizeof sub / sizeof sub [0];
@@ -181,6 +181,11 @@ HKEY raddi::instance::find_pid (HKEY hBase) {
             if (std::wcscmp (sub, this->pid) != 0)
                 continue;
         }
+
+        // is this APP uuid?
+
+        if (std::wcschr (sub, L'-'))
+            continue;
 
         // is that PID still alive?
         //  - TODO: completely rewrite to first enum all instances, then select the best
