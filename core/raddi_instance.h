@@ -13,7 +13,6 @@ namespace raddi {
     class instance {
         HKEY registry = NULL;
         HKEY overview = NULL;
-        HKEY commands = NULL;
 
         public:
             wchar_t pid [14];
@@ -26,10 +25,17 @@ namespace raddi {
 
         public:
             // instance (bool)
-            //  - creates information store (registry key) for current
-            //    instance (PID) either in HKLM (true) or HKCU (false)
+            //  - creates information store (registry key) for current NODE instance (PID)
+            //    either in HKLM (true) or HKCU (false)
+            //  - NODE instance store per-PID is volatile, data deleted on logoff/reboot
             // 
             explicit instance (bool global);
+
+            // instance (uuid)
+            //  - connects to information store (registry key) for current APP instance (uuid)
+            //  - APP instance data are not deleted on logoff/reboot
+            // 
+            explicit instance (uuid app);
 
             // instance (pid)
             //  - searches and connects to 'pid' instance or first available (if 'pid' is nullptr)

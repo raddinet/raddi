@@ -25,6 +25,21 @@ raddi::instance::instance (bool global) {
     SetLastError (this->status);
 }
 
+raddi::instance::instance (uuid app) {
+    this->pid [0] = L'\0';
+    this->status = RegCreateKeyEx (HKEY_CURRENT_USER,
+                                   L"SOFTWARE\\RADDI.net", 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &this->registry, NULL);
+    if (this->status != ERROR_SUCCESS) {
+        this->failure_point = L"SOFTWARE\\RADDI.net";
+    } else {
+        this->status = RegCreateKeyEx (registry, app.c_wstr ().c_str (), 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &this->overview, NULL);
+        if (this->status != ERROR_SUCCESS) {
+            this->failure_point = L"uuid";
+        }
+    }
+    SetLastError (this->status);
+}
+
 bool raddi::instance::set (const wchar_t * name, uuid value) {
     return this->set (name, REG_BINARY, &value, sizeof value);
 }
@@ -56,7 +71,7 @@ bool raddi::instance::set (const wchar_t * name, DWORD type, const void * data, 
 template <> uuid raddi::instance::get <uuid> (const wchar_t * name) const {
     uuid data;
     DWORD size = sizeof data;
-    if (this->get (name, REG_QWORD, reinterpret_cast <BYTE *> (&data), &size)) {
+    if (this->get (name, REG_BINARY, reinterpret_cast <BYTE *> (&data), &size)) {
         return data;
     } else {
         data.null ();
@@ -218,7 +233,9 @@ raddi::instance::~instance () {
         this->overview = NULL;
     }
     if (this->registry) {
-        RegDeleteKey (this->registry, this->pid);
+        if (this->pid [0]) {
+            RegDeleteKey (this->registry, this->pid);
+        }
         RegCloseKey (this->registry);
         this->registry = NULL;
     }
