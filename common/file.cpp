@@ -127,3 +127,7 @@ bool file::zero (std::uintmax_t offset, std::uintmax_t length) noexcept {
 
     return DeviceIoControl (this->handle, FSCTL_SET_ZERO_DATA, &zero, (DWORD) sizeof zero, NULL, 0, &n, NULL);
 }
+
+bool file::unlink (const std::wstring & path) {
+    return DeleteFile (path.c_str ());
+}

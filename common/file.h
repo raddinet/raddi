@@ -134,6 +134,13 @@ public:
     //
     bool zero (std::uintmax_t offset, std::uintmax_t length) noexcept;
 
+public:
+
+    // unlink
+    //  - marks file for deletion when all handles are closed
+    //
+    static bool unlink (const std::wstring & path);
+
 private:
     std::uintmax_t seek_ (std::uintmax_t offset, int) const noexcept;
 };
