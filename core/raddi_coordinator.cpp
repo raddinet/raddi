@@ -682,14 +682,14 @@ void raddi::coordinator::process_download_request (const request::download * dow
 }
 
 bool raddi::coordinator::move (connection * connection, level new_level, std::uint16_t assessment) {
-    if (this->move (connection->peer, new_level, assessment)) {
+    if (this->move (connection->peer, new_level, assessment, false)) {
         connection->level = new_level;
         return true;
     } else
         return false;
 }
 
-bool raddi::coordinator::move (const address & address, level new_level, std::uint16_t assessment) {
+bool raddi::coordinator::move (const address & address, level new_level, std::uint16_t assessment, bool adjust) {
     level level;
     while (this->find (address, &level)) {
         if (level == blacklisted_nodes)
@@ -698,6 +698,17 @@ bool raddi::coordinator::move (const address & address, level new_level, std::ui
         this->database.peers [level]->erase (address);
     }
     this->database.peers [new_level]->insert (address, assessment);
+
+    if (adjust) {
+        immutability guard (this->lock);
+        for (auto & connection : this->connections) {
+            if (!connection.retired) {
+                if (connection.peer == address) {
+                    connection.level = new_level;
+                }
+            }
+        }
+    }
     return true;
 }
 

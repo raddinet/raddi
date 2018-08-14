@@ -347,7 +347,7 @@ namespace raddi {
         std::size_t gather_history (const eid &, request::subscription *) const;
         bool process_history (const raddi::request::subscription * history, std::size_t size, connection *);
 
-        bool move (const address &, level, std::uint16_t = db::peerset::new_record_assessment);
+        bool move (const address &, level, std::uint16_t = db::peerset::new_record_assessment, bool adjust = true);
         bool move (connection *, level, std::uint16_t = db::peerset::new_record_assessment);
 
         std::size_t select_unused_addresses (level, std::size_t n, std::map <address, level> & addresses) const;
