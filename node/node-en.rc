@@ -83,6 +83,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SERVER | NOTE | 0x27    "{1} {2} history span: {5} entries in range {3:x}..{4:x}, we have {6} in this range"
     SERVER | NOTE | 0x28    "peer {1} requested download of entries of channel {4} in range {2:x}..{3:x}"
     SERVER | NOTE | 0x29    "peer {1} requested download of all entries in range {2:x}..{3:x}"
+    SERVER | NOTE | 0x2A    "peer {1} announced address {2} is on blacklist, ignored"
 
     // coordinator
     SERVER | DATA | 0x20    "peer {1} exceeded {2} requests per second limit"

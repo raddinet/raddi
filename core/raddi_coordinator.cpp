@@ -385,9 +385,11 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
                     if (this->find (address)) {
                         this->report (log::level::note, 0x20, (unsigned int) port);
                     } else {
-                        this->database.peers [announced_nodes]->insert (address);
-                        this->connect_one_more_announced_node = true;
-                        this->report (log::level::note, 0x21, address);
+                        if (!this->database.peers [blacklisted_nodes]->count (address)) {
+                            this->database.peers [announced_nodes]->insert (address);
+                            this->connect_one_more_announced_node = true;
+                            this->report (log::level::note, 0x21, address);
+                        }
                     }
                 }
                 break;
@@ -440,26 +442,31 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
                         a.port = reinterpret_cast <const request::newpeer *> (r->content ())->port;
                     }
 
-                    // accept local network addresses only from peers on local network
+                    if (!this->database.peers [blacklisted_nodes]->count (a)) {
 
-                    if (a.accessible () || !connection->peer.accessible (address::validation::allow_null_port)) {
+                        // accept local network addresses only from peers on local network
 
-                        // core nodes may announce other core node
-                        //  - if we already know that node, upgrade it's status
+                        if (a.accessible () || !connection->peer.accessible (address::validation::allow_null_port)) {
 
-                        if ((reinterpret_cast <const request::newpeer *> (r->content ())->flags & 0x0001) && (connection->level == core_nodes)) {
-                            if (this->move (a, core_nodes)) {
-                                this->report (log::level::note, 0x23, connection->peer, a);
+                            // core nodes may announce other core node
+                            //  - if we already know that node, upgrade it's status
+
+                            if ((reinterpret_cast <const request::newpeer *> (r->content ())->flags & 0x0001) && (connection->level == core_nodes)) {
+                                if (this->move (a, core_nodes)) {
+                                    this->report (log::level::note, 0x23, connection->peer, a);
+                                }
+                            } else {
+                                this->database.peers [announced_nodes]->erase (a);
+                                if (!this->find (a)) {
+                                    this->database.peers [validated_nodes]->insert (a);
+                                    this->report (log::level::note, 0x22, connection->peer, a);
+                                }
                             }
                         } else {
-                            this->database.peers [announced_nodes]->erase (a);
-                            if (!this->find (a)) {
-                                this->database.peers [validated_nodes]->insert (a);
-                                this->report (log::level::note, 0x22, connection->peer, a);
-                            }
+                            this->report (log::level::data, 0x22, connection->peer, a);
                         }
                     } else {
-                        this->report (log::level::data, 0x22, connection->peer, a);
+                        this->report (log::level::note, 0x2A, connection->peer, a);
                     }
                 } else {
                     // don't display warning within local network

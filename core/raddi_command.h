@@ -32,7 +32,7 @@ namespace raddi {
 
             // TODO: query_more_peers?
             // TODO: listen/stop(listening)? NOTE: add locking in coordinator (listeners list) when implementing this
-            // TODO: discovery(new/stop)? NOTE: allso add locking
+            // TODO: discovery(new/stop)? NOTE: also needs the locking
 
             add_peer            = 0x10, // data: 'address'
             rem_peer            = 0x11, // data: 'address'
@@ -88,14 +88,18 @@ namespace raddi {
             case command::type::set_log_level: return L"set log level";
             case command::type::set_display_level: return L"set display level";
             case command::type::optimize: return L"optimize";
+
             case command::type::add_peer: return L"add peer";
             case command::type::rem_peer: return L"remove peer";
             case command::type::ban_peer: return L"ban peer";
             case command::type::unban_peer: return L"unban peer";
             case command::type::add_core_peer: return L"add core peer";
             case command::type::connect_peer: return L"connect peer";
+
+            case command::type::download: return L"download";
             case command::type::erase: return L"erase";
             case command::type::erase_thorough: return L"thorough erase";
+
             case command::type::subscribe: return L"subscribe";
             case command::type::unsubscribe: return L"unsubscribe";
             case command::type::blacklist: return L"blacklist";
