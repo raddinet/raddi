@@ -145,6 +145,12 @@ Node database behavior parameters:
 		- when non-zero the database is not testing for subscriptions and stores
 		  everything (core network nodes are typically configured as such)
 		- default is 0 when parameter is missing, 1 if no value is provided
+	- database-xor-mask-size:<N>
+		- used on first start, defines size of random xor mask used subsequently
+		  to xor database content files on read and write
+			- the purpose is to mask data against simple full-disk searches
+			  for anything discrediting, regardless the author of such data
+		- default is 256, set to 0 to keep database unencrypted
 
 RADDI.com utility functions:
 	- timestamp
