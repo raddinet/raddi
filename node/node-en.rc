@@ -65,7 +65,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SOURCE | ERROR | 8  "unable to start, error {ERR}"
     SOURCE | ERROR | 9  "won't process nor broadcast file {1}, truncated"
 
-    SERVER | NOTE | 1       "RCV {3}, MSG {1}, K/A {2}; TRM {4}, DLY {5}"
+    SERVER | NOTE | 1       "{1} on {2}, pending {3} ({4} bytes), {5}s idle, RCV {6}: msgs {7}, k/a {8}; TRM {9}: delayed {10}"
     // SERVER | NOTE | 2       "remote peer clock difference {1} seconds"
     SERVER | NOTE | 3       "reflected connection dropped"
     SERVER | NOTE | 4       "connecting through SOCKS5t proxy {1}"
@@ -87,7 +87,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
     // coordinator
     SERVER | DATA | 0x20    "peer {1} exceeded {2} requests per second limit"
-    SERVER | DATA | 0x21    "peer {1} cannot validate own address, suspecting NAT, ignoring"
+    SERVER | DATA | 0x21    "peer {1} cannot validate own address" // node is probably behind NAT
     SERVER | DATA | 0x22    "peer {1} cannot validate non public address {2}"
     SERVER | DATA | 0x23    "wrong protocol, expected {2}, received {1}"
     SERVER | DATA | 0x24    "packet truncated, expected {2} bytes, received only {1}"

@@ -976,7 +976,7 @@ namespace {
         }
 
         SetPeriodicWaitableTimer (events [6], database.settings.disk_flush_interval);
-        ScheduleWaitableTimer (events [7], 10'000'000'0);
+        ScheduleWaitableTimer (events [7], 60*60'000'000'0);
         SetEvent (optimize);
 
         coordinator.start ();
@@ -1085,11 +1085,10 @@ namespace {
 
                 // status
                 //  - for debugging purposes, displays status of the connections
-                //  - TODO: make it 1 hour or on keepalive and show general status (note) with trm/rcv/connections counters?
                 //
                 case WAIT_OBJECT_0 + 7:
                     coordinator.status ();
-                    ScheduleWaitableTimer (events [7], 10'000'000'0);
+                    ScheduleWaitableTimer (events [7], 60*60'000'000'0);
                     break;
 
                 case WAIT_TIMEOUT:
