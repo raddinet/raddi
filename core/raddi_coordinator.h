@@ -130,7 +130,7 @@ namespace raddi {
         // core_sync...
         //  - data for synchronization among core nodes...
 
-        std::uint32_t core_sync_threshold;
+        std::uint32_t core_sync_threshold = 0;
         std::uint32_t core_sync_count = 3; // ???
 
     public:

@@ -1197,6 +1197,8 @@ void raddi::coordinator::announce (const address & a, bool only, connection * cx
             rcb = sizeof (request::ipv6peer);
             std::memcpy (r.v6.address, &a.address6, sizeof a.address6);
             break;
+        default:
+            return;
     }
 
     if (only) {
