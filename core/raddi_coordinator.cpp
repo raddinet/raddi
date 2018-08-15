@@ -152,6 +152,10 @@ void raddi::coordinator::terminate () {
 
     if (!this->connections.empty ()) {
         this->report (log::level::stop, 0x20, this->connections.size ());
+
+        for (const auto & connection : connections) {
+            connection.status ();
+        }
     }
 
     this->listeners.clear ();
@@ -840,8 +844,9 @@ bool raddi::coordinator::broadcasting () const {
 void raddi::coordinator::status () const {
     immutability guard (this->lock);
     for (const auto & connection : connections) {
-        if (connection.secured)
+        if (connection.secured || !connection.retired) {
             connection.status ();
+        }
     }
 }
 

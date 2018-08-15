@@ -254,8 +254,8 @@ namespace raddi {
         bool find (const address &, level * = nullptr) const;
 
         // status
-        //  - requests status display of all connections
-        //  - TODO: return data as a container for push into 'overview'
+        //  - displays status of all connections
+        //  - TODO: add function that will return data for 'overview'
         //
         void status () const;
 

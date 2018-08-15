@@ -156,9 +156,12 @@ std::uint64_t raddi::connection::keepalive (std::uint64_t now, std::uint64_t exp
 }
 
 void raddi::connection::status () const {
-    // TODO: return status structure
     this->report (raddi::log::level::note, 1,
-                  this->messages, this->keepalives, this->counter,
+                  this->retired ? L"\x2020" : this->secured ? L"\x263B" : L"\x263A",
+                  this->secured ? this->encryption->name () : L"...",
+                  this->unsynchronized_is_live (), this->buffer_size (),
+                  (raddi::microtimestamp () - std::max (this->probed, this->latest)) / 1'000'000uLL,
+                  this->counter, this->messages, this->keepalives,
                   this->counters.sent, this->counters.delayed);// */
 }
 
