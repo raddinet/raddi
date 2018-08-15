@@ -79,18 +79,18 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
         this->round = 2;
         for (; (this->round != ((Complexity > 30) ? 96u : 68u) - 2) && !this->cancelled (); this->round += 2) {
             this->threadpool.begin (n);
-                for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRound <true>, &t);
+                for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRoundT, &t);
             this->threadpool.join ();
             this->threadpool.begin (n);
-                for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRound <false>, &t);
+                for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRoundF, &t);
             this->threadpool.join ();
         }
 
         this->threadpool.begin (n);
-            for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRename1 <true>, &t);
+            for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRename1T, &t);
         this->threadpool.join ();
         this->threadpool.begin (n);
-            for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRename1 <false>, &t);
+            for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRename1F, &t);
         this->threadpool.join ();
     }
 

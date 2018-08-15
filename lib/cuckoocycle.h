@@ -284,6 +284,12 @@ namespace cuckoo {
             template <bool TRIMONV> void trimRound ();
             template <bool TRIMONV> void trimRename1 ();
 
+            // MSVC 15.8 fix (?)
+            void trimRoundT () { return this->trimRound <true> (); };
+            void trimRoundF () { return this->trimRound <false> (); };
+            void trimRename1T () { return this->trimRename1 <true> (); };
+            void trimRename1F () { return this->trimRename1 <false> (); };
+
         private:
             template <bool TRIMONV> void trimEdges1 ();
             template <unsigned SRCSIZE, unsigned DSTSIZE, bool TRIMONV> void trimEdges ();
