@@ -11,6 +11,8 @@ commands: optimize
 
 raddi.com: simple reading support
 
+somehow banning IPs doesn't work
+
 report bad inputs (from source) in node
 
 tables: test and fix shard splitting
@@ -50,11 +52,11 @@ merge raddi::detached, raddi::noticed and raddi::subscriptions
  - maybe one base template with 3 specializations
 
 split raddi stuff from node.cpp to raddi_node.cpp
- - rename node.cpp to node_win.cpp
+ - rename node.cpp to node_win.cpp and keep all Win32/service stuff there
 
 rewrite log as noted in log.cpp or somewhere there in comment
 
-SETTINGS GUIDE: settings for most privacy concerned users
+SETTINGS GUIDE: settings for most privacy concerned users, first run (proxy, tor, listeners, xor-mask)
 SETTINGS GUIDE: running multiple nodes on single machine
 
 TBD app: https://msdn.microsoft.com/en-us/library/aa767914(VS.85).aspx#app_reg
