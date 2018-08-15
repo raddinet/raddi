@@ -110,6 +110,8 @@ namespace raddi {
         inline std::wstring translate (const wchar_t * argument, const std::wstring &) { return argument; }
         inline std::wstring translate (std::nullptr_t argument, const std::wstring &) { return L""; }
 
+        inline std::wstring translate (bool argument, const std::wstring &) { return argument ? L"true" : L"false"; }
+
         std::wstring translate (api_error, const std::wstring &);
         std::wstring translate (const in_addr *, const std::wstring &);
         std::wstring translate (const in6_addr *, const std::wstring &);
