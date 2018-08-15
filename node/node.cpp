@@ -972,7 +972,7 @@ namespace {
         ScheduleTimerToLocalMidnight (events [2], +10'000'0);
 
         if (coordinator.settings.keep_alive_period) {
-            ScheduleWaitableTimer (events [3], coordinator.settings.keep_alive_period * 1'000'0);
+            ScheduleWaitableTimer (events [3], LONGLONG (coordinator.settings.keep_alive_period) * 1'000'0LL);
         }
 
         SetPeriodicWaitableTimer (events [6], database.settings.disk_flush_interval);
@@ -1128,15 +1128,7 @@ namespace {
                     overview.set (L"shards", stats.shards.active);
                     overview.set (L"cache", stats.rows); // TODO: different name?
 
-                    if (running && coordinator.broadcasting ()) {
-                        if (source.start ()) {
-                            overview.set (L"broadcasting", 1u);
-                        }
-                    } else {
-                        if (source.stop ()) {
-                            overview.set (L"broadcasting", 0u);
-                        }
-                    }
+                    overview.set (L"broadcasting", (unsigned int) (running && source.start () && coordinator.broadcasting ()));
             }
 
             overview.set (L"heartbeat", raddi::microtimestamp ());
