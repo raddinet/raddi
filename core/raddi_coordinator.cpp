@@ -181,6 +181,11 @@ void raddi::coordinator::operator() () {
     std::size_t connected [levels];
     std::size_t secured = this->active (attempting, connected);
 
+    if (this->previous_secured_count != secured) {
+        this->previous_secured_count = secured;
+        this->report (log::level::note, 2, secured, connected [core_nodes]);
+    }
+
     this->lock.acquire_shared ();
     std::size_t total = this->connections.size ();
     this->lock.release_shared ();
@@ -820,15 +825,17 @@ std::size_t raddi::coordinator::active (std::size_t attempting [levels],
     immutability guard (this->lock);
 
     for (const auto & connection : connections) {
-        if (connection.connecting) {
-            if (attempting) {
-                ++attempting [connection.level];
+        if (!connection.retired) {
+            if (connection.connecting) {
+                if (attempting) {
+                    ++attempting [connection.level];
+                }
             }
-        }
-        if (connection.secured) {
-            ++n;
-            if (connected) {
-                ++connected [connection.level];
+            if (connection.secured) {
+                ++n;
+                if (connected) {
+                    ++connected [connection.level];
+                }
             }
         }
     }

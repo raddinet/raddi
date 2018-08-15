@@ -66,7 +66,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SOURCE | ERROR | 9  "won't process nor broadcast file {1}, truncated"
 
     SERVER | NOTE | 1       "{1} on {2}, pending {3} ({4} bytes), {5}s idle, RCV {6}: msgs {7}, k/a {8}; TRM {9}: delayed {10}"
-    // SERVER | NOTE | 2       "remote peer clock difference {1} seconds"
+    SERVER | NOTE | 2       "currently connected to {1} nodes ({2} core nodes)"
     SERVER | NOTE | 3       "reflected connection dropped"
     SERVER | NOTE | 4       "connecting through SOCKS5t proxy {1}"
     SERVER | NOTE | 5       "reciprocal connection dropped"

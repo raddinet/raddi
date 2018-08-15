@@ -120,6 +120,7 @@ namespace raddi {
         std::uint32_t pacing = raddi::now ();
         std::uint32_t started = raddi::now ();
         std::uint32_t last_peers_query = raddi::now ();
+        std::size_t   previous_secured_count = 0;
 
         // connect_one_more_announced_node
         //  - when node announcement is received, this bumps the enthusiasm to validate it
