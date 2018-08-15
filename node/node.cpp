@@ -976,7 +976,7 @@ namespace {
         }
 
         SetPeriodicWaitableTimer (events [6], database.settings.disk_flush_interval);
-        ScheduleWaitableTimer (events [7], 60*60'000'000'0);
+        ScheduleWaitableTimer (events [7], 60 * 60'000'000'0uLL);
         SetEvent (optimize);
 
         coordinator.start ();
@@ -1088,7 +1088,7 @@ namespace {
                 //
                 case WAIT_OBJECT_0 + 7:
                     coordinator.status ();
-                    ScheduleWaitableTimer (events [7], 60*60'000'000'0);
+                    ScheduleWaitableTimer (events [7], 60 * 60'000'000'0uLL);
                     break;
 
                 case WAIT_TIMEOUT:
