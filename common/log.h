@@ -26,6 +26,7 @@
 // #define COORDINATOR 0x00500
 
 #ifndef RC_INVOKED
+#include <type_traits>
 #include <stdexcept>
 #include <cstdarg>
 #include <string>
@@ -107,6 +108,7 @@ namespace raddi {
 
         inline std::wstring translate (const std::wstring & argument, const std::wstring &) { return argument; }
         inline std::wstring translate (const wchar_t * argument, const std::wstring &) { return argument; }
+        inline std::wstring translate (std::nullptr_t argument, const std::wstring &) { return L""; }
 
         std::wstring translate (api_error, const std::wstring &);
         std::wstring translate (const in_addr *, const std::wstring &);
@@ -171,13 +173,19 @@ namespace raddi {
                     if (fe == std::wstring::npos)
                         break;
 
-                    auto translated = translate (argument, fo != fe ? string.substr (fo + 1, fe - fo - 1) : std::wstring ());
-                    if (prefix != L"ERR") {
-                        translated = L"\x201C" + translated + L"\x201D";
-                    }
+                    if (std::is_same <std::nullptr_t, T>::value) {
 
-                    string.replace (offset, fe + 1 - offset, translated);
-                    offset += translated.size ();
+                        string.replace (offset, fe + 1 - offset, std::wstring ());
+                    } else {
+
+                        auto translated = translate (argument, fo != fe ? string.substr (fo + 1, fe - fo - 1) : std::wstring ());
+                        if (prefix != L"ERR") {
+                            translated = L"\x201C" + translated + L"\x201D";
+                        }
+
+                        string.replace (offset, fe + 1 - offset, translated);
+                        offset += translated.size ();
+                    }
                 }
             }
             inline
