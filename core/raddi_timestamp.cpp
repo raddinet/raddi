@@ -52,7 +52,7 @@ namespace {
 std::uint32_t raddi::timestamp () {
     uULL u;
     GetSystemTimeAsFileTime (&u.ft);
-    return static_cast <std::uint32_t> (u.ns / 10000000uLL - base);
+    return static_cast <std::uint32_t> (u.ns / 1'000'000'0uLL - base);
 }
 
 std::uint32_t raddi::timestamp (const std::tm & tm) {
@@ -75,7 +75,7 @@ std::uint64_t raddi::microtimestamp () {
 std::uint32_t raddi::timestamp (const SYSTEMTIME & st) {
     uULL u;
     if (SystemTimeToFileTime (&st, &u.ft))
-        return static_cast <std::uint32_t> (u.ns / 10000000uLL - base);
+        return static_cast <std::uint32_t> (u.ns / 1'000'000'0uLL - base);
     else
         return 0u;
 }
@@ -87,7 +87,14 @@ std::tm raddi::time (std::uint32_t t) {
 SYSTEMTIME raddi::wintime (std::uint32_t t) {
     SYSTEMTIME st;
     uULL u;
-    u.ns = (t + base) * 10000000uLL;
+    u.ns = (t + base) * 1'000'000'0uLL;
+    FileTimeToSystemTime (&u.ft, &st);
+    return st;
+}
+SYSTEMTIME raddi::wintime (std::uint64_t t) {
+    SYSTEMTIME st;
+    uULL u;
+    u.ns = t * 10uLL + base * 1'000'000'0uLL;
     FileTimeToSystemTime (&u.ft, &st);
     return st;
 }

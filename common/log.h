@@ -122,11 +122,12 @@ namespace raddi {
         inline std::wstring translate (const sockaddr & address, const std::wstring & format) { return translate (&address, format); }
 
 #ifdef _WIN32
-        // TODO: replace with 'std::tm' where needed to be portable
-        std::wstring translate (GUID, const std::wstring &);
-        std::wstring translate (FILETIME, const std::wstring &);
-        std::wstring translate (SYSTEMTIME, const std::wstring &);
-        std::wstring translate (SOCKADDR_INET, const std::wstring &);
+        // TODO: create custom 'tm' structure with milliseconds
+        std::wstring translate (const std::tm &, const std::wstring &);
+        std::wstring translate (const GUID &, const std::wstring &);
+        std::wstring translate (const FILETIME &, const std::wstring &);
+        std::wstring translate (const SYSTEMTIME &, const std::wstring &);
+        std::wstring translate (const SOCKADDR_INET &, const std::wstring &);
 #endif
 
         std::wstring translate (const void * argument, const std::wstring &);

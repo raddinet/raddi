@@ -37,6 +37,7 @@ namespace raddi {
     //  - returns Windows' SYSTEMTIME for timestamp
     //
     SYSTEMTIME wintime (std::uint32_t timestamp);
+    SYSTEMTIME wintime (std::uint64_t timestamp);
 #endif
 
     // older

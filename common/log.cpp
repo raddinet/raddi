@@ -453,19 +453,27 @@ std::wstring raddi::log::translate (const sockaddr * address, const std::wstring
     }
 }
 
+std::wstring raddi::log::translate (const std::tm & t, const std::wstring & format) {
+    wchar_t string [24];
+    _snwprintf (string, sizeof string / sizeof string [0],
+                format.empty () ? L"%04u-%02u-%02u %02u:%02u:%02u" : format.c_str (),
+                t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+    return string;
+}
+
 #ifdef _WIN32
-std::wstring raddi::log::translate (SOCKADDR_INET address, const std::wstring & format) {
+std::wstring raddi::log::translate (const SOCKADDR_INET & address, const std::wstring & format) {
     return translate (reinterpret_cast <const sockaddr *> (&address), format);
 }
 
-std::wstring raddi::log::translate (FILETIME utc, const std::wstring & format) {
+std::wstring raddi::log::translate (const FILETIME & utc, const std::wstring & format) {
     SYSTEMTIME st;
     if (FileTimeToSystemTime (&utc, &st)) {
         return translate (st, format);
     } else
         return L"";
 }
-std::wstring raddi::log::translate (SYSTEMTIME st, const std::wstring & format) {
+std::wstring raddi::log::translate (const SYSTEMTIME & st, const std::wstring & format) {
     wchar_t string [24];
     _snwprintf (string, sizeof string / sizeof string [0],
                 format.empty () ? L"%04u-%02u-%02u %02u:%02u:%02u.%03u" : format.c_str (),
@@ -473,7 +481,7 @@ std::wstring raddi::log::translate (SYSTEMTIME st, const std::wstring & format) 
     return string;
 }
 
-std::wstring raddi::log::translate (GUID guid, const std::wstring &) {
+std::wstring raddi::log::translate (const GUID & guid, const std::wstring &) {
     wchar_t sz [40] = { 0 };
     StringFromGUID2 (guid, sz, 40);
     return sz;
