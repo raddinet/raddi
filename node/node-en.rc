@@ -95,7 +95,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SERVER | DATA | 0x26    "peer {1} requests for all data denied, not enabled"
 
     SERVER | EVENT | 1      "remote peer {1} connection to {2} accepted as {3}"
-    SERVER | EVENT | 2      "remote peer {1} disconnected"
+    SERVER | EVENT | 2      "remote peer disconnected" // {1} is address, same as instance name
     SERVER | EVENT | 3      "unable to establish connection" // " to {1}"
     SERVER | EVENT | 4      "connection established, {1}"
     SERVER | EVENT | 5      "discovered local peer {1}"

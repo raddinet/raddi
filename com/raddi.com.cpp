@@ -626,7 +626,18 @@ bool go () {
         return reply (L"reply", parameter);
     }
 
-    // TODO: document
+    // TODO: document all below
+
+    if (auto parameter = option (argc, argw, L"echo")) {
+        if (!std::wcscmp (parameter, L"connection")) {
+
+            raddi::instance instance (option (argc, argw, L"instance"));
+            if (instance.status != ERROR_SUCCESS)
+                return raddi::log::data (0x91);
+            else
+                return send (instance, raddi::command::type::log_conn_status);
+        }
+    }
 
     if (auto parameter = option (argc, argw, L"add")) {
         bool core = false;
@@ -671,7 +682,6 @@ bool go () {
     if (auto parameter = option (argc, argw, L"unretain")) { // TODO: better name?
         return subscription_command (raddi::command::type::unretain, parameter);
     }
-    
 
     return false;
 }

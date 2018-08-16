@@ -29,6 +29,7 @@ namespace raddi {
             set_log_level       = 0x01, // data: raddi::log::level (int)
             set_display_level   = 0x02, // data: raddi::log::level (int)
             optimize            = 0x03, // no data
+            log_conn_status     = 0x04, // no data
 
             // TODO: query_more_peers?
             // TODO: listen/stop(listening)? NOTE: add locking in coordinator (listeners list) when implementing this
@@ -88,6 +89,7 @@ namespace raddi {
             case command::type::set_log_level: return L"set log level";
             case command::type::set_display_level: return L"set display level";
             case command::type::optimize: return L"optimize";
+            case command::type::log_conn_status: return L"log connection status";
 
             case command::type::add_peer: return L"add peer";
             case command::type::rem_peer: return L"remove peer";

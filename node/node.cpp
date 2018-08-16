@@ -271,6 +271,15 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
             case raddi::command::type::optimize:
                 SetEvent (optimize);
                 break;
+            case raddi::command::type::log_conn_status: {
+                auto prev_log = raddi::log::settings::level;
+                auto prev_display = raddi::log::settings::display;
+                raddi::log::settings::display = raddi::log::level::note;
+                raddi::log::settings::level = raddi::log::level::note;
+                coordinator->status ();
+                raddi::log::settings::level = prev_log;
+                raddi::log::settings::display = prev_display;
+            } break;
 
             // peers
 
