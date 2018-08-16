@@ -309,7 +309,7 @@ std::size_t raddi::coordinator::select_unused_addresses (level lvl , std::size_t
             auto a = this->database.peers [lvl]->select (this->random_distribution (this->random_generator));
             if (!this->inuse (a)
                     && !addresses.count (a)
-                    && !this->database.peers [blacklisted_nodes]->count_ip (a)) {
+                    && !this->blacklisted (a)) {
 
                 this->report (log::level::event, 0x21, lvl, a);
                 addresses [a] = lvl;
@@ -733,7 +733,7 @@ void raddi::coordinator::ban (const address & address, std::uint16_t days) {
 
 bool raddi::coordinator::incomming (Socket && prepared, const sockaddr * remote) {
 
-    if (this->database.peers [blacklisted_nodes]->count_ip (remote)) {
+    if (this->blacklisted (remote)) {
         this->report (log::level::event, 0x20, remote);
         return false;
     }
