@@ -31,7 +31,7 @@ void raddi::db::peerset::save (int family) const {
         std::size_t written = 0;
 
         for (const auto & [address, assessment] : this->addresses) {
-            if (address.accessible ()) {
+            if (address.accessible (address::validation::allow_null_port)) {
                 if (address.family == family) {
                     if (f.write (address.data (), address.size ()) && f.write (assessment)) {
                         ++written;
@@ -74,7 +74,7 @@ std::uint32_t raddi::db::peerset::adjust (const address & a, std::int16_t adj) {
 
             i->second = (std::uint16_t) updated;
 
-            if (a.accessible ()) {
+            if (a.accessible (address::validation::allow_null_port)) {
                 switch (a.family) {
                     case AF_INET:
                         this->ipv4changed = true;
@@ -144,11 +144,43 @@ bool raddi::db::peerset::count_ip (const raddi::address & a) const {
 
 void raddi::db::peerset::erase (const address & a) {
     exclusive guard (this->lock);
-    this->addresses.erase (a);
+    if (a.port == 0) {
+        auto lower = a;
+        auto upper = a;
+
+        lower.port = 0;
+        upper.port = 65535;
+
+        while (true) {
+            auto i = this->addresses.lower_bound (lower);
+            if (i != this->addresses.end () && i->first <= upper) {
+                this->addresses.erase (i);
+                switch (a.family) {
+                    case AF_INET:
+                        this->ipv4changed = true;
+                        break;
+                    case AF_INET6:
+                        this->ipv6changed = true;
+                        break;
+                }
+            } else
+                return;
+        }
+    } else {
+        this->addresses.erase (a);
+        switch (a.family) {
+            case AF_INET:
+                this->ipv4changed = true;
+                break;
+            case AF_INET6:
+                this->ipv6changed = true;
+                break;
+        }
+    }
 }
 void raddi::db::peerset::insert (const address & a, std::uint16_t s) {
     exclusive guard (this->lock);
-    if (this->addresses.emplace (a, s).second && a.accessible ()) {
+    if (this->addresses.emplace (a, s).second && a.accessible (address::validation::allow_null_port)) {
         switch (a.family) {
             case AF_INET:
                 this->ipv4changed = true;

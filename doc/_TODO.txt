@@ -9,9 +9,9 @@ github repo:
 commands: loglevels
 commands: optimize
 
-raddi.com: simple reading support
+classification on db insert
 
-somehow banning IPs doesn't work
+raddi.com: simple reading support
 
 report bad inputs (from source) in node
 
@@ -40,6 +40,8 @@ sane coordinator status display
 more info into overview
 
 move connection::request_limiter to separate class
+
+connection members will probably need locking to protect from early deletion when retired
 
 old data deletion (whole shards?) except 'retained' channels/threads
 

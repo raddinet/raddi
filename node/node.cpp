@@ -291,11 +291,13 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
             case raddi::command::type::add_core_peer:
                 if ((coordinator != nullptr) && (size >= sizeof (raddi::address))) {
                     const auto & address = *reinterpret_cast <const raddi::address *> (cmd->content ());
-                    if (address.valid ()) {
+                    if (address.valid (raddi::address::validation::allow_null_port)) {
 
                         switch (cmd->type) {
                             case raddi::command::type::add_peer:
-                                coordinator->add (raddi::level::announced_nodes, address);
+                                if (address.port) {
+                                    coordinator->add (raddi::level::announced_nodes, address);
+                                }
                                 break;
 
                             case raddi::command::type::rem_peer: // TODO: option to allow/disallow peer removal
@@ -313,12 +315,16 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
                                 break;
 
                             case raddi::command::type::connect_peer:
-                                coordinator->add (raddi::level::announced_nodes, address);
-                                coordinator->connect (address);
+                                if (address.port) {
+                                    coordinator->add (raddi::level::announced_nodes, address);
+                                    coordinator->connect (address);
+                                }
                                 break;
 
                             case raddi::command::type::add_core_peer:// TODO: option to allow/disallow adding core peers
-                                coordinator->add (raddi::level::core_nodes, address);
+                                if (address.port) {
+                                    coordinator->add (raddi::level::core_nodes, address);
+                                }
                                 break;
                         }
                     }

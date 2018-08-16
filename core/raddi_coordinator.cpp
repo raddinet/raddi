@@ -762,7 +762,14 @@ bool raddi::coordinator::inuse (const address & a) const {
 }
 
 bool raddi::coordinator::blacklisted (const address & a) const {
-    return this->database.peers [blacklisted_nodes]->count_ip (a);
+    if (a.port) {
+        address a0 = a;
+        a0.port = 0;
+
+        return this->database.peers [blacklisted_nodes]->count (a0)
+            || this->database.peers [blacklisted_nodes]->count (a);
+    } else 
+        return this->database.peers [blacklisted_nodes]->count_ip (a);
 }
 
 bool raddi::coordinator::empty (level level) const {
