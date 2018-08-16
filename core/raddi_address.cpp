@@ -33,8 +33,22 @@ std::size_t raddi::address::size () const {
 }
 
 bool raddi::address::operator < (const raddi::address & other) const {
-    return std::memcmp (this, &other,
-                        sizeof (address::family) + std::min (this->size (), other.size ())) < 0;
+    if (this->family < other.family) return true;
+    if (this->family > other.family) return false;
+
+    int comparison = 0;
+    switch (this->family) {
+        case AF_INET:
+            comparison = std::memcmp (&this->address4, &other.address4, sizeof this->address4);
+            break;
+        case AF_INET6:
+            comparison = std::memcmp (&this->address6, &other.address6, sizeof this->address6);
+            break;
+    }
+    if (comparison != 0)
+        return comparison < 0;
+    else
+        return this->port < other.port;
 }
 bool raddi::address::operator == (const raddi::address & other) const {
     return std::memcmp (this, &other,
