@@ -109,10 +109,11 @@ raddi::db::peerset::select (std::size_t random_value, std::uint16_t * assessment
 
 void raddi::db::peerset::prune (std::uint16_t threshold) {
     exclusive guard (this->lock);
+
     auto i = this->addresses.begin ();
     auto e = this->addresses.end ();
     while (i != e) {
-        if ((threshold - i->second) < 0x8000) {
+        if (threshold >= i->second) {
             i = this->addresses.erase (i);
             e = this->addresses.end ();
         } else
