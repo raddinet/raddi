@@ -53,7 +53,7 @@ Leading byte:
 		- type interpreted by header
 			- images (displayed aside the text):
 				- PNG: 89 50 4E 47 0D 0A 1A 0A
-				- GIF: 
+				- GIF: 47 49 46 38 39 61
 				- JPG: FF D8 FF E0 00 10 4A 46 49 46
 			- archives (display paperclip icon(s) to save):
 				- ZIP: 50 4B
