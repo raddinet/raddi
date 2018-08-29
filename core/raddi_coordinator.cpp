@@ -874,6 +874,7 @@ std::size_t raddi::coordinator::broadcast (const db::root & top, const entry * d
 
             // TODO: send to someone immediately and to others with slight delay (up to 1s?) to mess with origin analysis - Aetheral Research
             //        - this will come in hand with the queuing feature described in .send function comments
+            //        - shorter randomized delay for retransmitted messages than for original ones
 
             if (announcement || connection.subscriptions.is_subscribed ({ top.channel, top.thread, data->parent, data->id })) {
                 n += connection.send (data, size);
