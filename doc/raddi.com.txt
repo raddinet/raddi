@@ -19,7 +19,8 @@ NOTES:
 	resources, to create. Usually just a few seconds.
 
 	raddi.com won't work unless you run node software which is successfully connected
-	to the network.
+	to the network. The node will attempt to broadcast the content anyway, but issues
+	a warning that it might not have got reliably through.
 
 Creating new identity
 ---------------------
@@ -36,7 +37,16 @@ many identities as you want though.
 
 The identity's public key is broadcast onto the network which should start accepting your
 messages within a few moments.
-Note that your identity is also your personal channel, but you may create another.
+Note that your identity is also your personal channel, but you should prefer to create
+named channels.
+
+NOTE (TODO: in HTML hide this behind progressive disclosure):
+	The identity identifier is unique in the network. This uniqueness is established
+	partly by using current timestamp. While it's possible to skew the PC's RTC clock
+	and generate old-looking or slightly-in-the-future identity, you always want to
+	use the actual time, otherwise, in the first case, you are risking collision with
+	older existing account (and existing account will always win), and, in the second
+	case, your identity could get ignored by core nodes with too slightly skewed RTC.
 
 Creating new channel
 --------------------
