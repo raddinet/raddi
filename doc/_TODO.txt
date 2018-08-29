@@ -11,6 +11,10 @@ commands: optimize
 
 classification on db insert
 
+outbound data sorting in raddi::connection::send
+ - prioritize shorter entries
+ - random delay for origin masking (longer for longer messages)
+
 raddi.com: simple reading support
 
 report bad inputs (from source) in node
@@ -32,6 +36,8 @@ perfect compression dictionary for english text
    Z) combine: to one long string, asc sorting by value, with removing words found inside the newly combined string
  - evaluate gains of shuffling various similarly-valued words in order to 
  - compress initial bodies with established dictionary, report results, try different dictionaries, compare results
+
+title/sidebar edits must be retained forever and forwarded to all users
 
 historical data replay flooding protection in raddi::db::classify case
  - start rejecting old entries from connection that we did not asked (connection->history_extension)
@@ -72,6 +78,7 @@ common/string.h
  - use for paths and everything
     - options?
     - node.cpp/raddi.com.cpp -> main args?
+ - AND THEN DROP ALL wchar_t* OVERLOADS
 
 consider http server? simple GET/POST support
  - replace Source functionality?
