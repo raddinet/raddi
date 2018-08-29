@@ -43,7 +43,7 @@ namespace raddi {
         //  - generates std::wstring containing displayable representation of the eid object
         //
         inline std::wstring serialize () const {
-            wchar_t buffer [26];
+            wchar_t buffer [eid::max_length + 1];
             this->serialize (buffer, sizeof buffer / sizeof buffer [0]);
             return buffer;
         }
@@ -54,6 +54,7 @@ namespace raddi {
         //  - returns number of characters parsed on success, zero on failure
         //
         std::size_t parse (const wchar_t *);
+        std::size_t parse (const char *);
 
         // isnull
         //  - all members 0 means NULL, invalid, special meaning
@@ -69,6 +70,12 @@ namespace raddi {
         inline bool erased () const {
             return this->isnull ();
         }
+
+        // max/min_length
+        //  - inclusive range boundaries of valid eid text representation length
+
+        static constexpr auto min_length = iid::min_length + 1 + 1;
+        static constexpr auto max_length = iid::max_length + 1 + 2 * sizeof (timestamp);
     };
 
     // translate

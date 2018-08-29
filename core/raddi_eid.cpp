@@ -19,3 +19,13 @@ std::size_t raddi::eid::parse (const wchar_t * string) {
     }
     return false;
 }
+
+std::size_t raddi::eid::parse (const char * string) {
+    if (std::size_t offset = this->identity.parse (string)) {
+        std::size_t offset2;
+        if (std::sscanf (string + offset, " - %8x%zn", &this->timestamp, &offset2) == 1) {
+            return offset + offset2;
+        }
+    }
+    return false;
+}
