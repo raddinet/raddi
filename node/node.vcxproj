@@ -414,6 +414,7 @@
     <ClCompile Include="..\core\raddi_channel.cpp" />
     <ClCompile Include="..\core\raddi_command.cpp" />
     <ClCompile Include="..\core\raddi_connection.cpp" />
+    <ClCompile Include="..\core\raddi_content.cpp" />
     <ClCompile Include="..\core\raddi_coordinator.cpp" />
     <ClCompile Include="..\core\raddi_database.cpp" />
     <ClCompile Include="..\core\raddi_database_peerset.cpp" />
@@ -467,6 +468,7 @@
     <ClInclude Include="..\core\raddi_command.h" />
     <ClInclude Include="..\core\raddi_connection.h" />
     <ClInclude Include="..\core\raddi_consensus.h" />
+    <ClInclude Include="..\core\raddi_content.h" />
     <ClInclude Include="..\core\raddi_coordinator.h" />
     <ClInclude Include="..\core\raddi_database.h" />
     <ClInclude Include="..\core\raddi_database_peerset.h" />

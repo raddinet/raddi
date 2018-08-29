@@ -107,6 +107,9 @@
     <ClCompile Include="..\common\platform.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\core\raddi_content.cpp">
+      <Filter>Core\Structures</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="node-en.rc">
@@ -257,6 +260,9 @@
     </ClInclude>
     <ClInclude Include="..\common\platform.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_content.h">
+      <Filter>Core\Structures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
