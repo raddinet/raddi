@@ -5,6 +5,7 @@
 #include "raddi_consensus.h"
 #include "raddi_identity.h"
 #include "raddi_channel.h"
+#include "raddi_content.h"
 
 // row
 //  - in-memory and on-disk representation of stored index key of an data entry 
@@ -29,10 +30,9 @@ struct raddi::db::row {
     root top_;
 
     // type
-    //  - differentiation index based on the content to improve search performance
-    //  - TODO: this will be classification bit-field
+    //  - classification bit-field, based on the content to improve search performance
     //
-    std::uint64_t type;
+    content::summary type;
 
 public:
 
@@ -63,9 +63,7 @@ public:
         this->id = entry->id;
         this->parent = entry->parent;
         this->top_ = top;
-        this->type = 0; // TODO: parse entry content and classify...
-                        // 'this->type->classify (entry->content (), size - sizeof (raddi::entry));
-
+        this->type = content::analyze (entry->content (), size - sizeof (raddi::entry)).summarize ();
         return true;
     }
 };
