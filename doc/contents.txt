@@ -50,22 +50,10 @@ Leading byte:
 	0xF8: reserved
 	0xF9: reserved
 	0xFA: BINARY ATTACHMENT
-		- type interpreted by header
-			- images (displayed aside the text):
-				- PNG: 89 50 4E 47 0D 0A 1A 0A
-				- GIF: 47 49 46 38 39 61
-				- JPG: FF D8 FF E0 00 10 4A 46 49 46
-			- archives (display paperclip icon(s) to save):
-				- ZIP: 50 4B
-				- RAR: 52 61 72 21
-				- 7z: 37 7A
-				- xz: 
-			- audio (play icon button or full player):
-				- TODO: MP2/MP3/OGG?
-			- other:
-				- PDF: 25 50 44 46
-				- XML: 3C 3F 78 6D 6C
-					- further parsed?
+		- type is determined by header bytes, and typical behavior is:
+			- images are displayed aside the text
+			- archives display paperclip icon(s) to allow extraction and save
+			- audio displays play icon button or full player
 	0xFB: reserved
 	0xFC: COMPRESSED DATA, LZMA, optionally with predefined dictionary
 		- after length informations, 2B code for predefined dictionary follows:
@@ -74,13 +62,24 @@ Leading byte:
 			- adding more dictionaries should be coordinated
 		- compressed data follows, typically just UTF-8 text, but may again
 		  contain any of here defined leading bytes
-	0xFD: reserved
+	0xFD: DIFFERENTIAL DATA, EDIT
+		- length of less than 4 bytes is not allowed and should be ignored
+		- after length informations, 2×2B integers follow:
+			- offset into uncompressed/decrypted parent entry
+			- length of the content in uncompressed/decrypted parent entry
+			  that is to be replaced by following content
+		- when user replies to his own entry then the entry may contain multiple 
+		  EDITs which may not overlap and client application should merge them
+		- when entry posted by a different user contains EDITs, the application
+		  should render them appropriately
 	0xFE: ENCRYPTED DATA
 		- content is encrypted by pre-shared per-channel key
 		- TBD: crypto_stream/crypto_stream_xor - nonce is eid+parent
 	0xFF: PRIVATE MESSAGE/REPLY
 		- content is encrypted by target user's public key
 		- TBD: crypto_sign_ed25519_pk_to_curve25519/crypto_box_easy
+
+TBD: one of the reserved bytes above will be used to signify streamed data
 
 Extraction phase:
 -----------------
@@ -92,6 +91,13 @@ Leading bytes:
 		- first NUL byte that does not belong to compressed chunk (above) or does
 		  not terminate string code in this table terminates the entry and
 		  introduces PoW; generally the entry is searched backwards for the proof
+	0x04: EOT
+		- meaning reserved, no data follows
+	0x05: ENQ
+		- meaning reserved, no data follows
+	0x06: ACK, ENDORSE
+		- indicator for private messages, or otherwise targetted messages, author
+		  reports that he has read the parent entry
 	0x07: BEL, REPORT
 		- user reports this entry to moderators for evaluation
 		- no further content required, GUI clients should graphically distinguish
@@ -104,7 +110,7 @@ Leading bytes:
 			  standing in user's subscriptions (client-specific, TBD)
 	0x0B: VT, VOTE
 		- followed by either: 1B code in predefined range 0x01..0x1F,
-		  or by a NUL-terminated UTF-8 string describing the vote type
+		  or by a NUL-terminated (UTF-8) string describing the vote type
 		- client app is free to ignore votes embedded in compressed or encrypted
 		  data (not that it isn't free to ignore them altogether, just saying)
 		- predefined vote codes:
@@ -112,8 +118,11 @@ Leading bytes:
 			- 0x02: DOWN (generic disagreement)
 			- 0x03: INFO (considered informative, but user disagrees)
 			- 0x04: FUNNY (user agrees, but it's joke, not informative)
+			- 0x05: SPAM (does not add any value)
 		- predefined vote strings:
 			- none, reserved for future extensions
+	0x0C: FF
+		- meaning reserved, no data follows
 	0x10: DLE, SIDEBAND DATA SET/EDIT
 		- valid only if first byte in entry and if appears only once
 		- valid only if direct descendant of the announcement it is affects
@@ -125,46 +134,44 @@ Leading bytes:
 		- sideband ID byte follows, predefined:
 			- 0x01: title
 				- change identity/channel/thread name/title
-			- 0x02: ??? header ???
-			- 0x03: ??? footer ???
-			- 0x09: ??? title bar ???
-			- 0x0B: sidebar - set/change identity/channel sidebar text
+			- 0x02: header - reserved, unused
+			- 0x03: footer - reserved, unused
+			- 0x04: sidebar - set/change identity/channel sidebar text
+			- 0x05: shoutbox - twitter-like feed
+	0x15: NAK
+		- moderation; a moderator advises subscribed clients to perform an action
+		- followed by either: 1B code in predefined range 0x01..0x1F,
+		  or by a NUL-terminated (UTF-8) string describing the type
+		- predefined mod-op codes:
+			- 0x01: HIDE - same as DEL byte
+			- 0x02: BAN - moderator bans the user for this entry
+			- 0x03: NSFW
+			- 0x04: NSFL
+			- 0x05: SPOILER
+			- 0x08: STICK
+			- 0x09: HIGHLIGHT
+		- predefined mod-op strings:
+			- "move:"<eid>
+				- the parent entry should be moved under 'eid'
+			- "junction:"<eid>
+				- the parent entry should be replaced by 'eid' and
+				  everything that follows that 'eid'
+				- clients should allow junctions forming cross-posted
+				  topics from anyone, and within comment tree accessible
+				  on demand from anyone
 	0x16: SYN, CHAINING
 		- followed by 8 (TBD) bytes of hash (TBD) of parent entry to ensure valid
 		  chain of responses
-	0x1A: SUB, EDIT
-		- valid only when user edits his own entry; then the entry may contain
-		  multiple EDITs which may not overlap
-		- followed by 2×2B (offset + length into decompressed parent entry)
-		  describing edited range and NUL-terminated text
-		- NOTE: content outside EDITs should be appended to displayed
-		        representation of the original content
-
-TBD:
-----
-	MOD OPS...
-	STREAM INTRODUCER
-	0x06: ACK, ENDORSE
-		- TBD
-		- mod op?
-		- or plain "read" indicator for IMs?
-	0x15: NAK, REMOVED
-		- mod op
-		- 
-UNUSED BYTES/CODEPOINTS:
-	0x04 EOT
-	0x05 ENQ
-	0x0C FF
-	0x0D CR
-	0x0E SO
-	0x0F SI
-	0x15 NAK
-	0x17 ETB
-	0x19 EM
-	0x1C FS
-	0x1D GS
-	0x1E RS
-	0x1F US
+	0x17: ETB
+		- meaning reserved, no data follows
+	0x19: EM
+		- meaning reserved, no data follows
+	0x1A: SUB
+		- meaning reserved
+		- followed by either: 1B code in predefined range 0x01..0x1F,
+		  or by a NUL-terminated (UTF-8) string describing the type
+	0x7F: DEL, DELETE
+		- moderator or author wishes to delete (hide) the parent entry
 
 Other code points with specific meaning:
 ----------------------------------------
@@ -176,26 +183,28 @@ Code points:
 	0x0003: ETX, end of text, render "More..." button here and hide rest
 	0x0009: HT, TAB, standard meaning, column alignment
 	0x????: ???, spoiler, hidden by client app until intentionaly revealed
-	0x000A: LF, newline
-		- two LF in sequence should render as 3/4 line height space
+	0x000A: LF, line feed, new paragraph
+		- client may render as 3/4 line height space, indent first row, etc.
+	0x000D: CR, carriage return, newline
+		- client should not render any extra space or anything, just start at new
+		  line
 
 Text formatting:
+	0x000E: SO, lower text intensity
+	0x000F: SI, higher text intensity
 	0x0011: DC1, different font, serifs
 	0x0012: DC2, different font, monospace
 	0x0013: DC3, different font, handwriting
 	0x0014: DC4, different font, reserved
 	0x0018: CAN, cancels all formatting set up until that point
 	0x001B: ESC
-		- TODO: font size (relative)
+		- TODO: font size (relative?)
 		- TODO: bold, italic, underline, stikeout
-		- TODO: spacing? rotation?
-		- TODO: more intensive, or less (scale?)
 		- TODO: color? semantic colors?
+	0x001C: FS, reserved for tables
+	0x001D: GS, reserved for tables
+	0x001E: RS, reserved for tables
+	0x001F: US, reserved for tables
 
-TODO: Parent entry hash
-TODO: Use TAB, FS, GS, RS and US for simple tables
-TODO: crosspost mark
-TODO: junctions???
 TODO: stream starts
-TODO: mods: ban, move, merge, nsfw/nsfl, remove, endorse
 TODO: ENQ? users pinging OP for update?
