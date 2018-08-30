@@ -19,6 +19,7 @@
 #include "../core/raddi.h"
 #include "../core/raddi_request.h"
 #include "../core/raddi_content.h"
+#include "../core/raddi_defaults.h"
 
 uuid app;
 wchar_t buffer [65536];
@@ -730,8 +731,27 @@ bool peer_command (enum class raddi::command::type cmd, const wchar_t * addr) {
     if (!StringToAddress (sa, addr))
         return raddi::log::data (0x93, addr);
 
-    if (cmd == raddi::command::type::ban_peer) {
-        // TODO: days
+    switch (cmd) {
+        case raddi::command::type::add_peer:
+        case raddi::command::type::add_core_peer:
+        case raddi::command::type::connect_peer:
+            switch (sa.si_family) {
+                case AF_INET:
+                    if (sa.Ipv4.sin_port == 0) {
+                        sa.Ipv4.sin_port = htons (raddi::defaults::coordinator_listening_port);
+                    }
+                    break;
+                case AF_INET6:
+                    if (sa.Ipv6.sin6_port == 0) {
+                        sa.Ipv6.sin6_port = htons (raddi::defaults::coordinator_listening_port);
+                    }
+                    break;
+            }
+            break;
+
+        case raddi::command::type::ban_peer:
+            // TODO: days
+            break;
     }
 
     return send (instance, cmd, raddi::address (sa));
@@ -1056,7 +1076,7 @@ bool list_core_table (T * table, list_column_info (&columns) [7], std::size_t sk
                                 name += u82ws (text.begin, (std::size_t) (text.end - text.begin));
                             }
 
-                            if (name.length () > columns [6].width) {
+                            if (name.length () > (unsigned) columns [6].width) {
                                 name.resize (columns [6].width - 3);
                                 name += L"...";
                             }
@@ -1088,7 +1108,6 @@ bool list_identities () {
         { 30, "%-*ls", "name" }, // raddi::consensus::max_identity_name_size
     };
     return list_core_table (database.identities.get (), columns, sizeof (raddi::identity) - sizeof (raddi::entry));
-
 }
 
 bool list_channels () {
