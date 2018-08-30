@@ -7,7 +7,7 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
     text_appearance state;
     const std::uint8_t * text_start = nullptr;
 
-    auto finish_text = [content, &text_start, &analysis, &state] () {
+    auto finish_text = [&content, &text_start, &analysis, &state] () {
         if ((text_start != nullptr) && (content != text_start)) {
             analysis.text.push_back ({ state, text_start, content });
             text_start = nullptr;
