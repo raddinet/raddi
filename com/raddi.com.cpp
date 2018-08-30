@@ -1087,7 +1087,7 @@ bool list_identities () {
         { 5, "%*llu", "n" },
         { 9, "%*u", "offset" },
         { 5, "%*u", "size" },
-        { 50, "%-*ls", "name" }, // raddi::consensus::max_identity_name_size
+        { 30, "%-*ls", "name" }, // raddi::consensus::max_identity_name_size
     };
     return list_core_table (database.identities.get (), columns, sizeof (raddi::identity) - sizeof (raddi::entry));
 
