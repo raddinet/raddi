@@ -18,6 +18,7 @@
 
 #include "../core/raddi.h"
 #include "../core/raddi_request.h"
+#include "../core/raddi_content.h"
 
 uuid app;
 wchar_t buffer [65536];
@@ -65,6 +66,20 @@ std::size_t w2u8 (const wchar_t * p, std::size_t n, std::uint8_t * content, std:
         return WideCharToMultiByte (CP_UTF8, 0, p, (int) n, (LPSTR) content, (int) maximum, NULL, NULL);
     else
         return 0;
+}
+
+// u82ws
+//  - converts UTF-8 to UTF-16 (wchar_t) string
+//
+std::wstring u82ws (const uint8_t * data, std::size_t size) {
+    std::wstring result;
+    if (data && size) {
+        if (auto n = MultiByteToWideChar (CP_UTF8, 0, (LPCCH) data, (int) size, NULL, 0)) {
+            result.resize (n);
+            MultiByteToWideChar (CP_UTF8, 0, (LPCCH) data, (int) size, &result [0], n);
+        };
+    }
+    return result;
 }
 
 // userinput
@@ -683,6 +698,19 @@ bool go () {
         return subscription_command (raddi::command::type::unretain, parameter);
     }
 
+    /*if (auto parameter = option (argc, argw, L"test")) {
+        if (!std::wcscmp (parameter, L"content")) {
+
+            std::uint8_t buffer [65536];
+            while (!quit) {
+                const auto length = std::rand () % sizeof buffer;
+                randombytes_buf (buffer, length);
+
+                std::printf ("test [%5u]: %16llX\n", length, raddi::content::analyze (buffer, length).summarize ().raw);
+            }
+        }
+    }// */
+
     return false;
 }
 
@@ -976,9 +1004,10 @@ struct list_column_info {
 };
 
 template <typename T>
-bool list_core_table (T * table, list_column_info (&columns) [6]) {
+bool list_core_table (T * table, list_column_info (&columns) [7], std::size_t skip) {
     std::uint32_t oldest = 0;
     std::uint32_t latest = raddi::now ();
+    bool verbose = true; // TODO: option
 
     if (auto p = option (argc, argw, L"oldest")) {
         oldest = std::wcstoul (p, nullptr, 16);
@@ -987,23 +1016,55 @@ bool list_core_table (T * table, list_column_info (&columns) [6]) {
         latest = std::wcstoul (p, nullptr, 16);
     }
     for (auto column : columns) {
-        std::printf ("%*s", column.width, column.name);
+        if (std::strchr (column.format, '-')) {
+            std::printf (" %-*s", column.width, column.name);
+        } else {
+            std::printf ("%*s", column.width, column.name);
+        }
     }
     std::printf ("\n");
 
     table->select (oldest, latest,
                    [] (const auto &, const auto &) { return true; },
-                   [&columns] (const auto & row, const auto & detail) {
+                   [&columns, verbose] (const auto & row, const auto & detail) {
                         std::printf (columns [0].format, columns [0].width, row.id.serialize ().c_str ());
                         std::printf (columns [1].format, columns [1].width, detail.shard);
                         std::printf (columns [2].format, columns [2].width, detail.index + 1);
                         std::printf (columns [3].format, columns [3].width, detail.count);
                         std::printf (columns [4].format, columns [4].width, row.data.offset);
                         std::printf (columns [5].format, columns [5].width, row.data.length + sizeof (raddi::entry::signature));
-                        std::printf ("\n");
-                        return false;
+                        if (verbose) {
+                            return true;
+                        } else {
+                            std::printf ("\n");
+                            return false;
+                        }
                    },
-                   [] (const auto &, const auto &, std::uint8_t *) { /* noop */});
+                   [&columns, skip] (const auto & row, const auto &, std::uint8_t * raw) {
+                        const auto entry = reinterpret_cast <raddi::entry *> (raw);
+
+                        std::size_t proof_size = 0;
+                        if (entry->proof (row.data.length + sizeof (raddi::entry), &proof_size)) {
+
+                            auto analysis = raddi::content::analyze (entry->content () + skip, row.data.length - proof_size - skip);
+                            std::wstring name;
+
+                            for (const auto & text : analysis.text) {
+                                if (text.paragraph)
+                                    break;
+
+                                name += u82ws (text.begin, (std::size_t) (text.end - text.begin));
+                            }
+
+                            if (name.length () > columns [6].width) {
+                                name.resize (columns [6].width - 3);
+                                name += L"...";
+                            }
+
+                            std::wprintf (L" %s\n", name.c_str ());
+                        } else
+                            std::printf ("<ERR:DBCORRUPTED>\n");
+                   });
     return true;
 }
 
@@ -1026,8 +1087,9 @@ bool list_identities () {
         { 5, "%*llu", "n" },
         { 9, "%*u", "offset" },
         { 5, "%*u", "size" },
+        { 50, "%-*ls", "name" }, // raddi::consensus::max_identity_name_size
     };
-    return list_core_table (database.identities.get (), columns);
+    return list_core_table (database.identities.get (), columns, sizeof (raddi::identity) - sizeof (raddi::entry));
 
 }
 
@@ -1051,8 +1113,9 @@ bool list_channels () {
         { 5, "%*llu", "n" },
         { 9, "%*u", "offset" },
         { 5, "%*u", "size" },
+        { 22, "%-*ls", "title" }, // raddi::consensus::max_channel_name_size
     };
-    return list_core_table (database.channels.get (), columns);
+    return list_core_table (database.channels.get (), columns, sizeof (raddi::channel) - sizeof (raddi::entry));
 }
 
 
