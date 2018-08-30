@@ -9,8 +9,6 @@ github repo:
 commands: loglevels
 commands: optimize
 
-classification on db insert
-
 outbound data sorting in raddi::connection::send
  - prioritize shorter entries
  - random delay for origin masking (longer for longer messages)
@@ -38,6 +36,7 @@ perfect compression dictionary for english text
  - compress initial bodies with established dictionary, report results, try different dictionaries, compare results
 
 title/sidebar edits must be retained forever and forwarded to all users
+ - or just force moderators to occassionally update them with fresh non-edit entry?
 
 historical data replay flooding protection in raddi::db::classify case
  - start rejecting old entries from connection that we did not asked (connection->history_extension)
