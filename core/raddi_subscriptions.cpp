@@ -73,7 +73,7 @@ std::size_t raddi::subscriptions::load (const std::wstring & path) {
     file f;
     if (f.open (path, file::mode::always, file::access::read, file::share::read, file::buffer::sequential)) {
 
-        this->data.resize (f.size () / sizeof (eid));
+        this->data.resize ((std::size_t) (f.size () / sizeof (eid)));
         if (f.read (this->data.data (), this->data.size () * sizeof (eid))) {
 
             std::sort (this->data.begin (), this->data.end ());
