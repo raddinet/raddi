@@ -1078,8 +1078,6 @@ bool list_identities () {
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
-    // TODO: optionally display name
-
     list_column_info columns [] = {
         { 16, "%*ls", "iid" },
         { 9, "%*x", "shard" },
@@ -1103,8 +1101,7 @@ bool list_channels () {
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
-    // TODO: restrict by identity (creator)
-    // TODO: optionally display title
+    // TODO: option to restrict by identity (creator)
 
     list_column_info columns [] = {
         { 24, "%*ls", "eid" },
