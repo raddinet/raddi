@@ -79,6 +79,7 @@ bool WSAInitialize () noexcept {
         SOCKET s = socket (AF_INET, SOCK_STREAM, 0);
         if (s != INVALID_SOCKET) {
 
+            // TODO: these seems to be missing on ReactOS
             WSAGetPtr (s, WSAID_ACCEPTEX, ptrAcceptEx, L"AcceptEx");
             WSAGetPtr (s, WSAID_GETACCEPTEXSOCKADDRS, ptrGetAcceptExSockAddrs, L"GetAcceptExSockAddrs");
             WSAGetPtr (s, WSAID_CONNECTEX, ptrConnectEx, L"ConnectEx");
