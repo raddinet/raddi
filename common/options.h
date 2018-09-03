@@ -9,20 +9,34 @@ template <typename F, std::size_t N>
 std::size_t options (unsigned long argc, wchar_t ** argw, const wchar_t (&name) [N], F f) {
     std::size_t n = 0;
     const auto length = (sizeof name / sizeof name [0]) - 1;
-    for (auto i = 1uL; i != argc; ++i)
-        if (std::wcsncmp (argw [i], name, length) == 0)
-            switch (argw [i] [length]) {
+    for (auto i = 1uL; i != argc; ++i) {
+
+        auto skip = 0;
+        switch (argw [i][0]) {
+            case L'/':
+                skip = 1;
+                break;
+            case L'-':
+                while (argw [i][skip] == '-') {
+                    ++skip;
+                }
+                break;
+        }
+
+        if (std::wcsncmp (&argw [i][skip], name, length) == 0)
+            switch (argw [i][length + skip]) {
                 case L':':
-                    raddi::log::note (raddi::component::main, 1, name, &argw [i] [length + 1]);
-                    f (&argw [i] [length + 1]);
+                    raddi::log::note (raddi::component::main, 1, name, &argw [i][length + skip + 1]);
+                    f (&argw [i][length + skip + 1]);
                     ++n;
                     break;
                 case L'\0':
-                    raddi::log::note (raddi::component::main, 1, name, &argw [i] [length]);
-                    f (&argw [i] [length]);
+                    raddi::log::note (raddi::component::main, 1, name, &argw [i][length + skip]);
+                    f (&argw [i][length + skip]);
                     ++n;
                     break;
             }
+    }
 
     return n;
 }

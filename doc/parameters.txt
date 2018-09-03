@@ -2,6 +2,8 @@ Command-line parameters
 =======================
 
 Notes:
+	- parameters may be optionally introduced by '/' or any number of '-' characters,
+	  neither is necessary though
 	- parameters that take boolean value, usually denoted with <0|1|false|true> below
 	  are generally false by default, unless specified otherwise; when specified
 	  without value, true is assumed
