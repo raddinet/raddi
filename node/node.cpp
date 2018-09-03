@@ -71,7 +71,7 @@ namespace {
     std::size_t          workers = 0;
     raddi::db *          database = nullptr;
     raddi::coordinator * coordinator = nullptr;
-    LocalHosts *         localhosts = nullptr;
+    LocalHosts *         localhosts = nullptr; // TODO: consider making member of 'coordinator'
 }
 
 int wmain (int argc, wchar_t ** argw) {
@@ -142,7 +142,11 @@ bool Listener::connected (sockaddr * local, sockaddr * remote) {
     return ::coordinator->incomming (std::move (this->prepared), remote);
 }
 
-bool raddi::discovery::is_local (const raddi::address & a) {
+bool raddi::coordinator::is_local (const raddi::address & a) const {
+    return ::localhosts->contains (a);
+}
+
+bool raddi::discovery::is_local (const raddi::address & a) const {
     return ::localhosts->contains (a);
 }
 void raddi::discovery::discovered (const address & address) {

@@ -46,7 +46,7 @@ namespace raddi {
         void stop () { return this->UdpPoint::stop (); }
 
     private:
-        bool is_local (const address &);
+        bool is_local (const address &) const;
         void discovered (const address &);
         void out_of_memory ();
 

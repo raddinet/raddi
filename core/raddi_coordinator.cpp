@@ -238,7 +238,7 @@ void raddi::coordinator::operator() () {
                     || ((secured <= raddi::defaults::coordinator_override_min_core_connections_count)
                         && (now - this->started) > raddi::defaults::coordinator_override_min_core_connections_delay)) {
 
-                    n -= select_unused_addresses (core_nodes, 1, addresses);
+                    n -= this->select_unused_addresses (core_nodes, 1, addresses);
                 }
             }
         }
@@ -268,12 +268,12 @@ void raddi::coordinator::operator() () {
 
         // okay, try next node categories
 
-        n -= select_unused_addresses (established_nodes, std::min (n, this->settings.connections / 2), addresses);
-        n -= select_unused_addresses (validated_nodes, std::min (n, this->settings.connections / 4), addresses);
+        n -= this->select_unused_addresses (established_nodes, std::min (n, this->settings.connections / 2), addresses);
+        n -= this->select_unused_addresses (validated_nodes, std::min (n, this->settings.connections / 4), addresses);
 
         if (n || this->connect_one_more_announced_node) {
             this->connect_one_more_announced_node = false;
-            select_unused_addresses (announced_nodes, 1, addresses);
+            this->select_unused_addresses (announced_nodes, 1, addresses);
         }
 
         if (!addresses.empty ()) {
@@ -309,6 +309,7 @@ std::size_t raddi::coordinator::select_unused_addresses (level lvl , std::size_t
             auto a = this->database.peers [lvl]->select (this->random_distribution (this->random_generator));
             if (!this->inuse (a)
                     && !addresses.count (a)
+                    && !this->is_local (a)
                     && !this->blacklisted (a)) {
 
                 this->report (log::level::event, 0x21, lvl, a);

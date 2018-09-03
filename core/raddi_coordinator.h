@@ -335,11 +335,12 @@ namespace raddi {
         void optimize ();
 
     private:
+        bool is_local (const address &) const;
         void announce (const address &, bool, connection *);
         void announce_random_peers (connection *);
         void set_discovery_spread ();
         void process_download_request (const request::download *, connection *);
-
+        
         template <typename Key>
         void report_table_history (connection *, enum class request::type, db::table <Key> *) const;
         template <enum class request::type RT, typename Key>
