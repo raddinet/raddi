@@ -78,7 +78,7 @@ namespace {
 
     lock linelock;
     file logfile;
-    HANDLE output = NULL;
+    HANDLE output = GetStdHandle (STD_OUTPUT_HANDLE);
 
     void create (const wchar_t * path) {
         SetLastError (0);
