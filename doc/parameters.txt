@@ -229,7 +229,34 @@ RADDI.com utility functions:
 			- threshold - default threshold is 31 days (now-31*86400)
 
 	- list:identities
+		- enumerates and displays all identities in the database (that equals to
+		  all existing, active or past, identities in the network, when database
+		  is fully synchronized), optionally restricted by timestamp of their
+		  creation
+		- optional parameters:
+			- names - false/true (default) - whether to display identity name
+			- oldest - hexadecimal timestamp of oldest identity to list
+			- latest - hexadecimal timestamp of newest identity to list
 	- list:channels
+		- enumerates and displays all channels in the database (that equals to
+		  all existing, active or past, channels in the network, when database is
+		  fully synchronized), optionally restricted by timestamp of their
+		  creation
+		- optional parameters:
+			- names - false/true (default) - whether to display channel names
+			- author - if present, list only channels by that identity
+			- oldest - hexadecimal timestamp of oldest channel to list
+			- latest - hexadecimal timestamp of newest channel to list
+	- list:threads
+		- enumerates and displays all threads from a particular channel that are
+		  currently present in the local database
+		- required parameters:
+			- channel - eid of a channel to list
+		- optional parameters:
+			- names - false/true (default) - whether to display thread names
+			- author - if present, list only threads by that identity
+			- oldest - hexadecimal timestamp of oldest thread to list
+			- latest - hexadecimal timestamp of newest thread to list
 
 	- add:<IP>
 	- remove:<IP>
@@ -245,7 +272,7 @@ RADDI.com utility functions:
 	- unretain:<eid>
 
 
-RADDI.com utility optional parameters to functions:
+RADDI.com utility additional and optional parameters to functions:
 	- instance:<pid>
 		- specifies active instance, identified by PID number, to operate on
 		- otherwise first instance found is used, searched in following order:
@@ -314,10 +341,16 @@ RADDI.com utility optional parameters to functions:
 		- optional, attempt to use invalid key might get caught by sign/verify
 		- applies to:
 			- new:channel, new:thread, new:thread, reply
-	- channel:<eid>
-		- specifies channel entry identitifer for new:thread command
+	- author:<eid>
+		- specifies identity identitifer,
+		  optional listing filter for list:channels command
 		- applies to:
-			- new:thread
+			- list:channels, list:threads
+	- channel:<eid>
+		- specifies channel identitifer, required parent for new:thread command,
+		  listing filter for list:threads command
+		- applies to:
+			- new:thread, list:threads
 	- quick:<0|1|false|true>
 		- setting to true for 'erase' function, the deletion will not be thorough
 		  i.e. only index entry is deleted; normally the content is overwritten
@@ -331,3 +364,16 @@ RADDI.com utility optional parameters to functions:
 		  if there's too much data
 		- applies to:
 			- download
+	- names:<0|1|false|true>
+		- specifies whether the content of the enumerated entries is parsed for
+		  simple name, which is then displayed
+		- setting to 'false' will significantly speed up the enumeration
+		- generally defaults to 'true'
+		- applies to:
+			list:identities, list:channels, list:threads
+	- oldest:<hexadecimal>
+	- latest:<hexadecimal>
+		- 
+		- when omitted, no listing restriction takes place
+		- applies to:
+			list:identities, list:channels, list:threads

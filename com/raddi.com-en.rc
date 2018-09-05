@@ -33,6 +33,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 0x1F "unable to open content file {1}, error {ERR}"
     MAIN | ERROR | 0x20 "invalid offset {3} exceeds size of file {1} which is {2} bytes"
     MAIN | ERROR | 0x21 "invalid offset/length, specification {3}+{4}={5} exceeds size of file {1} which is {2} bytes"
+    MAIN | ERROR | 0x22 "channel required"
 
     MAIN | STOP  | 0x20 "{1} internal error, validation failed in {2}"
 
@@ -41,6 +42,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | DATA  | 0x91 "warning: no node instance available"
     MAIN | DATA  | 0x92 "error: {1} is not valid entry identifier"
     MAIN | DATA  | 0x93 "error: {1} is not valid IP address"
+    MAIN | DATA  | 0x94 "error: {1} is not known channel"
+    MAIN | DATA  | 0x95 "error: {1} is not valid identity identifier"
+    MAIN | DATA  | 0x96 "error: {1} is not known identity"
 
     MAIN | EVENT | 0x91 "sending {2} bytes through {1}"
     MAIN | ERROR | 0x90 "transmission file {1} creation failed, error {ERR}"

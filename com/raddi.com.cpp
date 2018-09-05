@@ -517,6 +517,7 @@ bool reply (const wchar_t * opname, const wchar_t * to);
 
 bool list_identities ();
 bool list_channels ();
+bool list_threads ();
 
 bool download_command (const wchar_t * what);
 bool erase_command (const wchar_t * what);
@@ -617,7 +618,9 @@ bool go () {
         if (!std::wcscmp (parameter, L"channels")) {
             return list_channels ();
         }
-        // TODO: threads
+        if (!std::wcscmp (parameter, L"threads")) {
+            return list_threads ();
+        }
         // TODO: bans
         // TODO: rejected
         // TODO: subscriptions/blacklisted/retained
@@ -641,6 +644,10 @@ bool go () {
     if (auto parameter = option (argc, argw, L"reply")) {
         return reply (L"reply", parameter);
     }
+
+    if (auto parameter = option (argc, argw, L"get")) { // get a single entry
+    }
+
 
     // TODO: document all below
 
@@ -1023,11 +1030,13 @@ struct list_column_info {
     const char * name;
 };
 
-template <typename T>
-bool list_core_table (T * table, list_column_info (&columns) [7], std::size_t skip) {
+template <typename T, typename Constrain>
+bool list_core_table (T * table, list_column_info (&columns) [7], std::size_t skip, Constrain constrain) {
     std::uint32_t oldest = 0;
     std::uint32_t latest = raddi::now ();
-    bool verbose = true; // TODO: option
+    
+    bool names = true;
+    option (argc, argw, L"names", names);
 
     if (auto p = option (argc, argw, L"oldest")) {
         oldest = std::wcstoul (p, nullptr, 16);
@@ -1045,15 +1054,15 @@ bool list_core_table (T * table, list_column_info (&columns) [7], std::size_t sk
     std::printf ("\n");
 
     table->select (oldest, latest,
-                   [] (const auto &, const auto &) { return true; },
-                   [&columns, verbose] (const auto & row, const auto & detail) {
+                   constrain,
+                   [&columns, names] (const auto & row, const auto & detail) {
                         std::printf (columns [0].format, columns [0].width, row.id.serialize ().c_str ());
                         std::printf (columns [1].format, columns [1].width, detail.shard);
                         std::printf (columns [2].format, columns [2].width, detail.index + 1);
                         std::printf (columns [3].format, columns [3].width, detail.count);
                         std::printf (columns [4].format, columns [4].width, row.data.offset);
                         std::printf (columns [5].format, columns [5].width, row.data.length + sizeof (raddi::entry::signature));
-                        if (verbose) {
+                        if (names) {
                             return true;
                         } else {
                             std::printf ("\n");
@@ -1107,7 +1116,9 @@ bool list_identities () {
         { 5, "%*u", "size" },
         { 30, "%-*ls", "name" }, // raddi::consensus::max_identity_name_size
     };
-    return list_core_table (database.identities.get (), columns, sizeof (raddi::identity) - sizeof (raddi::entry));
+    return list_core_table (database.identities.get (), columns,
+                            sizeof (raddi::identity) - sizeof (raddi::entry),
+                            [] (const auto &, const auto &) { return true; });
 }
 
 bool list_channels () {
@@ -1120,7 +1131,61 @@ bool list_channels () {
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
-    // TODO: option to restrict by identity (creator)
+    list_column_info columns [] = {
+        { 24, "%*ls", "eid" },
+        { 9, "%*x", "shard" },
+        { 5, "%*u", "i" },
+        { 5, "%*llu", "n" },
+        { 9, "%*u", "offset" },
+        { 5, "%*u", "size" },
+        { 22, "%-*ls", "name" }, // raddi::consensus::max_channel_name_size
+    };
+
+    if (auto iid = option (argc, argw, L"author")) {
+
+        raddi::iid author;
+        if (!author.parse (iid))
+            return raddi::log::data (0x95, iid);
+
+        if (!database.identities->get (author))
+            return raddi::log::data (0x96, author);
+
+        return list_core_table (database.channels.get (), columns,
+                                sizeof (raddi::channel) - sizeof (raddi::entry),
+                                [author] (const auto & row, const auto &) { return row.id.identity == author; });
+    } else {
+        return list_core_table (database.channels.get (), columns,
+                                sizeof (raddi::channel) - sizeof (raddi::entry),
+                                [] (const auto &, const auto &) { return true; });
+    }
+}
+
+bool list_threads () {
+    raddi::instance instance (option (argc, argw, L"instance"));
+    if (instance.status != ERROR_SUCCESS)
+        return raddi::log::data (0x91);
+
+    raddi::db database (file::access::read,
+                        instance.get <std::wstring> (L"database").c_str ());
+    if (!database.connected ())
+        return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
+
+    raddi::eid channel;
+    if (auto eid = option (argc, argw, L"channel")) {
+        if (!channel.parse (eid))
+            return raddi::log::data (0x92, eid);
+
+        if (channel.timestamp == channel.identity.timestamp) {
+            // identity channel
+            if (!database.identities->get (channel.identity))
+                return raddi::log::data (0x95, channel.identity);
+        } else {
+            // normal channel
+            if (!database.channels->get (channel))
+                return raddi::log::data (0x94, channel);
+        }
+    } else
+        return raddi::log::error (0x22);
 
     list_column_info columns [] = {
         { 24, "%*ls", "eid" },
@@ -1129,9 +1194,29 @@ bool list_channels () {
         { 5, "%*llu", "n" },
         { 9, "%*u", "offset" },
         { 5, "%*u", "size" },
-        { 22, "%-*ls", "title" }, // raddi::consensus::max_channel_name_size
+        { 22, "%-*ls", "name" }, // raddi::consensus::max_thread_name_size
     };
-    return list_core_table (database.channels.get (), columns, sizeof (raddi::channel) - sizeof (raddi::entry));
+
+    if (auto iid = option (argc, argw, L"author")) {
+
+        raddi::iid author;
+        if (!author.parse (iid))
+            return raddi::log::data (0x95, iid);
+
+        if (!database.identities->get (author))
+            return raddi::log::data (0x96, author);
+
+        return list_core_table (database.threads.get (), columns, 0,
+                                [channel, author] (const auto & row, const auto &) {
+                                    return channel == row.top ().channel
+                                        && author == row.id.identity;
+                                });
+    } else {
+        return list_core_table (database.threads.get (), columns, 0,
+                                [channel] (const auto & row, const auto &) {
+                                    return channel == row.top ().channel;
+                                });
+    }
 }
 
 
