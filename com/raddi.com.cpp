@@ -22,7 +22,7 @@
 #include "../core/raddi_defaults.h"
 
 uuid app;
-wchar_t buffer [65536];
+wchar_t buffer [4*65536];
 volatile bool quit = false;
 
 alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/1";
@@ -49,6 +49,25 @@ std::size_t hexadecimal (const wchar_t * p, std::uint8_t * content, std::size_t 
             ++p;
         }
         if (std::swscanf (p, L"%2x%zn", &value, &offset) == 1) {
+            p += offset;
+            *content++ = value;
+            --maximum;
+            ++n;
+        } else
+            break;
+    }
+    return n;
+}
+std::size_t hexadecimal (const char * p, std::uint8_t * content, std::size_t maximum) {
+    std::size_t n = 0;
+    std::size_t offset;
+    unsigned int value;
+
+    while (*p && maximum) {
+        while (*p && !std::iswdigit (*p)) {
+            ++p;
+        }
+        if (std::sscanf (p, "%2x%zn", &value, &offset) == 1) {
             p += offset;
             *content++ = value;
             --maximum;
@@ -180,7 +199,6 @@ std::size_t userfilecontent (wchar_t * path, std::uint8_t * content, std::size_t
     }
     return 0;
 }
-
 
 // gather
 //  - parses command-line 'text' and 'content' parameters and builds an entry content
@@ -518,6 +536,8 @@ bool reply (const wchar_t * opname, const wchar_t * to);
 bool list_identities ();
 bool list_channels ();
 bool list_threads ();
+bool get (const wchar_t * eid);
+bool analyze (const std::uint8_t * data, std::size_t size);
 
 bool download_command (const wchar_t * what);
 bool erase_command (const wchar_t * what);
@@ -645,9 +665,31 @@ bool go () {
         return reply (L"reply", parameter);
     }
 
-    if (auto parameter = option (argc, argw, L"get")) { // get a single entry
+    if (auto parameter = option (argc, argw, L"get")) {
+        return get (parameter);
     }
+    if (auto parameter = option (argc, argw, L"analyze")) {
+        std::size_t size = 0;
+        std::uint8_t data [raddi::entry::max_content_size];
 
+        switch (parameter [0]) {
+            case L'*':
+                size = userinput (std::count (parameter, parameter + std::wcslen (parameter), L'*'), data, sizeof data);
+                data [size] = '\0';
+                size = hexadecimal (reinterpret_cast <char *> (data), data, sizeof data);
+                break;
+            case L'@':
+                size = userfilecontent (const_cast <wchar_t *> (&parameter [1]), data, sizeof data);
+                break;
+            default:
+                size = hexadecimal (parameter, data, sizeof data);
+                break;
+        }
+        if (size)
+            return analyze (data, size);
+        else
+            return false;
+    }
 
     // TODO: document all below
 
@@ -812,7 +854,6 @@ bool erase_command (const wchar_t * what) {
 
     return send (instance, quick ? raddi::command::type::erase : raddi::command::type::erase_thorough);
 }
-
 
 template <typename T>
 std::size_t sign_and_validate (const wchar_t * step, T & entry, std::size_t size,
@@ -1092,7 +1133,7 @@ bool list_core_table (T * table, list_column_info (&columns) [7], std::size_t sk
 
                             std::wprintf (L" %s\n", name.c_str ());
                         } else
-                            std::printf ("<ERR:DBCORRUPTED>\n");
+                            raddi::log::stop (0x21, row.id);
                    });
     return true;
 }
@@ -1219,6 +1260,159 @@ bool list_threads () {
     }
 }
 
+bool analyze (const std::uint8_t * data, std::size_t size) {
+    
+    // TODO: better format
+
+    auto analysis = raddi::content::analyze (data, size);
+
+    if (!analysis.markers.empty ()) {
+        std::printf ("MARKERS:\n\t");
+        for (const auto & marker : analysis.markers) {
+            switch (marker.type) {
+                // case 0x03: std::printf (" ETX"); break;
+                // case 0x04: std::printf (" EOT"); break;
+                // case 0x05: std::printf (" ENQ"); break;
+                case 0x06: std::printf (" ACK"); break;
+                case 0x07: std::printf (" REPORT"); break;
+                case 0x08: std::printf (" REVERT"); break;
+                // case 0x0C: std::printf (" FF"); break;
+                // case 0x17: std::printf (" ETB"); break;
+                // case 0x19: std::printf (" EM"); break;
+                case 0x1C: std::printf (" FS"); break; // FS, table  --.
+                case 0x1D: std::printf (" GS"); break; // GS, tab (?)--+-- used to render tables
+                case 0x1E: std::printf (" RS"); break; // RS, row    --|
+                case 0x1F: std::printf (" US"); break; // US, column --'
+                case 0x7F: std::printf (" DELETE"); break;
+                default:
+                    std::printf (" %u", marker.type);
+            }
+            if (marker.insertion) {
+                std::printf (" @%u", marker.insertion);
+                // TODO: remember and display symbol in text, different color
+            }
+        }
+        std::printf ("\n");
+    }
+    if (!analysis.tokens.empty ()) {
+        std::printf ("TOKENS:\n");
+        for (const auto & token : analysis.tokens) {
+            switch (token.code) {
+                case 0x0B: std::printf ("\tVOTE: "); break;
+                case 0x10: std::printf ("\tSIDEBAND: "); break;
+                case 0x15: std::printf ("\tMODERATION: "); break;
+                // case 0x1A: std::printf ("\tSUB: "); break;
+                default:
+                    std::printf ("\t%u: ", token.type);
+            }
+            if (token.code || !token.string) {
+                std::printf ("0x%02x", token.code);
+            }
+            if (token.string) {
+                std::wprintf (L"%s", u82ws (token.string, token.string_end - token.string).c_str ());
+            }
+            if (token.insertion) {
+                std::printf (" @%u", token.insertion);
+                // TODO: remember and display symbol in text, different color
+            }
+            if (token.truncated) {
+                std::printf (" TRUNCATED!");
+            }
+            std::printf ("\n");
+        }
+    }
+    if (!analysis.attachments.empty ()) {
+        std::printf ("ATTACHMENTS:\n");
+        for (const auto & attachment : analysis.attachments) {
+            switch (attachment.type) {
+                case 0xFA: std::printf ("\tBINARY ATTACHMENT: "); break;
+                case 0xFC: std::printf ("\tCOMPRESSED DATA: "); break;
+                case 0xFE: std::printf ("\tENCRYPTED DATA: "); break;
+                case 0xFF: std::printf ("\tPRIVATE MESSAGE: "); break;
+                default:
+                    std::printf ("\t%u: ", attachment.type);
+            }
+            std::printf ("%u bytes", attachment.size);
+
+            if (attachment.insertion) {
+                std::printf (" @%u", attachment.insertion);
+                // TODO: remember and display symbol in text, different color
+            }
+            if (attachment.truncated) {
+                std::printf (" TRUNCATED!");
+            }
+            if (attachment.type == 0xFC) {
+                // TODO: decompress and display
+            }
+            std::printf ("\n");
+        }
+    }
+    for (const auto & edit : analysis.edits) {
+        std::printf ("EDIT: offset %u, %u bytes, replace with following %u bytes%s:\n",
+                     edit.offset, edit.length, edit.string_end - edit.string, edit.truncated ? " (truncated)" : "");
+        analyze (edit.string, edit.string_end - edit.string);
+        std::printf ("\n");
+    }
+    if (!analysis.text.empty ()) {
+        std::printf ("TEXT:\n");
+
+        for (const auto & text : analysis.text) {
+            if (text.paragraph) {
+                std::printf ("\n\n");
+            }
+            if (text.heading) {
+                // TODO: set bg color
+            } else {
+                // TODO: normal bg color
+            }
+            std::wprintf (L"%s", u82ws (text.begin, (std::size_t) (text.end - text.begin)).c_str ());
+        }
+    }
+    return true;
+}
+
+bool get (const wchar_t * what) {
+    raddi::instance instance (option (argc, argw, L"instance"));
+    if (instance.status != ERROR_SUCCESS)
+        return raddi::log::data (0x91);
+
+    raddi::db database (file::access::read,
+                        instance.get <std::wstring> (L"database").c_str ());
+    if (!database.connected ())
+        return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
+
+    raddi::eid eid;
+    if (!eid.parse (what))
+        return raddi::log::data (0x92, what);
+
+    std::size_t size = 0;
+    std::uint8_t data [raddi::protocol::max_payload];
+
+    if (database.get (eid, data, &size)) {
+        const auto entry = reinterpret_cast <raddi::entry *> (data);
+
+        std::size_t proof_size = 0;
+        if (entry->proof (size, &proof_size)) {
+            
+            int skip = 0;
+            switch (entry->is_announcement ()) {
+                case raddi::entry::new_identity_announcement:
+                    skip = sizeof (raddi::identity) - sizeof (raddi::entry);
+                    break;
+                case raddi::entry::new_channel_announcement:
+                    skip = sizeof (raddi::channel) - sizeof (raddi::entry);
+                    break;
+                case raddi::entry::not_an_announcement:
+                    break;
+            }
+
+            return analyze (entry->content () + skip, size - proof_size - skip);
+        } else {
+            return raddi::log::stop (0x21, eid);
+        }
+    } else
+        return raddi::log::error (0x19, eid);
+}
 
 bool database_verification () {
     raddi::instance instance (option (argc, argw, L"instance"));

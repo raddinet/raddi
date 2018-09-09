@@ -174,6 +174,7 @@ namespace raddi {
             std::uint16_t length = 0;
             const std::uint8_t * string = nullptr;
             const std::uint8_t * string_end = nullptr;
+            bool                 truncated = false;
         };
         struct token {
             std::uint8_t         type = 0; // VT, DLE, ...

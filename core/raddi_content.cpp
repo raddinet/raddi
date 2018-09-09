@@ -48,6 +48,7 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
             case 0x01: // SOH, new heading
                 state = text_appearance ();
                 state.heading = true;
+                state.paragraph = true;
                 break;
             case 0x02: // STX, start of text (end of heading)
                 state = text_appearance ();
@@ -248,6 +249,7 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                                 edit.length = attachment.data [2] | (attachment.data [3] << 8);
                                 edit.string = attachment.data + 4;
                                 edit.string_end = attachment.data + attachment.size;
+                                edit.truncated = attachment.truncated;
 
                                 analysis.edits.push_back (edit);
                                 break;

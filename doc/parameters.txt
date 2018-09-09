@@ -215,10 +215,36 @@ RADDI.com utility functions:
 			- text or content in case of reply response
 		- prints single line:
 			- new entry identifier (eid), in lowercase hexadecimals
+	- get:<eid>
+		- retrieves an entry from the database and passes it's content to analyze
+		  function, see below
+
+	- analyze:<*×N>
+	- analyze:<hexadecimal>
+	- analyze:<@path[@offset[:length]]>
+		- analyzes binary content as if it was content of an entry, and displays
+		  logical content it would carry, i.e. text, attachments, edits, votes,
+		  moderation operations and others
+		- hexadecimal
+			- string of two-character hexadecimal values optionally separated
+			  by any non-hexadecimal character; translated to string of bytes
+			  with specified values
+		- *×N
+			- variable number (N) of star (*) characters, i.e.: analyze:***
+			- requests string of two-character hexadecimal values optionally
+			  separated by any non-hexadecimal character from command line
+			- input terminates after N consecutive LF characters, trailing
+			  LF characters are not included in the content
+		- @path[@offset[:length]]
+			- single (@) character followed by path to a file to be analyzed
+			- optionally can also include offset and length if only a portion
+			  the file is to be used; if length is not specified, until the
+			  end of the file is assumed
+			- size of input data is limited to 65430 bytes
 	- erase:<eid>
 		- deletes the <eid> entry from database
 		- optional parameters:
-			- quick
+			- quick - don't do thorough erase of content, just index entry
 	- download:<eid|"all">
 		- requests, from all connected nodes, all data for the specified channel
 		  or thread, or totally all data
@@ -286,7 +312,9 @@ RADDI.com utility additional and optional parameters to functions:
 		  without adding any additional characters
 		- applies to:
 			- new:identity, new:channel, new:thread, reply
-	- content:<*×N|@path[@offset[:length]]|hexadecimal>
+	- content:<*×N>
+	- content:<hexadecimal>
+	- content:<@path[@offset[:length]]>
 		- content is retrieved and translated per specification and appended to
 		  content of the new entry, applicable specifications follow:
 		- hexadecimal

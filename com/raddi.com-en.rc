@@ -24,7 +24,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 0x16 "provided identity private key is invalid"
     MAIN | ERROR | 0x17 "identity {1} does not exist"
     MAIN | ERROR | 0x18 "{1} is not valid entry id"
-    // MAIN | ERROR | 0x19 "entry {1} does not exist"
+    MAIN | ERROR | 0x19 "entry {1} does not exist"
     MAIN | ERROR | 0x1A "content required"
     MAIN | ERROR | 0x1B "entry {1} already exists, wait for a second"
     MAIN | ERROR | 0x1C "{1} is not valid timestamp"
@@ -36,6 +36,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 0x22 "channel required"
 
     MAIN | STOP  | 0x20 "{1} internal error, validation failed in {2}"
+    MAIN | STOP  | 0x21 "database corruption, no proof-of-work in entry {1}"
 
 
     MAIN | DATA  | 0x90 "warning: instance {1} is not broadcasting at the moment"
