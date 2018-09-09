@@ -9,6 +9,12 @@ github repo:
 commands: loglevels
 commands: optimize
 
+warrant cannary channel
+
+bootstrap:dns://c1.raddi.net
+
+list:peers...
+
 outbound data sorting in raddi::connection::send
  - prioritize shorter entries
  - random delay for origin masking (longer for longer messages)
