@@ -852,7 +852,7 @@ bool erase_command (const wchar_t * what) {
     bool quick = false;
     option (argc, argw, L"quick", quick);
 
-    return send (instance, quick ? raddi::command::type::erase : raddi::command::type::erase_thorough);
+    return send (instance, quick ? raddi::command::type::erase : raddi::command::type::erase_thorough, entry);
 }
 
 template <typename T>
