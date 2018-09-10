@@ -6,26 +6,27 @@ github repo:
    - release - installer exe in release, separated exe/dlls in subdirs
    - portable
 
+shard: get doesn't update timestamp of last use (immediate unloads happen)
+
+threads are inserted duplicated (race condition?)
+
 commands: loglevels
 commands: optimize
+commands: list:peers...
+raddi.com analyze/get/list -> support decompression
 
 warrant cannary channel
 
-bootstrap:dns://c1.raddi.net
-
-list:peers...
+bootstrap:dns://cn0.raddi.net - resolve IP through DNS, TODO: try cn1, cn2, cn3, etc...
 
 outbound data sorting in raddi::connection::send
  - prioritize shorter entries
  - random delay for origin masking (longer for longer messages)
 
-raddi.com: simple reading support
-
 report bad inputs (from source) in node
 
 tables: test and fix shard splitting
 tables: add code for client app to process external changes, see 'process' member function
-tables: test db erase function
 tables: evaluate proper size limits so the index files fit exactly within whole multiples of a typical cluster size
 
 perfect compression dictionary for english text

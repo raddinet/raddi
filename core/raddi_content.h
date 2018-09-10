@@ -181,6 +181,7 @@ namespace raddi {
             std::uint8_t         code = 0;
             std::uint16_t        insertion = 0;
             bool                 truncated = false;
+            bool                 known = false;
             const std::uint8_t * string = nullptr;
             const std::uint8_t * string_end = nullptr;
         };
@@ -195,6 +196,7 @@ namespace raddi {
         struct marker {
             std::uint8_t         type = 0; // TODO: enum
             std::uint16_t        insertion = 0; // index of 'text' before which this belongs
+            bool                 known = false;
         };
 
         // nested analysis for decompressed data

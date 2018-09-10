@@ -218,7 +218,8 @@ RADDI.com utility functions:
 	- get:<eid>
 		- retrieves an entry from the database and passes it's content to analyze
 		  function, see below
-
+		- optional parameters:
+			- compact - false/true (default) - display in compact form
 	- analyze:<*×N>
 	- analyze:<hexadecimal>
 	- analyze:<@path[@offset[:length]]>
@@ -241,6 +242,8 @@ RADDI.com utility functions:
 			  the file is to be used; if length is not specified, until the
 			  end of the file is assumed
 			- size of input data is limited to 65430 bytes
+		- optional parameters:
+			- compact - false/true (default) - display in compact form
 	- erase:<eid>
 		- deletes the <eid> entry from database
 		- optional parameters:
@@ -253,7 +256,14 @@ RADDI.com utility functions:
 			  have; note that non-core node peers will usually deny this
 		- optional parameters:
 			- threshold - default threshold is 31 days (now-31*86400)
-
+	- list:<eid>
+		- enumerates and displays entries directly descending the 'eid' entry
+		- optional parameters:
+			- names - false/true (default) - whether to display content
+			- compact - false/true (default) - display compact content
+			- author - if present, list only entries by that identity
+			- oldest - hexadecimal timestamp of oldest entry to list
+			- latest - hexadecimal timestamp of newest entry to list
 	- list:identities
 		- enumerates and displays all identities in the database (that equals to
 		  all existing, active or past, identities in the network, when database
@@ -398,7 +408,7 @@ RADDI.com utility additional and optional parameters to functions:
 		- setting to 'false' will significantly speed up the enumeration
 		- generally defaults to 'true'
 		- applies to:
-			list:identities, list:channels, list:threads
+			list:identities, list:channels, list:threads, list
 	- oldest:<hexadecimal>
 	- latest:<hexadecimal>
 		- 

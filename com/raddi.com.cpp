@@ -33,6 +33,7 @@ wchar_t ** argw;
 
 // TODO: add last, offline, attempt to find database for offline read access
 // TODO: add support for entering data in Base64 (sodium_base642bin)
+// TODO: use 'nstring' here to abstract Windows stuff out
 
 // hexadecimal
 //  - parses string of two-character hexadecimal values
@@ -100,6 +101,12 @@ std::wstring u82ws (const uint8_t * data, std::size_t size) {
         };
     }
     return result;
+}
+
+void color (int c) {
+#ifdef _WIN32
+    SetConsoleTextAttribute (GetStdHandle (STD_OUTPUT_HANDLE), c);
+#endif
 }
 
 // userinput
@@ -536,8 +543,9 @@ bool reply (const wchar_t * opname, const wchar_t * to);
 bool list_identities ();
 bool list_channels ();
 bool list_threads ();
+bool list (const wchar_t * parent);
 bool get (const wchar_t * eid);
-bool analyze (const std::uint8_t * data, std::size_t size);
+bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::size_t nesting = 0);
 
 bool download_command (const wchar_t * what);
 bool erase_command (const wchar_t * what);
@@ -641,9 +649,12 @@ bool go () {
         if (!std::wcscmp (parameter, L"threads")) {
             return list_threads ();
         }
+
         // TODO: bans
         // TODO: rejected
         // TODO: subscriptions/blacklisted/retained
+
+        return list (parameter);
     }
 
     if (auto parameter = option (argc, argw, L"new")) {
@@ -686,7 +697,7 @@ bool go () {
                 break;
         }
         if (size)
-            return analyze (data, size);
+            return analyze (data, size, false);
         else
             return false;
     }
@@ -1071,6 +1082,98 @@ struct list_column_info {
     const char * name;
 };
 
+bool list (const wchar_t * parent_) {
+    raddi::instance instance (option (argc, argw, L"instance"));
+    if (instance.status != ERROR_SUCCESS)
+        return raddi::log::data (0x91);
+
+    raddi::db database (file::access::read,
+                        instance.get <std::wstring> (L"database").c_str ());
+    if (!database.connected ())
+        return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
+
+    bool names = true;
+    option (argc, argw, L"names", names);
+
+    std::uint32_t oldest = 0;
+    std::uint32_t latest = raddi::now ();
+
+    if (auto p = option (argc, argw, L"oldest")) {
+        oldest = std::wcstoul (p, nullptr, 16);
+    }
+    if (auto p = option (argc, argw, L"latest")) {
+        latest = std::wcstoul (p, nullptr, 16);
+    }
+
+    raddi::eid parent;
+    raddi::iid author;
+
+    if (!parent.parse (parent_))
+        return raddi::log::data (0x92, parent_);
+
+    if (auto iid = option (argc, argw, L"author")) {
+        if (!author.parse (iid))
+            return raddi::log::data (0x95, iid);
+
+        if (!database.identities->get (author))
+            return raddi::log::data (0x96, author);
+    } else {
+        author.timestamp = 0;
+        author.nonce = 0;
+    }
+
+    list_column_info columns [] = {
+        { 24, "%*ls", "eid" },
+        { 9, "%*x", "shard" },
+        { 5, "%*u", "i" },
+        { 5, "%*llu", "n" },
+        { 9, "%*u", "offset" },
+        { 5, "%*u", "size" },
+        { 22, "%-*ls", "content" },
+    };
+    for (auto column : columns) {
+        if (std::strchr (column.format, '-')) {
+            std::printf (" %-*s", column.width, column.name);
+        } else {
+            std::printf ("%*s", column.width, column.name);
+        }
+    }
+    std::printf ("\n");
+
+    database.data->select (oldest, latest,
+                           [parent, author] (const auto & row, const auto &) {
+                                return row.parent == parent
+                                    && (author.isnull () || row.id.identity == author);
+                           },
+                           [&columns, names] (const auto & row, const auto & detail) {
+                                std::printf (columns [0].format, columns [0].width, row.id.serialize ().c_str ());
+                                std::printf (columns [1].format, columns [1].width, detail.shard);
+                                std::printf (columns [2].format, columns [2].width, detail.index + 1);
+                                std::printf (columns [3].format, columns [3].width, detail.count);
+                                std::printf (columns [4].format, columns [4].width, row.data.offset);
+                                std::printf (columns [5].format, columns [5].width, row.data.length + sizeof (raddi::entry::signature));
+                                if (names) {
+                                    return true;
+                                } else {
+                                    std::printf ("\n");
+                                    return false;
+                                }
+                            },
+                           [&columns] (const auto & row, const auto &, std::uint8_t * raw) {
+                                const auto entry = reinterpret_cast <raddi::entry *> (raw);
+
+                                std::size_t size = row.data.length;
+                                std::size_t proof_size = 0;
+                                if (entry->proof (size + sizeof (raddi::entry), &proof_size)) {
+                                    std::printf (" ");
+                                    analyze (entry->content (), size - proof_size, true);
+                                    std::printf ("\n");
+                                } else
+                                    raddi::log::stop (0x21, row.id);
+                            });
+    return true;
+}
+
 template <typename T, typename Constrain>
 bool list_core_table (T * table, list_column_info (&columns) [7], std::size_t skip, Constrain constrain) {
     std::uint32_t oldest = 0;
@@ -1114,9 +1217,11 @@ bool list_core_table (T * table, list_column_info (&columns) [7], std::size_t sk
                         const auto entry = reinterpret_cast <raddi::entry *> (raw);
 
                         std::size_t proof_size = 0;
-                        if (entry->proof (row.data.length + sizeof (raddi::entry), &proof_size)) {
+                        std::size_t size = row.data.length;
 
-                            auto analysis = raddi::content::analyze (entry->content () + skip, row.data.length - proof_size - skip);
+                        if (entry->proof (size + sizeof (raddi::entry), &proof_size)) {
+
+                            auto analysis = raddi::content::analyze (entry->content () + skip, size - proof_size - skip);
                             std::wstring name;
 
                             for (const auto & text : analysis.text) {
@@ -1260,114 +1365,266 @@ bool list_threads () {
     }
 }
 
-bool analyze (const std::uint8_t * data, std::size_t size) {
-    
-    // TODO: better format
+bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::size_t nesting) {
+    option (argc, argw, L"compact", compact);
+
+    char indent [9];
+    char indent_extra [10];
+    if (compact) {
+        indent [0] = '\0';
+        indent_extra [0] = '\0';
+    } else {
+        for (auto i = 0u; i != std::min (nesting, sizeof indent - 1); ++i) {
+            indent [i] = '\t';
+        }
+        for (auto i = 0u; i != std::min (nesting + 1, sizeof indent_extra - 1); ++i) {
+            indent_extra [i] = '\t';
+        }
+        indent [std::min (nesting, sizeof indent - 1)] = '\0';
+        indent_extra [std::min (nesting + 1, sizeof indent_extra - 1)] = '\0';
+    }
 
     auto analysis = raddi::content::analyze (data, size);
 
     if (!analysis.markers.empty ()) {
-        std::printf ("MARKERS:\n\t");
+        if (!compact) {
+            color (7);
+            std::printf ("%sMARKERS:\n\t%s", indent, indent);
+        }
         for (const auto & marker : analysis.markers) {
             switch (marker.type) {
-                // case 0x03: std::printf (" ETX"); break;
-                // case 0x04: std::printf (" EOT"); break;
-                // case 0x05: std::printf (" ENQ"); break;
-                case 0x06: std::printf (" ACK"); break;
-                case 0x07: std::printf (" REPORT"); break;
-                case 0x08: std::printf (" REVERT"); break;
-                // case 0x0C: std::printf (" FF"); break;
-                // case 0x17: std::printf (" ETB"); break;
-                // case 0x19: std::printf (" EM"); break;
-                case 0x1C: std::printf (" FS"); break; // FS, table  --.
-                case 0x1D: std::printf (" GS"); break; // GS, tab (?)--+-- used to render tables
-                case 0x1E: std::printf (" RS"); break; // RS, row    --|
-                case 0x1F: std::printf (" US"); break; // US, column --'
-                case 0x7F: std::printf (" DELETE"); break;
-                default:
-                    std::printf (" %u", marker.type);
+                case 0x1C: // FS, table  --.
+                case 0x1D: // GS, tab (?)--+-- used to render tables
+                case 0x1E: // RS, row    --|
+                case 0x1F: // US, column --'
+                    continue; // they affect GUI rendering, don't show here
             }
-            if (marker.insertion) {
-                std::printf (" @%u", marker.insertion);
+            if (marker.known) {
+                switch (marker.type) {
+                    case 0x06:
+                        // green
+                        color (2); std::printf ("ACK ");
+                        break;
+                    case 0x07:
+                         // red
+                        color (4); std::printf ("REPORT ");
+                        break;
+                    case 0x08:
+                        // red
+                        color (4); std::printf ("REVERT ");
+                        break;
+                    case 0x7F:
+                        // red
+                        color (4); std::printf ("DELETE ");
+                        break;
+                }
+            } else {
+                // pink
+                color (5); std::printf ("0x%02x ", marker.type);
+            }
+
+            if (marker.insertion && !compact) {
+                std::printf ("@%u ", marker.insertion);
                 // TODO: remember and display symbol in text, different color
             }
         }
-        std::printf ("\n");
+        if (!compact) {
+            std::printf ("\n");
+        }
     }
+
     if (!analysis.tokens.empty ()) {
-        std::printf ("TOKENS:\n");
+        if (!compact) {
+            color (7);
+            std::printf ("%sTOKENS:\n", indent);
+        }
         for (const auto & token : analysis.tokens) {
-            switch (token.code) {
-                case 0x0B: std::printf ("\tVOTE: "); break;
-                case 0x10: std::printf ("\tSIDEBAND: "); break;
-                case 0x15: std::printf ("\tMODERATION: "); break;
-                // case 0x1A: std::printf ("\tSUB: "); break;
-                default:
-                    std::printf ("\t%u: ", token.type);
+            bool code = false;
+            bool type = true;
+
+            if (token.known) {
+                bool named = true;
+                switch (token.type) {
+                    case 0x0B:
+                        if (token.code || !token.string) {
+                            switch (token.code) {
+                                case 0x01: color (9); std::printf ("%sUPVOTE", indent_extra); break;
+                                case 0x02: color (12); std::printf ("%sDOWNVOTE", indent_extra); break;
+                                case 0x03: color (14 /*?*/); std::printf ("%sINFORMATIVE (vote)", indent_extra); break;
+                                case 0x04: color (13 /*?*/); std::printf ("%sFUNNY (vote)", indent_extra); break;
+                                case 0x05: color (4); std::printf ("%sSPAM (vote)", indent_extra); break;
+                                default:
+                                    code = true;
+                                    named = false;
+                            }
+                        }
+                        if (!named) {
+                            color (5);
+                            std::printf ("%sVOTE:", indent_extra);
+                        }
+                        break;
+                    case 0x10:
+                        if (token.code || !token.string) {
+                            switch (token.code) {
+                                case 0x01: color (5); std::printf ("%sTITLE", indent_extra); break;
+                                case 0x04: color (5); std::printf ("%sSIDEBAR", indent_extra); break;
+                                default:
+                                    code = true;
+                                    named = false;
+                            }
+                        }
+                        if (!named) {
+                            color (5);
+                            std::printf ("%sSIDEBAND:", indent_extra);
+                        }
+                        break;
+                    case 0x15:
+                        if (token.code || !token.string) {
+                            switch (token.code) {
+                                case 0x01: color (4); std::printf ("%sHIDE", indent_extra); break;
+                                case 0x02: color (4); std::printf ("%sBAN", indent_extra); break;
+                                case 0x03: color (12); std::printf ("%sNSFW", indent_extra); break;
+                                case 0x04: color (12); std::printf ("%sNSFL", indent_extra); break;
+                                case 0x05: color (4); std::printf ("%sSPOILER", indent_extra); break;
+                                case 0x08: color (9); std::printf ("%sSTICK", indent_extra); break;
+                                case 0x09: color (9); std::printf ("%sHIGHLIGHT", indent_extra); break;
+
+                                default:
+                                    code = true;
+                                    named = false;
+                            }
+                        }
+                        if (!named) {
+                            color (5);
+                            std::printf ("%sMODERATION:", indent_extra);
+                        }
+                        break;
+                    default:
+                        code = true;
+                        type = false;
+                }
+            } else {
+                type = false;
             }
-            if (token.code || !token.string) {
+
+            if (!type) {
+                // pink
+                color (5); std::printf ("%s0x%02x:", indent_extra, token.type);
+                code = true;
+            }
+
+            if (code && (token.code || !token.string)) {
                 std::printf ("0x%02x", token.code);
             }
             if (token.string) {
                 std::wprintf (L"%s", u82ws (token.string, token.string_end - token.string).c_str ());
             }
-            if (token.insertion) {
-                std::printf (" @%u", token.insertion);
-                // TODO: remember and display symbol in text, different color
+            if (!compact) {
+                if (token.insertion) {
+                    std::printf (" @%u", token.insertion);
+                    // TODO: remember and display symbol in text, different color
+                }
+                if (token.truncated) {
+                    std::printf ("-TRUNCATED!");
+                }
             }
-            if (token.truncated) {
-                std::printf (" TRUNCATED!");
+            if (compact) {
+                std::printf (" ");
+            } else {
+                std::printf ("\n");
             }
-            std::printf ("\n");
         }
     }
     if (!analysis.attachments.empty ()) {
-        std::printf ("ATTACHMENTS:\n");
+        if (!compact) {
+            color (7);
+            std::printf ("%sATTACHMENTS:\n", indent);
+        }
         for (const auto & attachment : analysis.attachments) {
-            switch (attachment.type) {
-                case 0xFA: std::printf ("\tBINARY ATTACHMENT: "); break;
-                case 0xFC: std::printf ("\tCOMPRESSED DATA: "); break;
-                case 0xFE: std::printf ("\tENCRYPTED DATA: "); break;
-                case 0xFF: std::printf ("\tPRIVATE MESSAGE: "); break;
-                default:
-                    std::printf ("\t%u: ", attachment.type);
+            bool type = true;
+            if (attachment.known) {
+                switch (attachment.type) {
+                    case 0xFA: color (1); std::printf ("%sBINARY: ", indent_extra); break;
+                    case 0xFC: color (1); std::printf ("%sCOMPRESSED: ", indent_extra); break;
+                    case 0xFE: color (1); std::printf ("%sENCRYPTED: ", indent_extra); break;
+                    case 0xFF: color (1); std::printf ("%sPRIVATE MESSAGE: ", indent_extra); break;
+                    default:
+                        type = false;
+                }
+            } else {
+                type = false;
             }
+            if (!type) {
+                color (5); std::printf ("%s0x%02x: ", indent_extra, attachment.type);
+            }
+
             std::printf ("%u bytes", attachment.size);
 
-            if (attachment.insertion) {
-                std::printf (" @%u", attachment.insertion);
-                // TODO: remember and display symbol in text, different color
-            }
-            if (attachment.truncated) {
-                std::printf (" TRUNCATED!");
+            if (!compact) {
+                if (attachment.insertion) {
+                    std::printf (" @%u", attachment.insertion);
+                    // TODO: remember and display symbol in text, different color
+                }
+                if (attachment.truncated) {
+                    std::printf (" TRUNCATED!");
+                }
             }
             if (attachment.type == 0xFC) {
-                // TODO: decompress and display
+                // if (compact) { std::printf (" ["); }
+                // color (7);
+                // TODO: decompress and analyze (..., nesting + 1)
+                // if (compact) { std::printf ("] "); }
             }
+            if (compact) {
+                std::printf (" ");
+            } else {
+                std::printf ("\n");
+            }
+        }
+    }
+
+    for (const auto & edit : analysis.edits) {
+        if (compact) {
+            color (14);
+            std::printf ("EDIT %04x..%04x [",
+                         edit.offset, edit.offset + edit.length);
+            color (7);
+            analyze (edit.string, edit.string_end - edit.string, compact, nesting + 1);
+
+            color (14);
+            std::printf ("] ");
+        } else {
+            color (7);
+            std::printf ("%sEDIT: offset %u, %u bytes, replace with following %zu bytes%s:\n",
+                         indent, edit.offset, edit.length, edit.string_end - edit.string, edit.truncated ? " (truncated)" : "");
+
+            analyze (edit.string, edit.string_end - edit.string, compact, nesting + 1);
+
             std::printf ("\n");
         }
     }
-    for (const auto & edit : analysis.edits) {
-        std::printf ("EDIT: offset %u, %u bytes, replace with following %u bytes%s:\n",
-                     edit.offset, edit.length, edit.string_end - edit.string, edit.truncated ? " (truncated)" : "");
-        analyze (edit.string, edit.string_end - edit.string);
-        std::printf ("\n");
-    }
+    
     if (!analysis.text.empty ()) {
-        std::printf ("TEXT:\n");
-
+        color (7);
+        if (!compact) {
+            std::printf ("%sTEXT:\n%s", indent, indent);
+        }
         for (const auto & text : analysis.text) {
-            if (text.paragraph) {
-                std::printf ("\n\n");
+            if (!compact) {
+                if (text.paragraph) {
+                    std::printf ("\n\n%s", indent);
+                }
             }
             if (text.heading) {
-                // TODO: set bg color
+                color (15 | BACKGROUND_INTENSITY);
             } else {
-                // TODO: normal bg color
+                color (7);
             }
             std::wprintf (L"%s", u82ws (text.begin, (std::size_t) (text.end - text.begin)).c_str ());
         }
     }
+
+    color (7);
     return true;
 }
 
@@ -1406,7 +1663,7 @@ bool get (const wchar_t * what) {
                     break;
             }
 
-            return analyze (entry->content () + skip, size - proof_size - skip);
+            return analyze (entry->content () + skip, size - proof_size - skip, false);
         } else {
             return raddi::log::stop (0x21, eid);
         }

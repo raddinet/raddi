@@ -62,21 +62,24 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                 state = text_appearance ();
                 break;
 
-            case 0x03: // ETX, end of section
             case 0x04: // EOT, // reserved
             case 0x05: // ENQ, // reserved
-            case 0x06: // ACK, acknowledged by recepient
-            case 0x07: // BEL, report
-            case 0x08: // BS,  revert
             case 0x0C: // FF,  // reserved
             case 0x17: // ETB, // reserved
             case 0x19: // EM,  // reserved
+                analysis.markers.push_back ({ *content, (std::uint16_t) analysis.text.size (), false });
+                break;
+
+            case 0x03: // ETX, end of section
+            case 0x06: // ACK, acknowledged by recepient
+            case 0x07: // BEL, report
+            case 0x08: // BS,  revert
             case 0x1C: // FS, table  --.
             case 0x1D: // GS, tab (?)--+-- used to render tables
             case 0x1E: // RS, row    --|
             case 0x1F: // US, column --'
             case 0x7F: // DEL, delete, mod-op
-                analysis.markers.push_back ({ *content, (std::uint16_t) analysis.text.size () });
+                analysis.markers.push_back ({ *content, (std::uint16_t) analysis.text.size (), true });
                 break;
 
             case 0x0B: // VT, vote token
@@ -90,6 +93,16 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                     analysis::token token;
                     token.type = *content;
                     token.insertion = (std::uint16_t) analysis.text.size ();
+
+                    switch (*content) {
+                        case 0x0B:
+                        case 0x10:
+                        case 0x15:
+                            token.known = true;
+                            break;
+                        default:
+                            token.known = false;
+                    }
 
                     if (*p < 0x20) {
                         token.code = *p;
