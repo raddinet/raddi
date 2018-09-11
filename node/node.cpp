@@ -260,15 +260,23 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
                 break;
 
             case raddi::command::type::set_log_level:
-                // TODO: settings: allow log level changing, minimal/maximal allowed log level
-                if (size >= sizeof (raddi::log::level)) {
-                    raddi::log::settings::level = *reinterpret_cast <const raddi::log::level *> (cmd->content ());
-                }
-                break;
             case raddi::command::type::set_display_level:
-                // TODO: settings: same as above
-                if (size >= sizeof (raddi::log::level)) {
-                    raddi::log::settings::display = *reinterpret_cast <const raddi::log::level *> (cmd->content ());
+                // TODO: settings: allow log level changing, minimal/maximal allowed log level
+
+                if (size < sizeof (raddi::log::level)) {
+                    raddi::log::data (raddi::component::main, 8, cmd->type, sizeof (raddi::log::level));
+                    return false;
+
+                } else {
+                    auto new_level = *reinterpret_cast <const raddi::log::level *> (cmd->content ());
+                    switch (cmd->type) {
+                        case raddi::command::type::set_log_level:
+                            raddi::log::settings::level = new_level;
+                            break;
+                        case raddi::command::type::set_display_level:
+                            raddi::log::settings::display = new_level;
+                            break;
+                    }
                 }
                 break;
 
@@ -293,7 +301,11 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
             case raddi::command::type::unban_peer:
             case raddi::command::type::connect_peer:
             case raddi::command::type::add_core_peer:
-                if ((coordinator != nullptr) && (size >= sizeof (raddi::address))) {
+                if (size < sizeof (raddi::address)) {
+                    raddi::log::data (raddi::component::main, 8, cmd->type, sizeof (raddi::address));
+                    return false;
+
+                } else {
                     const auto & address = *reinterpret_cast <const raddi::address *> (cmd->content ());
                     if (address.valid (raddi::address::validation::allow_null_port)) {
 
@@ -338,7 +350,11 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
             // data
 
             case raddi::command::type::download:
-                if ((coordinator != nullptr) && (size >= sizeof (raddi::request::download))) {
+                if (size < sizeof (raddi::request::download)) {
+                    raddi::log::data (raddi::component::main, 8, cmd->type, sizeof (raddi::request::download));
+                    return false;
+
+                } else {
                     coordinator->broadcast (raddi::request::type::download,
                                             cmd->content (), sizeof (raddi::request::download));
                 }
@@ -346,13 +362,19 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
 
             case raddi::command::type::erase:
             case raddi::command::type::erase_thorough:
-                if ((database != nullptr) && (size >= sizeof (raddi::eid))) {
+                if (size < sizeof (raddi::eid)) {
+                    raddi::log::data (raddi::component::main, 8, cmd->type, sizeof (raddi::eid));
+                    return false;
+
+                } else {
                     const auto & entry = *reinterpret_cast <const raddi::eid *> (cmd->content ());
 
-                    // TODO: if option erase allowed...
+                    // TODO: if (option) erase is allowed...
 
                     if (database->erase (entry, (cmd->type == raddi::command::type::erase_thorough) ? true : false)) {
-                        // TODO: report success
+                        raddi::log::event (raddi::component::main, 6, entry);
+                    } else {
+                        raddi::log::error (raddi::component::main, 9, entry);
                     }
                 }
                 break;
@@ -365,7 +387,11 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
             case raddi::command::type::unblacklist:
             case raddi::command::type::retain:
             case raddi::command::type::unretain:
-                if ((coordinator != nullptr) && (size >= sizeof (raddi::command::subscription))) {
+                if (size < sizeof (raddi::command::subscription)) {
+                    raddi::log::data (raddi::component::main, 8, cmd->type, sizeof (raddi::command::subscription));
+                    return false;
+
+                } else {
                     const auto & subscription = *reinterpret_cast <const raddi::command::subscription *> (cmd->content ());
 
                     switch (cmd->type) {
@@ -398,7 +424,7 @@ bool Source::command (const raddi::command * cmd, std::size_t size_) {
         return true;
 
     } catch (const std::exception & x) {
-        raddi::log::event (raddi::component::main, 8, cmd->type, x.what ());
+        raddi::log::error (raddi::component::main, 8, cmd->type, x.what ());
         return false;
     }
 }
@@ -922,6 +948,8 @@ namespace {
 
         // http client
         //  - for bootstrap, and possible future features
+        //  - NOTE: 'Download' parses the file for separate line of IP:port pairs
+        //  - TODO: use dns://cn0.raddi.net
 
         if (WinHttpCheckPlatform ()) {
             std::wstring proxy_ua_string;

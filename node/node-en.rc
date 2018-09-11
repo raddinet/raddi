@@ -13,6 +13,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | EVENT | 0x03 "{1:%04u-%02u-%02u}"
     MAIN | EVENT | 0x04 "low on memory, optimizing"
     MAIN | EVENT | 0x05 "received command {1} with {2} bytes of data"
+    MAIN | EVENT | 0x06 "entry {1} successfully erased"
     MAIN | EVENT | 0x20 "bootstrapping from {1}: adding core level node address {2}"
     MAIN | EVENT | 0x21 "entry {1} broadcasted through {2} connections"
 
@@ -24,6 +25,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 6    "worker {1} ({2}): uncaught exception {3}"
     MAIN | ERROR | 7    "memory warning, won't honor reservation for {1} connections"
     MAIN | ERROR | 8    "command {1} failed with {2} exception"
+    MAIN | ERROR | 9    "entry {1} erase failed, no such entry or database failure"
     MAIN | ERROR | 0x20 "bootstrap: failed to parse URL {1}, error {ERR}"
     MAIN | ERROR | 0x21 "bootstrap: failed to prepare request to {1}:{2}, error {ERR}"
     MAIN | ERROR | 0x22 "bootstrap: failed to prepare request to {1}:{2}{3}, error {ERR}"
@@ -35,6 +37,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 0x28 "bootstrapping from {1}: unable to add core level node address {2}, not recognized"
 
     MAIN | DATA | 8     "command rejected, unknown type {1}"
+    MAIN | DATA | 9     "command {1} rejected, not enough data, {2} bytes required"
 
     MAIN | NOTE | 1     "applying option {1}: {2}"
     MAIN | NOTE | 2     "invoking {1}:{2}"
