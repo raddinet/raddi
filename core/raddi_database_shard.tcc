@@ -163,6 +163,8 @@ bool raddi::db::shard <Key>::unsynchronized_advance (const db::table <Key> * tab
         }
     }
 
+    this->accessed = raddi::now ();
+
     try {
         const auto size = this->index.size ();
         const auto n = size / sizeof (Key);

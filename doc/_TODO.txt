@@ -6,8 +6,6 @@ github repo:
    - release - installer exe in release, separated exe/dlls in subdirs
    - portable
 
-shard: get doesn't update timestamp of last use (immediate unloads happen)
-
 threads are inserted duplicated (race condition?)
 
 commands: loglevels
