@@ -2,15 +2,15 @@
 	autoincrement	= true
 
 [description]
-	product 		= raddi.net
+	product 		= RADDI.net
 	filename		= raddi.com
-	filedescription		= raddi.net command-line utility 
+	filedescription		= RADDI.net Command-line Utility 
 	internalname		= raddi.com
 
 	major = 0
-	minor = 2
+	minor = 3
 	patch = 0
-	build = 803
+	build = 854
 
 [versioninfo]
 	filename	= %dir%\%internalname%-vi.rc

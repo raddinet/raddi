@@ -2,15 +2,15 @@
 	autoincrement	= true
 
 [description]
-	product 		= raddi.net
+	product 		= RADDI.net
 	filename		= %targetfilename%
-	filedescription		= raddi.net node service
+	filedescription		= RADDI.net Node Service
 	internalname		= node
 
 	major = 0
-	minor = 2
+	minor = 3
 	patch = 0
-	build = 2645
+	build = 2669
 
 [versioninfo]
 	filename	= %dir%\%internalname%-vi.rc
