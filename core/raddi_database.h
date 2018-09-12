@@ -199,8 +199,6 @@ namespace raddi {
         //
         bool get (const eid &, void * buffer, std::size_t * length) const;
 
-        // TODO: add symmetric cipher (or just XOR) for data files and store it alongside of them, this is just to prevent raw drive search
-
         // typical use scenarios
         //  - search identities
         //  - search channels
@@ -258,7 +256,6 @@ namespace raddi {
         //  - threads - root thread entries (copy for fast lookup)
         //  - channels - root channel entries and directly following meta entries
         //  - identities - root identity entries and directly following meta entries
-        //  - NOTE: sent entries and private keys are stored by client apps, not nodes
         //  - TODO: figure out a clean way to remove the unneccessary indirection
 
         std::unique_ptr <table <row>> data;
