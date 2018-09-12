@@ -567,9 +567,8 @@ bool go () {
     }
 
     // TODO: install / uninstall / start / stop ... (service)
-    //  - ADD/REMOVE "127.0.0.1 xxx.raddi.net" to c:\Windows\System32\Drivers\etc\hosts 
 
-    // TODO: list:instances, list:threads ...
+    // TODO: list:instances
     // TODO: clear blacklist, list blacklist, ban:IP?
     // TODO: clear peers (all)
 
