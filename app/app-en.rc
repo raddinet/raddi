@@ -1,0 +1,10 @@
+#include <windows.h>
+#include "../common/log.h"
+
+STRINGTABLE
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+{
+    MAIN | EVENT | 0x01 "raddi.net {1}.{2} {3}, {4}"
+
+    MAIN | STOP | 1     "executable corrupted or miscompiled"
+}

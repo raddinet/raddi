@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RADDI node", "node\node.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "raddi.com", "com\raddi.com.vcxproj", "{04C91036-A0A3-4D33-8C4E-DEF5B8523950}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RADDI app", "app\app.vcxproj", "{0FBF4072-2F99-4F25-8240-82609AE0C68F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,18 @@ Global
 		{04C91036-A0A3-4D33-8C4E-DEF5B8523950}.Release|x64.Build.0 = Release|x64
 		{04C91036-A0A3-4D33-8C4E-DEF5B8523950}.Release|x86.ActiveCfg = Release|Win32
 		{04C91036-A0A3-4D33-8C4E-DEF5B8523950}.Release|x86.Build.0 = Release|Win32
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Debug|x64.ActiveCfg = Debug|x64
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Debug|x64.Build.0 = Debug|x64
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Debug|x86.ActiveCfg = Debug|Win32
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Debug|x86.Build.0 = Debug|Win32
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Portable|x64.ActiveCfg = Portable|x64
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Portable|x64.Build.0 = Portable|x64
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Portable|x86.ActiveCfg = Portable|Win32
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Portable|x86.Build.0 = Portable|Win32
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Release|x64.ActiveCfg = Release|x64
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Release|x64.Build.0 = Release|x64
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Release|x86.ActiveCfg = Release|Win32
+		{0FBF4072-2F99-4F25-8240-82609AE0C68F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
