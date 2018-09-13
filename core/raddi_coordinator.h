@@ -128,11 +128,21 @@ namespace raddi {
         //
         bool connect_one_more_announced_node = false;
 
-        // core_sync...
-        //  - data for synchronization among core nodes...
-
+        // core_sync_threshold
+        //  - initialized to timestamp which is requested (download) from other core nodes
+        //  - on first run (database is empty) it's current time minus database 'synchronization_threshold'
+        //    to retrieve all data that all normal nodes will generally care about
+        //  - on subsequent starts it's timestamp of newest data we have minus database 'synchronization_base_offset'
+        //    for some overlap to account for data potentially lost in transit
+        //
         std::uint32_t core_sync_threshold = 0;
-        std::uint32_t core_sync_count = 3; // ???
+
+        // core_sync_count
+        //  - how many other core nodes to ask for full database download
+        //    to make sure we really have everything
+        //  - TODO: defaults.h, also read from options?
+        // 
+        std::uint32_t core_sync_count = 3;
 
     public:
 
@@ -161,8 +171,6 @@ namespace raddi {
             unsigned int local_peer_discovery_period = 60;
             unsigned int more_peers_query_delay = 180;
             unsigned int full_database_download_limit = 62 * 86400;
-
-            // TODO: how many peers should I broadcast requests for data? everyone?
         } settings;
 
     public:
@@ -286,12 +294,13 @@ namespace raddi {
         std::size_t start ();
 
         // broadcast
-        //  - 
+        //  - broadcasts the entry to all connections that are subscribed to the channel/thread/stream
+        //    or everything (typically all, except leaf nodes)
         //
         std::size_t broadcast (const db::root &, const entry * data, std::size_t size);
 
         // broadcast
-        //  - 
+        //  - sends request to all connections (optionally with additional data)
         //
         std::size_t broadcast (enum class raddi::request::type, const void * data, std::size_t size);
         std::size_t broadcast (enum class raddi::request::type rq) {

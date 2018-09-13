@@ -208,12 +208,12 @@ namespace raddi {
         //  - list all posts/etc by some identity
 
         // shard_instance_name
-        //  - implemented in ...shard.cpp
+        //  - implemented in 'raddi_database_shard.cpp'
         //
         std::wstring shard_instance_name (std::uint32_t base, const std::wstring & table) const;
 
         // table_directory_path
-        //  - implemented in ...table.cpp
+        //  - implemented in 'raddi_database_table.cpp'
         //
         std::wstring table_directory_path (const std::wstring & table) const;
 

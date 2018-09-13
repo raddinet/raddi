@@ -83,7 +83,7 @@ common/string.h
  - AND THEN DROP ALL wchar_t* OVERLOADS
 
 consider http server? simple GET/POST support
- - replace Source functionality?
+ - also replace Source/commands functionality
  - POST - new identity/channel/post/etc.
  - GET - db queries? lists of identities/channels
        - deep tree data fetch?
