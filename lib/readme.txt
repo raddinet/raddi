@@ -18,9 +18,13 @@ raddi/lib/include/sodium/...
 raddi/lib/x86/Debug/liblzma.lib
  - copy from: xz\windows\vs2017\Debug\Win32\liblzma.lib
 raddi/lib/x86/Debug/libsodium.lib
+
 raddi/lib/x86/Release/liblzma.lib - NOTE: DLL
  - copy from: xz\windows\vs2017\Release\Win32\liblzma_dll\liblzma.lib
 raddi/lib/x86/Release/libsodium.lib - NOTE: DLL
+raddi/lib/x86/Release/sqlite3.lib - NOTE: DLL
+ - make using: lib.exe /def:sqlite3.def /out:sqlite3.lib
+
 raddi/lib/x86/Portable/liblzma.lib - NOTE: LTCG
  - copy from: xz\windows\vs2017\Release\Win32\liblzma\liblzma.lib 
 raddi/lib/x86/Portable/libsodium.lib - NOTE: LTCG
@@ -28,9 +32,13 @@ raddi/lib/x86/Portable/libsodium.lib - NOTE: LTCG
 raddi/lib/x64/Debug/liblzma.lib
  - copy from: xz\windows\vs2017\Debug\x64\liblzma.lib
 raddi/lib/x64/Debug/libsodium.lib
+
 raddi/lib/x64/Release/liblzma.lib - NOTE: DLL
  - copy from: xz\windows\vs2017\Release\x64\liblzma_dll\liblzma.lib 
 raddi/lib/x64/Release/libsodium.lib - NOTE: DLL
+raddi/lib/x64/Release/sqlite3.lib - NOTE: DLL
+ - make using: lib.exe /def:sqlite3.def /out:sqlite3.lib /machine:x64
+
 raddi/lib/x64/Portable/liblzma.lib - NOTE: LTCG
  - copy from: xz\windows\vs2017\Release\x64\liblzma\liblzma.lib 
 raddi/lib/x64/Portable/libsodium.lib - NOTE: LTCG
