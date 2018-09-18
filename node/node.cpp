@@ -775,8 +775,6 @@ namespace {
             option (argc, argw, L"database-reinsertion-validation", database.settings.reinsertion_validation);
             option (argc, argw, L"database-xor-mask-size", database.settings.xor_mask_size);
 
-            // TODO: remember largest EID (time of last shutdown) and current time, to ask for resync among core nodes
-
             ::database = &database;
         } else {
             status.dwWin32ExitCode = GetLastError ();
