@@ -502,12 +502,14 @@ int wmain (int argc, wchar_t ** argw) {
     // apps need their UUID for daemon to distinguish them:
     //  - either hard-code the UUID, every app different!
     //  - or generate on first run and store in app's settings, like this:
+    //  - TODO: make into a function
 
     HKEY registry;
     if (RegCreateKeyEx (HKEY_CURRENT_USER, L"SOFTWARE\\RADDI.net", 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &registry, NULL) == ERROR_SUCCESS) {
         DWORD size = sizeof app;
         if (RegQueryValueEx (registry, L"raddi.com", NULL, NULL, (LPBYTE) &app, &size) != ERROR_SUCCESS) {
             RegSetValueEx (registry, L"raddi.com", 0, REG_BINARY, (LPBYTE) &app, sizeof app);
+            raddi::log::event (0x02, app);
         }
         RegCloseKey (registry);
         registry = NULL;

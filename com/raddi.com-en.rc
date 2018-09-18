@@ -5,7 +5,8 @@ STRINGTABLE
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 {
     MAIN | EVENT | 0x01 "raddi.com {1}.{2} {3}, {4}"
-    
+    MAIN | EVENT | 0x02 "first run, generated uuid {1}"
+
     MAIN | NOTE | 0x01  "using argument {1}: {2}"
     MAIN | NOTE | 0x05  "{1} version {2}, linkage: {3}"
 
