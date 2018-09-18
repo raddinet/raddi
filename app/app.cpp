@@ -8,8 +8,9 @@
 #include <cstdarg>
 #include <list>
 
- #include <sodium.h>
- #include <lzma.h>
+#include <sodium.h>
+#include <lzma.h>
+#include <sqlite3.h>
 
 #include "../common/log.h"
 #include "../common/lock.h"
@@ -21,42 +22,32 @@
 #include "../core/raddi_content.h"
 
 uuid app;
+
 alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/1";
 const VS_FIXEDFILEINFO * const version = GetCurrentProcessVersionInfo ();
 
 int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
-    SetErrorMode (0x8007);
-    SetDllDirectoryW (L"");
-
     ULONG heapmode = 2;
     HeapSetInformation (GetProcessHeap (), HeapCompatibilityInformation, &heapmode, sizeof heapmode);
 
     sodium_init ();
+    sqlite3_initialize ();
     
-#ifdef NDEBUG
-    raddi::log::display (L"data");
-#endif
-    // raddi::log::display (option (argc, argw, L"display"));
-    // raddi::log::initialize (option (argc, argw, L"log"), L"\\RADDI.net\\", L"cmd", false);
+    raddi::log::display (L"disabled"); // TODO: redirect to some internal history
+    raddi::log::initialize (option (__argc, __wargv, L"log"), L"\\RADDI.net\\", L"app", false);
 
     raddi::log::event (0x01,
                        (unsigned long) HIWORD (version->dwProductVersionMS),
                        (unsigned long) LOWORD (version->dwProductVersionMS),
                        ARCHITECTURE, BUILD_TIMESTAMP);
 
-    /*if (auto h = LoadLibrary (L"sqlite3.dll")) {
-        if (auto p = reinterpret_cast <const char * (*) ()> (GetProcAddress (h, "sqlite3_libversion"))) {
-            raddi::log::note (0x05, "sqlite3", p (), L"dynamic");
-        }
-        FreeLibrary (h);
-    }*/
+    raddi::log::note (0x05, "sqlite3", sqlite3_libversion (), GetModuleHandle (L"sqlite3") ? L"dynamic" : L"static");
     raddi::log::note (0x05, "liblzma", lzma_version_string (), GetModuleHandle (L"liblzma") ? L"dynamic" : L"static");
     raddi::log::note (0x05, "libsodium", sodium_version_string (), GetModuleHandle (L"libsodium") ? L"dynamic" : L"static");
 
 #ifdef CRT_STATIC
     raddi::log::note (0x05, "vcruntime", CRT_STATIC, L"static");
 #else
-    // NOTE: also in HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\ (debug) \ x64 | x86 \ Version
     if (auto h = GetModuleHandle (L"VCRUNTIME140")) {
         if (auto info = GetModuleVersionInfo (h)) {
             wchar_t vs [32];
@@ -79,10 +70,12 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
         DWORD size = sizeof app;
         if (RegQueryValueEx (registry, L"app", NULL, NULL, (LPBYTE) &app, &size) != ERROR_SUCCESS) {
             RegSetValueEx (registry, L"app", 0, REG_BINARY, (LPBYTE) &app, sizeof app);
+            raddi::log::event (0x02, app);
         }
         RegCloseKey (registry);
         registry = NULL;
     }
+
 
 
 

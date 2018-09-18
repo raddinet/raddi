@@ -31,6 +31,9 @@
     <ClCompile Include="..\common\uuid.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\sqlite3.c">
+      <Filter>Libraries</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app-en.rc">
@@ -40,6 +43,9 @@
       <Filter>Resources</Filter>
     </ResourceCompile>
     <ResourceCompile Include="app-vi.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\common\log-en.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
