@@ -2,6 +2,17 @@ TODO
 ====
 
 github/raddi/raddi-builds-windows/release/installer.exe
+ - uac: highest available, if not elevated, global installation will prompt
+ - check for MSVC
+    - if redist exe present, and elevated, silently run redist install (or update)
+    - if not present, redirect user to download if not installed, or warn if very old
+    - if not present, and not elevated, ask user to install portable build?
+ - options (use tree):
+    - program files / app data
+    - service / on demand
+       - option to open service settings before first run
+    - core / normal / leaf
+    - shortcuts: for all users / just for me
 
 threads are inserted duplicated (race condition?)
 
@@ -72,7 +83,7 @@ TBD hta: http://localhost:44304/abcd/ executable name??? local web serving tray 
 TBD app: https://msdn.microsoft.com/en-us/library/aa767914(VS.85).aspx#app_reg
 TBD ext: raddi://a29e7568b5da6a-b5e418[.txt/.html/.xml/.md]
 TBD ext: raddi://a29e7568b5da6a-b5e418/[1/2/3/...][.jpg/.png/.zip/...]
-TBD www - read-only web interface
+TBD www - read-only web interface: http://read.raddi.net:8008/... (or 591)
 
 common/string.h
  - string with platform-defined internal representation
