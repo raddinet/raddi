@@ -88,6 +88,9 @@ Node parameters:
 				   XChaCha20-Poly1305 otherwise
 			- "disabled" - always uses XChaCha20-Poly1305
 			- "forced" - disconnects peers that don't support AES256-GCM
+	- local:<0|1|false|true>
+		- limits outbound connections to local peers only (locally discovered)
+		- default is false
 	- network-propagation-participation:<0|1|false|true>
 		- selects if node participates in network propagation, i.e. subscribes to
 		  receive all traffic and store/rebroadcast it where appropriate in order
