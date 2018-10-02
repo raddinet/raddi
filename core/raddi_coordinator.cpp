@@ -276,6 +276,19 @@ void raddi::coordinator::operator() () {
             this->select_unused_addresses (announced_nodes, 1, addresses);
         }
 
+        if (this->settings.local_peers_only) {
+            auto i = addresses.begin ();
+            auto e = addresses.end ();
+
+            while (i != e) {
+                if (i->first.accessible ()) {
+                    i = addresses.erase (i);
+                } else {
+                    ++i;
+                }
+            }
+        }
+
         if (!addresses.empty ()) {
             exclusive guard (this->lock);
 

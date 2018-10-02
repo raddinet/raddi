@@ -802,6 +802,7 @@ namespace {
         option (argc, argw, L"min-connections", coordinator.settings.min_connections);
         option (argc, argw, L"max-core-connections", coordinator.settings.max_core_connections);
         option (argc, argw, L"min-core-connections", coordinator.settings.min_core_connections);
+        option (argc, argw, L"local", coordinator.settings.local_peers_only); // 'local-peers-only'?
         option (argc, argw, L"network-propagation-participation", coordinator.settings.network_propagation_participation);
         option (argc, argw, L"channels-synchronization-participation", coordinator.settings.channels_synchronization_participation);
         option (argc, argw, L"full-database-downloads", coordinator.settings.full_database_downloads_allowed);

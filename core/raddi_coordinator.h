@@ -157,6 +157,7 @@ namespace raddi {
             std::size_t max_core_connections = 3; // maximum connections to core nodes
             std::size_t min_core_connections = 0; // minimum core nodes to allow broadcasting
 
+            bool local_peers_only = false;
             bool network_propagation_participation = true;
             bool channels_synchronization_participation = true;
             bool full_database_downloads_allowed = false;
