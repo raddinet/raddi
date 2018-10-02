@@ -95,7 +95,7 @@ Leading bytes:
 		- meaning reserved, no data follows
 	0x05: ENQ
 		- meaning reserved, no data follows
-	0x06: ACK, ENDORSE
+	0x06: ACK
 		- indicator for private messages, or otherwise targetted messages, author
 		  reports that he has read the parent entry
 	0x07: BEL, REPORT
@@ -206,5 +206,7 @@ Text formatting:
 	0x001E: RS, reserved for tables
 	0x001F: US, reserved for tables
 
+TODO: SYN
 TODO: stream starts
 TODO: ENQ? users pinging OP for update?
+TODO: endorse, e.g. moderator endorse other moderator, channel author endorsing a list of mods
