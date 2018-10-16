@@ -24,8 +24,9 @@ commands: list:peers...
 raddi.com analyze/get/list -> support decompression
 
 warrant cannary channel
+general link comments channel
 
-bootstrap:dns://cn0.raddi.net - resolve IP through DNS, TODO: try cn1, cn2, cn3, etc...
+bootstrap:dns://n0.raddi.net - resolve IP through DNS, TODO: try cn1, cn2, cn3, etc...
 
 outbound data sorting in raddi::connection::send
  - prioritize shorter entries
@@ -55,6 +56,11 @@ title/sidebar edits must be retained forever and forwarded to all users
 
 historical data replay flooding protection in raddi::db::classify case
  - start rejecting old entries from connection that we did not asked (connection->history_extension)
+
+app: master phrase/password to protect keys + misdirection phrase/password for plausible deniability unlocks different set of account
+ - generates safety hash such as
+    - pwd1 + hash -> main key
+    - pwd2 + hash -> safety key
 
 sane coordinator status display
 more info into overview
