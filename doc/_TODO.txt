@@ -30,7 +30,10 @@ warrant cannary channel
 general link comments channel
  - adding discussions below random internet links that might not allow one
 
-bootstrap:dns://n0.raddi.net - resolve IP through DNS, TODO: try cn1, cn2, cn3, etc...
+bootstrap:dns://#port.#index.raddi.net - resolve IP through DNS (or swap port and index?)
+ - 443.1.raddi.net (on port 443)
+ - 44303.1.raddi.net (on port 44303)
+ - method: try next 10 if some index succeeds to resolve
 
 outbound data sorting in raddi::connection::send
  - prioritize shorter entries
@@ -65,6 +68,11 @@ app: master phrase/password to protect keys + misdirection phrase/password for p
  - generates safety hash such as
     - pwd1 + hash -> main key
     - pwd2 + hash -> safety key
+
+app: https://github.com/Microsoft/console/issues/277
+ - SetWindowTheme(hWnd, L"DarkMode_Explorer", nullptr);
+ - AllowDarkModeForWindow
+ - https://github.com/ysc3839/VCMPBrowser/blob/darkmode/DarkMode.h
 
 sane coordinator status display
 more info into overview
