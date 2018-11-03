@@ -22,9 +22,13 @@ commands: loglevels
 commands: optimize
 commands: list:peers...
 raddi.com analyze/get/list -> support decompression
+raddi.com sign/verify -> file using identity
 
 warrant cannary channel
+ - https://en.wikipedia.org/wiki/Warrant_canary
+ - example content: https://www.idrix.fr/VeraCrypt/canary.txt
 general link comments channel
+ - adding discussions below random internet links that might not allow one
 
 bootstrap:dns://n0.raddi.net - resolve IP through DNS, TODO: try cn1, cn2, cn3, etc...
 
