@@ -3,6 +3,7 @@ TODO
 
 github/raddi/raddi-builds-windows/release/installer.exe
  - uac: highest available, if not elevated, global installation will prompt
+ - add raddiXX.exe to firewall
  - check for MSVC
     - if redist exe present, and elevated, run redist install (or update) /install /passive /norestart
     - if not present, redirect user to download if not installed, or warn if very old
@@ -16,7 +17,9 @@ github/raddi/raddi-builds-windows/release/installer.exe
  - update function
     - shutdown instances (other users/sessions?)
 
-threads are inserted duplicated (race condition?)
+threads are inserted duplicated (race condition?) - might've been fixed
+
+peer addresses appear in validated or are validate even though it's not possible to connect to them
 
 commands: loglevels
 commands: optimize
@@ -29,6 +32,11 @@ warrant cannary channel
  - example content: https://www.idrix.fr/VeraCrypt/canary.txt
 general link comments channel
  - adding discussions below random internet links that might not allow one
+ - unnamed topics with SHA1 of the link?
+    - normal name as "title change" MOD OP
+    - typically replies (automatically added) just contain EID of discussions in actual channels
+       - MERGE mod OPs
+    - or discussion simply follows (?)
 
 bootstrap:dns://#port.#index.raddi.net - resolve IP through DNS (or swap port and index?)
  - 443.1.raddi.net (on port 443)
