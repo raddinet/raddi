@@ -49,6 +49,10 @@ outbound data sorting in raddi::connection::send
 
 report bad inputs (from source) in node
 
+reduce local peer discovery period (not actually really necessary)
+
+support reading options from file
+
 tables: test and fix shard splitting
 tables: add code for client app to process external changes, see 'process' member function
 tables: evaluate proper size limits so the index files fit exactly within whole multiples of a typical cluster size
