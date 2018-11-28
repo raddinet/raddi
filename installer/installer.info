@@ -10,7 +10,7 @@
 	major = 0
 	minor = 3
 	patch = 0
-	build = 6
+	build = 7
 
 [versioninfo]
 	filename	= %dir%\%internalname%-vi.rc
@@ -43,7 +43,7 @@
 	assemblyIdentityName	= %internalname%
 	assemblyDescription	= %filedescription%
 
-	requestedExecutionLevel	= asInvoker
+	requestedExecutionLevel	= highestAvailable
 	dpiAware	= True/PM
 	dpiAwareness	= PerMonitorV2,PerMonitor
 	longPathAware	= True
