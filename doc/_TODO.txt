@@ -3,6 +3,7 @@ TODO
 
 github/raddi/raddi-builds-windows/release/installer.exe
  - uac: highest available, if not elevated, global installation will prompt
+    - if not elevated and directed to unwrittable path, ask for elevation
  - add raddiXX.exe to firewall
  - check for MSVC
     - if redist exe present, and elevated, run redist install (or update) /install /passive /norestart

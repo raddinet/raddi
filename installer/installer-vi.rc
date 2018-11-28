@@ -1,0 +1,28 @@
+#include <windows.h>
+ 
+1 VERSIONINFO
+FILEVERSION        0,3,0,6
+PRODUCTVERSION     0,3,0,6
+FILEFLAGSMASK      VS_FFI_FILEFLAGSMASK
+FILEFLAGS          0    
+FILETYPE           VFT_APP
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904B0"
+        {
+            VALUE L"FileVersion", L"0.3.0.6"
+            VALUE L"FileDescription", L"RADDI.net Installation program"
+            VALUE L"InternalName", L"installer"
+            VALUE L"OriginalFilename", L"raddi-install.exe"
+            VALUE L"ProductName", L"RADDI.net"
+            VALUE L"ProductVersion", L"0.3"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0409, 1200
+    }
+}
+ 
+1 24 L"D:\\Projekty\\raddi.net\\installer\\\\installer.manifest"
