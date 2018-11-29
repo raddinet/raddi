@@ -169,7 +169,7 @@ namespace raddi {
             unsigned int max_allowed_rejected_entries = 16;
             unsigned int max_allowed_unsolicited_entries = 64;
             unsigned int max_individual_subscriptions = 65536; // also streams limit
-            unsigned int local_peer_discovery_period = 60;
+            unsigned int local_peer_discovery_period = 1200;
             unsigned int more_peers_query_delay = 180;
             unsigned int full_database_download_limit = 62 * 86400;
         } settings;

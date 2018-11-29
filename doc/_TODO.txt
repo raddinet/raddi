@@ -50,8 +50,6 @@ outbound data sorting in raddi::connection::send
 
 report bad inputs (from source) in node
 
-reduce local peer discovery period (not actually really necessary)
-
 support reading options from file
 
 tables: test and fix shard splitting
