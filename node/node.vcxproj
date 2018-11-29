@@ -30,7 +30,7 @@
     <ProjectGuid>{5FC7EF83-90C2-4D12-B980-1B9530C25912}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>raddi</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <ProjectName>RADDI node</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

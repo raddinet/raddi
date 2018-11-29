@@ -30,7 +30,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{0FBF4072-2F99-4F25-8240-82609AE0C68F}</ProjectGuid>
     <RootNamespace>app</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <ProjectName>RADDI app</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -149,7 +149,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0600;SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;SQLITE_API=__declspec(dllimport);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;SQLITE_API=__declspec(dllimport);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ControlFlowGuard>false</ControlFlowGuard>
@@ -162,7 +162,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
@@ -192,7 +192,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0600;CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ControlFlowGuard>false</ControlFlowGuard>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -205,7 +205,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
@@ -231,7 +231,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0600;SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -239,7 +239,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
@@ -261,7 +261,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0600;SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -269,7 +269,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
@@ -295,7 +295,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0600;SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;SQLITE_API=__declspec(dllimport);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;SQLITE_API=__declspec(dllimport);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ControlFlowGuard>false</ControlFlowGuard>
@@ -308,7 +308,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
@@ -338,7 +338,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0600;CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ControlFlowGuard>false</ControlFlowGuard>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -351,7 +351,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
@@ -380,6 +380,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="app.cpp" />
+    <ClCompile Include="tabs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\common\log-en.rc" />
@@ -406,6 +407,7 @@
     <ClInclude Include="..\common\platform.h" />
     <ClInclude Include="..\common\uuid.h" />
     <ClInclude Include="..\lib\cuckoocycle.h" />
+    <ClInclude Include="tabs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

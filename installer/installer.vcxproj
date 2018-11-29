@@ -31,7 +31,7 @@
     <ProjectGuid>{3BB349E9-79F2-4167-8C6C-A4F7AC9938E4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>installer</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18272.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <ProjectName>RADDI installer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
