@@ -1,23 +1,6 @@
 TODO
 ====
 
-github/raddi/raddi-builds-windows/release/installer.exe
- - uac: highest available, if not elevated, global installation will prompt
-    - if not elevated and directed to unwrittable path, ask for elevation
- - add raddiXX.exe to firewall
- - check for MSVC
-    - if redist exe present, and elevated, run redist install (or update) /install /passive /norestart
-    - if not present, redirect user to download if not installed, or warn if very old
-    - if not present, and not elevated, ask user to install portable build?
- - options (use tree):
-    - program files / app data
-    - service / on demand
-       - option to open service settings before first run
-    - core / normal / leaf
-    - shortcuts: for all users / just for me
- - update function
-    - shutdown instances (other users/sessions?)
-
 threads are inserted duplicated (race condition?) - might've been fixed
 
 peer addresses appear in validated or are validate even though it's not possible to connect to them
