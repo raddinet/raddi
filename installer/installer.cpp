@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <wininet.h>
 #include <commctrl.h>
 #include <shlobj.h>
 
@@ -12,17 +11,10 @@
 #include <stdexcept>
 #include <cstdarg>
 #include <cwctype>
-#include <map>
-
-#undef small
-
-#include "../common/log.h"
-#include "../common/platform.h"
-#include "../common/threadpool.h"
 
 int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
     
-    // detect MSVC runtime version
+    // detect MSVC runtime version (check not needed in release build of the installer)
 
     // detect if already installed (and what version)
     //  - if payload contains higher version, display "update" button and "install" (either "for me" or "system")
@@ -39,6 +31,8 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
     //     - core / normal (default) / leaf
     //  - installation path:
     //     - if elevated suggest "program files", otherwise users appdata (yeah, sorry)
+    //     - browse button
+    //     - available disk space
     //     - if directed to unwrittable path, restart itself elevated (remember choices)
     //     - if not present, and not elevated, ask user to install portable build?
     //  - shortcuts:
