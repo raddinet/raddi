@@ -5,8 +5,8 @@ https://www.reddit.com/r/raddi
 A project aiming to develop and introduce radically decentralized discussion platform. Employs reddit-esque concepts of user identities, communities, discussion trees, voting and moderator influence on content quality, built on modern cryptography. Decentralized, uncensorable.
 
 ## Status
-Preview of node software, with limited-functonality command line application, is available for enthusiasts:
-Downloadable from [raddi-builds-windows](https://github.com/raddinet/raddi-builds-windows) repository.
+Preview of node software, with limited-functonality command line application, is available for enthusiasts,
+downloadable from [raddi-builds-windows](https://github.com/raddinet/raddi-builds-windows) repository.
 
 ## Dependencies
 Pre-built binaries of required libraries are available from [raddi-redist-windows](https://github.com/raddinet/raddi-redist-windows) repository.
