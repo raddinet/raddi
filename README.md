@@ -14,5 +14,5 @@ Those are needed only for *release* builds. For *portable* builds everything nec
 
 * https://github.com/jedisct1/libsodium
 * https://github.com/tromp/cuckoo - adapted to [/lib/cuckoocycle.h](https://github.com/raddinet/raddi/blob/master/lib/cuckoocycle.h) ([.tcc](https://github.com/raddinet/raddi/blob/master/lib/cuckoocycle.tcc))
-* https://git.tukaani.org/xz
+* https://tukaani.org/xz
 * https://sqlite.org/ - client application
