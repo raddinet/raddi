@@ -1281,14 +1281,17 @@ void raddi::coordinator::announce_random_peers (connection * c) {
 void raddi::coordinator::unavailable (const connection * connection) {
 
     // reduce rating and eventually remove dead peers
+    //  - only for peers we connected to (outbound), this would also caused deadlock from .accepted();
     //  - only if we have at least one active connection
     //    as the unavailability issue may be local and temporary
 
-    if (this->active ()) {
-        if (connection->level != blacklisted_nodes) {
-            if (this->database.peers [connection->level]->adjust (connection->peer, -1) == 0) {
-                this->database.peers [connection->level]->erase (connection->peer);
-                this->report (log::level::event, 0x23, connection->peer);
+    if (connection->peer.port) {
+        if (this->active ()) {
+                if (connection->level != blacklisted_nodes) {
+                if (this->database.peers [connection->level]->adjust (connection->peer, -1) == 0) {
+                    this->database.peers [connection->level]->erase (connection->peer);
+                    this->report (log::level::event, 0x23, connection->peer);
+                }
             }
         }
     }
