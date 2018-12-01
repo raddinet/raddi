@@ -11,6 +11,8 @@ commands: list:peers...
 raddi.com analyze/get/list -> support decompression
 raddi.com sign/verify -> file using identity
 
+node operators message channel
+ - ?
 warrant cannary channel
  - https://en.wikipedia.org/wiki/Warrant_canary
  - example content: https://www.idrix.fr/VeraCrypt/canary.txt
