@@ -502,7 +502,6 @@ int wmain (int argc, wchar_t ** argw) {
     // apps need their UUID for daemon to distinguish them:
     //  - either hard-code the UUID, every app different!
     //  - or generate on first run and store in app's settings, like this:
-    //  - TODO: make into a function
 
     HKEY registry;
     if (RegCreateKeyEx (HKEY_CURRENT_USER, L"SOFTWARE\\RADDI.net", 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &registry, NULL) == ERROR_SUCCESS) {
@@ -1387,12 +1386,12 @@ bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::si
 
     auto analysis = raddi::content::analyze (data, size);
 
-    if (!analysis.markers.empty ()) {
+    if (!analysis.marks.empty ()) {
         if (!compact) {
             color (7);
-            std::printf ("%sMARKERS:\n\t%s", indent, indent);
+            std::printf ("%sMARKS:\n\t%s", indent, indent);
         }
-        for (const auto & marker : analysis.markers) {
+        for (const auto & marker : analysis.marks) {
             switch (marker.type) {
                 case 0x1C: // FS, table  --.
                 case 0x1D: // GS, tab (?)--+-- used to render tables
@@ -1400,7 +1399,7 @@ bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::si
                 case 0x1F: // US, column --'
                     continue; // they affect GUI rendering, don't show here
             }
-            if (marker.known) {
+            if (marker.defined) {
                 switch (marker.type) {
                     case 0x06:
                         // green
@@ -1443,7 +1442,7 @@ bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::si
             bool code = false;
             bool type = true;
 
-            if (token.known) {
+            if (token.defined) {
                 bool named = true;
                 switch (token.type) {
                     case 0x0B:
@@ -1536,6 +1535,95 @@ bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::si
             }
         }
     }
+
+    if (!analysis.stamps.empty ()) {
+        if (!compact) {
+            color (7);
+            std::printf ("%sSTAMPS:\n", indent);
+        }
+        for (const auto & stamp : analysis.stamps) {
+            bool code = false;
+            bool type = true;
+
+            color (7);
+            if (stamp.defined) {
+                switch (stamp.type) {
+                    case 0x16: // SYN, chaining
+                        switch (stamp.code) {
+                            case 0x10: std::printf ("%sPARENT CRC-16 CCITT", indent_extra); break;
+                            case 0x20: std::printf ("%sPARENT CRC-32", indent_extra); break;
+                            case 0x51: std::printf ("%sPARENT BLAKE2b (16B)", indent_extra); break;
+                            case 0x61: std::printf ("%sPARENT BLAKE2b (32B)", indent_extra); break;
+                            case 0x71: std::printf ("%sPARENT BLAKE2b (64B)", indent_extra); break;
+                            case 0x32: std::printf ("%sPARENT SipHash24", indent_extra); break;
+                            case 0x52: std::printf ("%sPARENT SipHashx24", indent_extra); break;
+                            case 0x63: std::printf ("%sPARENT SHA-256", indent_extra); break;
+                            case 0x73: std::printf ("%sPARENT SHA-512", indent_extra); break;
+                            default:
+                                code = true;
+                                type = false;
+                        }
+                        break;
+                    case 0x19: // EM, endorsement
+                        switch (stamp.code) {
+                            case 0x00: std::printf ("%sENDORSE PARENT", indent_extra); break;
+                            case 0x30: std::printf ("%sENDORSE IID", indent_extra); break;
+                            case 0x40: std::printf ("%sENDORSE EID", indent_extra); break;
+                            default:
+                                code = true;
+                                type = false;
+                        }
+                        break;
+                    default:
+                        type = false;
+                }
+            } else {
+                type = false;
+            }
+
+            if (!type) {
+                // pink
+                color (5); std::printf ("%s0x%02x:", indent_extra, stamp.type);
+                code = true;
+            }
+            if (code) {
+                std::printf ("0x%02x", stamp.code);
+            }
+            if (stamp.data && stamp.size) {
+                if (stamp.truncated) {
+                    color (5);
+                    std::printf (" [%u] ", stamp.size);
+                } else {
+                    std::printf (": ");
+                }
+                if (!stamp.truncated && (stamp.type == 0x19) && ((stamp.code == 0x30) || (stamp.code == 0x40))) {
+                    if (stamp.code == 0x30) {
+                        std::printf ("%ls", reinterpret_cast <const raddi::iid *> (stamp.data)->serialize ().c_str ());
+                    } else {
+                        std::printf ("%ls", reinterpret_cast <const raddi::eid *> (stamp.data)->serialize ().c_str ());
+                    }
+                } else {
+                    for (std::size_t i = 0; i != stamp.size; ++i) {
+                        std::printf ("%02x", stamp.data [i]);
+                    }
+                }
+            }
+            if (!compact) {
+                if (stamp.insertion) {
+                    std::printf (" @%u", stamp.insertion);
+                    // TODO: remember and display symbol in text, different color
+                }
+                if (stamp.truncated) {
+                    std::printf ("-TRUNCATED!");
+                }
+            }
+            if (compact) {
+                std::printf (" ");
+            } else {
+                std::printf ("\n");
+            }
+        }
+    }
     if (!analysis.attachments.empty ()) {
         if (!compact) {
             color (7);
@@ -1543,7 +1631,7 @@ bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::si
         }
         for (const auto & attachment : analysis.attachments) {
             bool type = true;
-            if (attachment.known) {
+            if (attachment.defined) {
                 switch (attachment.type) {
                     case 0xFA: color (1); std::printf ("%sBINARY: ", indent_extra); break;
                     case 0xFC: color (1); std::printf ("%sCOMPRESSED: ", indent_extra); break;

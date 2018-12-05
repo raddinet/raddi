@@ -79,7 +79,7 @@ Leading byte:
 		- content is encrypted by target user's public key
 		- TBD: crypto_sign_ed25519_pk_to_curve25519/crypto_box_easy
 
-TBD: one of the reserved bytes above will be used to signify streamed data
+TBD: one of the reserved bytes above will be used to signify packet of streamed data
 
 Extraction phase:
 -----------------
@@ -98,16 +98,19 @@ Leading bytes:
 	0x06: ACK
 		- indicator for private messages, or otherwise targetted messages, author
 		  reports that he has read the parent entry
+		- no code-point specific data follows
 	0x07: BEL, REPORT
-		- user reports this entry to moderators for evaluation
+		- user reports parent entry to moderators for evaluation
 		- no further content required, GUI clients should graphically distinguish
 		  the parent entry as reported for evaluation by moderators
+		- no code-point specific data follows
 	0x08: BS, REVERT
 		- nullifies operations (mod ops, votes, edits, ...) in parent entry
 			- only authors can nullify their votes and edits; nullified text
 			  content can be rendered with some "user changed his mind" icons
 			- how moderators can nullify each other's ops depends on their
 			  standing in user's subscriptions (client-specific, TBD)
+		- no code-point specific data follows
 	0x0B: VT, VOTE
 		- followed by either: 1B code in predefined range 0x01..0x1F,
 		  or by a NUL-terminated (UTF-8) string describing the vote type
@@ -154,24 +157,59 @@ Leading bytes:
 			- "move:"<eid>
 				- the parent entry should be moved under 'eid'
 			- "junction:"<eid>
-				- the parent entry should be replaced by 'eid' and
+				- this NAK entry should be replaced by 'eid' and
 				  everything that follows that 'eid'
 				- clients should allow junctions forming cross-posted
 				  topics from anyone, and within comment tree accessible
 				  on demand from anyone
 	0x16: SYN, CHAINING
-		- followed by 8 (TBD) bytes of hash (TBD) of parent entry to ensure valid
-		  chain of responses
+		- followed by 1B code and hash (or other form) of parent entry to ensure
+		  valid chain of responses, the 1B code specifies the following data in
+		  format: RNNNTTTT:
+			- R - reserved bit, most significant bit (0x80)
+			- NNN - number of following bytes (unsupporting client can skip):
+				- 0 - 0 bytes
+				- 1 - 2 byte
+				- 2 - 4 bytes
+				- 3 - 8 bytes
+				- 4 - 12 bytes
+				- 5 - 16 bytes
+				- 6 - 32 bytes
+				- 7 - 64 bytes
+			- TTTT - type of data
+		- defined hash codes:
+			- 0x10 - CRC-16 CCITT
+			- 0x20 - CRC-32
+			- 0x51, 0x61 and 0x71 - BLAKE2b
+			- 0x32 - SipHash24
+			- 0x52 - SipHashx24
+			- 0x63 - SHA-256
+			- 0x73 - SHA-512
+		- TODO: define default, probably SHA-256
 	0x17: ETB
-		- meaning reserved, no data follows
-	0x19: EM
-		- meaning reserved, no data follows
+		- meaning reserved
+		- immediately followed by 1 byte that specifies type and amount of data
+		  that follows, format is same as for SYN (CHAINING) (RNNNTTTT above)
+	0x19: EM, ENDORSEMENT
+		- user signals endorsement of parent entry or specific IID/EID/etc
+		- multiple endorsement can appear per entry
+		- immediately followed by 1 byte that specifies type and amount of data
+		  that follows, format is same as for SYN (CHAINING) (RNNNTTTT above)
+			- TTTT is type of endorsement
+		- code byte is not required when EM byte is last; code 0x00 is assumed
+		- code 0x00 references parent entry and has multiple meanings:
+			- moderator forwards other mod's operation to his own subscribers
+			- moderator forwards other mod's sideband update
+		- other defined codes:
+			- 0x30 - moderator/channel author endorses other moderator (IID)
+			- 0x40 - moderator/channel author endorses EID
 	0x1A: SUB
 		- meaning reserved
 		- followed by either: 1B code in predefined range 0x01..0x1F,
 		  or by a NUL-terminated (UTF-8) string describing the type
 	0x7F: DEL, DELETE
 		- moderator or author wishes to delete (hide) the parent entry
+		- no code-point specific data follows
 
 Other code points with specific meaning:
 ----------------------------------------
@@ -206,7 +244,5 @@ Text formatting:
 	0x001E: RS, reserved for tables
 	0x001F: US, reserved for tables
 
-TODO: SYN
 TODO: stream starts
 TODO: ENQ? users pinging OP for update?
-TODO: endorse, e.g. moderator endorse other moderator, channel author endorsing a list of mods

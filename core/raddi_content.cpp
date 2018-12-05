@@ -65,9 +65,7 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
             case 0x04: // EOT, // reserved
             case 0x05: // ENQ, // reserved
             case 0x0C: // FF,  // reserved
-            case 0x17: // ETB, // reserved
-            case 0x19: // EM,  // reserved
-                analysis.markers.push_back ({ *content, (std::uint16_t) analysis.text.size (), false });
+                analysis.marks.push_back ({ *content, (std::uint16_t) analysis.text.size (), false });
                 break;
 
             case 0x03: // ETX, end of section
@@ -79,7 +77,7 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
             case 0x1E: // RS, row    --|
             case 0x1F: // US, column --'
             case 0x7F: // DEL, delete, mod-op
-                analysis.markers.push_back ({ *content, (std::uint16_t) analysis.text.size (), true });
+                analysis.marks.push_back ({ *content, (std::uint16_t) analysis.text.size (), true });
                 break;
 
             case 0x0B: // VT, vote token
@@ -98,10 +96,10 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                         case 0x0B:
                         case 0x10:
                         case 0x15:
-                            token.known = true;
+                            token.defined = true;
                             break;
                         default:
-                            token.known = false;
+                            token.defined = false;
                     }
 
                     if (*p < 0x20) {
@@ -127,6 +125,67 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                 }
                 break;
 
+            case 0x16: // SYN, chaining
+            case 0x17: // ETB, // reserved
+            case 0x19: // EM, endorsement
+            {
+                analysis::stamp stamp;
+                stamp.type = *content;
+                stamp.insertion = (std::uint16_t) analysis.text.size ();
+
+                if (length > 1) {
+                    static const unsigned char skiptable [8] = { 0,2,4,8, 12,16,32,64 };
+
+                    stamp.code = content [1];
+                    stamp.size = skiptable [(content [1] & 0x70) >> 4];
+
+                    if (stamp.size) {
+                        stamp.data = content + 2;
+
+                        if (stamp.size > length - 2) {
+                            stamp.size = (std::uint16_t) (length - 2);
+                            stamp.truncated = true;
+                        }
+                    }
+
+                    switch (stamp.type) {
+                        case 0x16: // SYN, chaining
+                            switch (stamp.code) {
+                                case 0x10: // CRC-16 CCITT
+                                case 0x20: // CRC-32
+                                case 0x51: // BLAKE2b (16B)
+                                case 0x61: // BLAKE2b (32B)
+                                case 0x71: // BLAKE2b (64B)
+                                case 0x32: // SipHash24
+                                case 0x52: // SipHashx24
+                                case 0x63: // SHA-256
+                                case 0x73: // SHA-512
+                                    stamp.defined = true;
+                            }
+                            break;
+                        case 0x19: // EM, endorsement
+                            switch (stamp.code) {
+                                case 0x00: // parent entry
+                                case 0x30: // moderator/channel author endorses other moderator (IID)
+                                case 0x40: // moderator/channel author endorses EID (TBD)
+                                    stamp.defined = true;
+                            }
+                            break;
+                    }
+
+                    content += stamp.size + 1;
+                    length -= stamp.size + 1;
+                } else {
+                    // special case when stamp byte is last, then code 0x00 is assumed
+                    switch (stamp.type) {
+                        case 0x19: // EM, endorsement
+                            stamp.defined = true;
+                            break;
+                    }
+                }
+                analysis.stamps.push_back (stamp);
+            } break;
+
             case 0x0E: // SO
                 --state.intensity;
                 break;
@@ -138,9 +197,6 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
             case 0x12: state.font = text_appearance::font::monospace; break;
             case 0x13: state.font = text_appearance::font::handwriting; break;
             case 0x14: state.font = text_appearance::font::reserved; break;
-
-            case 0x16: // SYN, chaining, TODO
-                break;
 
             case 0x1B: // ESC, reserved for ANSI escape codes, skip most of them now
                 if (length > 1) {
@@ -250,7 +306,7 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                         case 0xFD: // differential content, edit
                         case 0xFE: // encrypted data
                         case 0xFF: // private message
-                            attachment.known = true;
+                            attachment.defined = true;
                     }
 
                     switch (attachment.type) {
@@ -281,9 +337,8 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                             analysis.attachments.push_back (attachment);
                     }
 
-                    content += attachment.size + 3;
-                    length -= attachment.size + 3;
-                    continue;
+                    content += attachment.size + 2;
+                    length -= attachment.size + 2;
                 }
                 break;
         }
@@ -388,8 +443,8 @@ raddi::content::summary raddi::content::analysis::summarize (summary summary) co
         }
     }
 
-    for (const auto & marker : this->markers) {
-        switch (marker.type) {
+    for (const auto & mark : this->marks) {
+        switch (mark.type) {
             case 0x03: // ETX, end of section
                 break;
             case 0x04: // EOT, // reserved
@@ -494,7 +549,7 @@ raddi::content::summary raddi::content::analysis::summarize (summary summary) co
                         }
                     } else {
                         switch (token.code) {
-                            case 0x01: summary.mod = summary::moderation::hide; break; // use DEL marker instead
+                            case 0x01: summary.mod = summary::moderation::hide; break; // use DEL mark instead
                             case 0x02: summary.mod = summary::moderation::nuke; break;
                             case 0x03: summary.mod = summary::moderation::ban; break;
                             case 0x04: summary.mod = summary::moderation::nsfw; break;

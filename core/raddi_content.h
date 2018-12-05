@@ -52,8 +52,8 @@ namespace raddi {
         //  - bit-field containing analysis of the content for fast search
         //  - a lot of bits are exclusive to each other, but that's okay
         //  - note that integral values of enum values here are not the same
-        //    as predefined codes of relevant marker/tokens
-        //  - all 'std::uint64_t' so the compiler does not add padding
+        //    as predefined codes of relevant marks/tokens
+        //  - all bits are 'std::uint64_t' so the compiler does not add padding
         //
         union summary {
             enum class encrypted : std::uint64_t {
@@ -135,7 +135,7 @@ namespace raddi {
         static_assert (sizeof (summary) == sizeof (std::uint64_t));
 
         // analyze
-        //  - breaks the entry content down to text+formatting and tokens/markers; into 'analysis' structure below
+        //  - breaks the entry content down to text+formatting and marks/tokens; into 'analysis' structure below
         //  - 'length' should not include PoW
         //
         static analysis analyze (const std::uint8_t * content, std::size_t length);
@@ -181,7 +181,7 @@ namespace raddi {
             std::uint8_t         code = 0;
             std::uint16_t        insertion = 0;
             bool                 truncated = false;
-            bool                 known = false;
+            bool                 defined = false;
             const std::uint8_t * string = nullptr;
             const std::uint8_t * string_end = nullptr;
         };
@@ -189,14 +189,23 @@ namespace raddi {
             std::uint8_t         type = 0;
             std::uint16_t        insertion = 0; // index of 'text' before which this belongs
             bool                 truncated = false;
-            bool                 known = false;
+            bool                 defined = false;
             std::uint16_t        size = 0;
             const std::uint8_t * data = nullptr;
         };
-        struct marker {
+        struct mark {
             std::uint8_t         type = 0; // TODO: enum
             std::uint16_t        insertion = 0; // index of 'text' before which this belongs
-            bool                 known = false;
+            bool                 defined = false;
+        };
+        struct stamp {
+            std::uint8_t         type = 0; // SYN, EM, ... (TODO: enum)
+            std::uint8_t         code = 0;
+            std::uint16_t        insertion = 0; // index of 'text' before which this belongs
+            bool                 truncated = false;
+            bool                 defined = false;
+            std::uint8_t         size = 0;
+            const std::uint8_t * data = nullptr;
         };
 
         // nested analysis for decompressed data
@@ -206,8 +215,9 @@ namespace raddi {
 
         std::vector <text>      text;
         std::vector <reference> edits;
+        std::vector <mark>      marks; // VT, DLE
         std::vector <token>     tokens; // ETX, BEL, BS
-        std::vector <marker>    markers; // VT, DLE
+        std::vector <stamp>     stamps; // SYN, EM
         std::vector <attachment> attachments;
 
     public:
