@@ -5,11 +5,21 @@ threads are inserted duplicated (race condition?) - might've been fixed
 
 peer addresses appear in validated or are validate even though it's not possible to connect to them
 
+consider: send peers/histories only after successfully received initial packet
+
+hybrid (?) mode - bypass proxy for certain ports (80,443) or attempt connection both through proxy and directly
+
+will not start connecting to core nodes if connecting to validated node on same IP (different port) as other core node
+
+revocation code for identity: when received, all further messages by that identity are dropped
+ - content code, 0xF8 plus fixed predefine block of content??
+ - node support (list of revoked IIDs)
+
 commands: loglevels
 commands: optimize
 commands: list:peers...
 raddi.com analyze/get/list -> support decompression
-raddi.com sign/verify -> file using identity
+raddi.com sign/verify -> file or text using identity
 
 node operators message channel
  - ?
@@ -35,6 +45,8 @@ outbound data sorting in raddi::connection::send
 
 report bad inputs (from source) in node
 
+extend log so it can also output binary to named section (one for every level] for multiple clients to read
+
 support reading options from file
 
 tables: test and fix shard splitting
@@ -55,7 +67,7 @@ perfect compression dictionary for english text
  - compress initial bodies with established dictionary, report results, try different dictionaries, compare results
 
 title/sidebar edits must be retained forever and forwarded to all users
- - or just force moderators to occassionally update them with fresh non-edit entry?
+ - or just require moderators to occassionally update them with fresh non-edit entry?
 
 historical data replay flooding protection in raddi::db::classify case
  - start rejecting old entries from connection that we did not asked (connection->history_extension)
@@ -78,6 +90,8 @@ move connection::request_limiter to separate class
 connection members will probably need locking to protect from early deletion when retired
 
 old data deletion (whole shards?) except 'retained' channels/threads
+
+Windows tray app (optional) to monitor Node service
 
 coordinator: congestion control
 coordinator: small random delay to sends to harden agains origin analysis -> connection.send

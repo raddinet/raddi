@@ -27,6 +27,8 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
     //  - service/tray/on demand (app starts node)
     //     - radio buttons with short explanation
     //     - default: service if elevated, tray otherwise
+    //  - web app / win32 app (default on XP or if no "good" browser is installed)
+    //     - web app will have notification tray icon, don't set as autorun separate notification tray icon
     //  - role
     //     - core / normal (default) / leaf
     //  - installation path:
@@ -50,7 +52,6 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
     //     - if not present, redirect user to download if not installed
     //     - if not present, and not elevated, install portable build (redirect to download?)
     //     - warn if very old?
-
     //  - if overwriting running executable, shut it down
     //     - stop service or stop background task (tray?)
 
