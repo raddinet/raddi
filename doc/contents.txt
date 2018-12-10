@@ -50,10 +50,10 @@ Leading byte:
 	0xF8: reserved
 	0xF9: reserved
 	0xFA: BINARY ATTACHMENT
-		- type is determined by header bytes, and typical behavior is:
+		- type is determined by magic header bytes, and typical behavior is:
 			- images are displayed aside the text
 			- archives display paperclip icon(s) to allow extraction and save
-			- audio displays play icon button or full player
+			- audio displays play icon button or full seekable player bar
 	0xFB: reserved
 	0xFC: COMPRESSED DATA, LZMA, optionally with predefined dictionary
 		- after length informations, 2B code for predefined dictionary follows:
@@ -128,7 +128,8 @@ Leading bytes:
 		- meaning reserved, no data follows
 	0x10: DLE, SIDEBAND DATA SET/EDIT
 		- valid only if first byte in entry and if appears only once
-		- valid only if direct descendant of the announcement it is affects
+		- valid only if direct descendant of the announcement of the identity or
+		  channel it affects
 			- client app should apply change to thread or identity name (or
 			  any other sideband data) only when made by it's author
 			- client app should apply changes to channel title or sidebar (or
@@ -141,13 +142,17 @@ Leading bytes:
 			- 0x03: footer - reserved, unused
 			- 0x04: sidebar - set/change identity/channel sidebar text
 			- 0x05: shoutbox - twitter-like feed
+			- 0x1F: TBD: meta channel, textual meta information, examples:
+				- channel mode suggestion, initial moderators suggestion
+				- user shares his donation cryptocurrency addresses
+				- will also be used after byte codes like SYN/EM run out
 	0x15: NAK
 		- moderation; a moderator advises subscribed clients to perform an action
 		- followed by either: 1B code in predefined range 0x01..0x1F,
 		  or by a NUL-terminated (UTF-8) string describing the type
 		- predefined mod-op codes:
 			- 0x01: HIDE - same as DEL byte
-			- 0x02: BAN - moderator bans the user for this entry
+			- 0x02: BAN - moderator bans the user for this entry (how long?)
 			- 0x03: NSFW
 			- 0x04: NSFL
 			- 0x05: SPOILER

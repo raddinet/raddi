@@ -68,6 +68,7 @@ namespace raddi {
                 footer      = 3, // reserved
                 sidebar     = 4, // identity/channel only, set/edit to sidebar info
                 shoutbox    = 5, // tweet-like feed
+                meta        = 13, // meta channel, precise meaning TBD
                 other       = 14, // contains other band code or string-defined band
                 multiple    = 15, // contains multiple band specs (not valid now)
             };

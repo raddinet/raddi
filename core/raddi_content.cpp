@@ -509,18 +509,20 @@ raddi::content::summary raddi::content::analysis::summarize (summary summary) co
                 if (summary.band != summary::band_type::primary) {
                     summary.band = summary::band_type::multiple;
                 } else {
-                    if (token.string) {
-                        summary.band = summary::band_type::other;
-                    } else {
-                        switch (token.code) {
-                            case 0x01: summary.band = summary::band_type::title; break;
-                            case 0x02: summary.band = summary::band_type::header; break;
-                            case 0x03: summary.band = summary::band_type::footer; break;
-                            case 0x04: summary.band = summary::band_type::sidebar; break;
-                            case 0x05: summary.band = summary::band_type::shoutbox; break;
-                            default:
-                                summary.band = summary::band_type::other;
-                                break;
+                    if (token.insertion == 0) {
+                        if (token.string) {
+                            summary.band = summary::band_type::other;
+                        } else {
+                            switch (token.code) {
+                                case 0x01: summary.band = summary::band_type::title; break;
+                                case 0x02: summary.band = summary::band_type::header; break;
+                                case 0x03: summary.band = summary::band_type::footer; break;
+                                case 0x04: summary.band = summary::band_type::sidebar; break;
+                                case 0x05: summary.band = summary::band_type::shoutbox; break;
+                                default:
+                                    summary.band = summary::band_type::other;
+                                    break;
+                            }
                         }
                     }
                 }
