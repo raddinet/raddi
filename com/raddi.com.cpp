@@ -1709,7 +1709,13 @@ bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::si
             } else {
                 color (7);
             }
-            std::wprintf (L"%s", u82ws (text.begin, (std::size_t) (text.end - text.begin)).c_str ());
+            std::wstring ws = u82ws (text.begin, (std::size_t) (text.end - text.begin));
+            std::wstring::size_type i = 0;
+            while ((i = ws.find (L'\x0D', i)) != std::wstring::npos) {
+                ws.insert (i + 1, 1, L'\x0A');
+                i += 2;
+            }
+            std::wprintf (L"%s", ws.c_str ());
         }
     }
 
