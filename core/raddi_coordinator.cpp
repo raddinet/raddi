@@ -452,7 +452,7 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
                 //  - outbound connected connections can verify other ports on the same IP address
                 //  - inbound connection may not verify other ports on the same IP address
 
-                if (connection->peer.port) {
+                if (connection->is_outbound ()) {
                     a.port = reinterpret_cast <const request::newpeer *> (r->content ())->port;
                 } else {
                     a.port = 0;
@@ -755,8 +755,16 @@ bool raddi::coordinator::incomming (Socket && prepared, const sockaddr * remote)
     // add to incomming list
 
     try {
+        // inbound port is always random and not what we have in DB
+        // but we disregard this when core node connects to us
+
+        auto level = blacklisted_nodes;
+        if (this->database.peers [core_nodes]->count_ip (remote)) {
+            level = core_nodes;
+        }
+
         exclusive guard (this->lock);
-        return this->connections.emplace_front (std::move (prepared), remote, blacklisted_nodes).accepted ();
+        return this->connections.emplace_front (std::move (prepared), remote, level).accepted ();
     } catch (const std::bad_alloc &) {
         return false;
     }
@@ -915,7 +923,7 @@ void raddi::coordinator::established (connection * connection) {
     // exchange protocol strings to verify encryption works correctly
     connection->send (request::type::initial, raddi::protocol::magic, sizeof raddi::protocol::magic);
 
-    if (connection->peer.port) {
+    if (connection->is_outbound ()) {
         // update level for successful outbound connection
         switch (connection->level) {
 
@@ -1285,9 +1293,9 @@ void raddi::coordinator::unavailable (const connection * connection) {
     //  - only if we have at least one active connection
     //    as the unavailability issue may be local and temporary
 
-    if (connection->peer.port) {
+    if (connection->is_outbound ()) {
         if (this->active ()) {
-                if (connection->level != blacklisted_nodes) {
+            if (connection->level != blacklisted_nodes) {
                 if (this->database.peers [connection->level]->adjust (connection->peer, -1) == 0) {
                     this->database.peers [connection->level]->erase (connection->peer);
                     this->report (log::level::event, 0x23, connection->peer);
@@ -1299,10 +1307,11 @@ void raddi::coordinator::unavailable (const connection * connection) {
 
 void raddi::coordinator::disagreed (const connection * connection) {
     if (connection->level != blacklisted_nodes
+            && connection->is_outbound ()
             && this->database.peers [connection->level]->adjust (connection->peer, -0xF) == 0) {
 
         std::uint32_t days;
-        if (connection->peer.port) {
+        if (connection->is_outbound ()) {
             // outbound connecton, known node in network compromised, TODO: raddi_defaults.h
             days = 14;
         } else {

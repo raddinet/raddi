@@ -71,6 +71,9 @@ namespace raddi {
         struct counter messages;
         struct counter keepalives;
 
+        bool is_inbound () const { return this->peer.port == 0; }
+        bool is_outbound () const { return this->peer.port != 0; }
+
         // connect
         //  - starts processing incomming traffic on the connection
         //    and asynchronously begins establishing connection to peer

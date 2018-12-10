@@ -140,6 +140,7 @@ namespace raddi {
         // core_sync_count
         //  - how many other core nodes to ask for full database download
         //    to make sure we really have everything
+        //  - TODO: reset when last core node disconnects
         //  - TODO: defaults.h, also read from options?
         // 
         std::uint32_t core_sync_count = 3;
