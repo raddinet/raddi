@@ -45,9 +45,18 @@ outbound data sorting in raddi::connection::send
 
 report bad inputs (from source) in node
 
+log when node was hibernated
+
 extend log so it can also output binary to named section (one for every level] for multiple clients to read
 
 support reading options from file
+ - and registry
+    - command line overrides all, specified file overrides registry
+ - display where option came from
+ - node running as service stores settings in HKLM
+    - connected app will need elevation of the "node setup dialog" (separate app)
+ - node started by tray app or reader app will normally use HKCU 
+    - but if local config file (sqlite?) is present (raddi32.cfg) then will use that
 
 tables: test and fix shard splitting
 tables: add code for client app to process external changes, see 'process' member function
@@ -132,7 +141,3 @@ consider http server? simple GET/POST support
 
 document protocol
  - requirement: synchronized time
-
-UCRT?
- - https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
- - https://github.com/MicrosoftDocs/cpp-docs/blob/master/docs/c-runtime-library/crt-library-features.md
