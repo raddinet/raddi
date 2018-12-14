@@ -86,6 +86,15 @@ namespace raddi {
             api_error (unsigned long code) : code (code) {};
         };
 
+        // rsrc_string
+        //  - 
+        //
+        struct rsrc_string {
+            unsigned long code;
+        public:
+            rsrc_string (unsigned long code) : code (code) {};
+        };
+
         // translate
         //  - converts log function argument to string, according to second 'format' parameter
         //  - provide overload to extend functionality
@@ -113,6 +122,7 @@ namespace raddi {
         inline std::wstring translate (bool argument, const std::wstring &) { return argument ? L"true" : L"false"; }
 
         std::wstring translate (api_error, const std::wstring &);
+        std::wstring translate (rsrc_string, const std::wstring &);
         std::wstring translate (const in_addr *, const std::wstring &);
         std::wstring translate (const in6_addr *, const std::wstring &);
         std::wstring translate (const sockaddr *, const std::wstring &);
@@ -251,7 +261,7 @@ namespace raddi {
             if (internal::evaluate_level (ll)) {
 
                 api_error error;
-                auto string = internal::load_string (c, ll, id);
+                std::wstring string = internal::load_string (c, ll, id);
 
                 internal::capture_overriden_api_error (error, args...);
                 internal::replace_arguments (string, sizeof... (args), args...);

@@ -362,6 +362,14 @@ std::wstring raddi::log::translate (raddi::log::api_error argument, const std::w
     return buffer;
 }
 
+std::wstring raddi::log::translate (raddi::log::rsrc_string argument, const std::wstring &) {
+    const wchar_t * ptr = nullptr;
+    if (auto size = LoadString (GetCurrentModuleHandle (), argument.code, (wchar_t *) &ptr, 0))
+        return std::wstring (ptr, ptr + size);
+    else
+        return std::wstring ();
+}
+
 std::wstring raddi::log::translate (const void * argument, const std::wstring &) {
     
     // on x86-64 display only 48-bit pointer (12 nibbles)
