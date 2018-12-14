@@ -143,7 +143,7 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                         stamp.data = content + 2;
 
                         if (stamp.size > length - 2) {
-                            stamp.size = (std::uint16_t) (length - 2);
+                            stamp.size = (std::uint8_t) (length - 2);
                             stamp.truncated = true;
                         }
                     }
