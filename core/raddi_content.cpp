@@ -82,7 +82,6 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
 
             case 0x0B: // VT, vote token
             case 0x10: // DLE, sideband marking token
-            case 0x15: // NAK, moderation ops
             case 0x1A: // SUB, // reserved
                 if (length > 1) {
                     auto p = content + 1;
@@ -95,7 +94,6 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                     switch (*content) {
                         case 0x0B:
                         case 0x10:
-                        case 0x15:
                             token.defined = true;
                             break;
                         default:
@@ -125,6 +123,7 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                 }
                 break;
 
+            case 0x15: // NAK, moderation ops
             case 0x16: // SYN, chaining
             case 0x17: // ETB, // reserved
             case 0x19: // EM, endorsement
@@ -149,6 +148,21 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                     }
 
                     switch (stamp.type) {
+                        case 0x15: // NAK, moderation ops
+                            switch (stamp.code) {
+                                case 0x01: // NSFW
+                                case 0x02: // NSFL
+                                case 0x03: // SPOILER
+                                case 0x08: // STICK
+                                case 0x09: // HIGHLIGHT
+                                case 0x10: // BAN
+                                case 0x30: // ENDORSE MOD
+                                case 0x31: // DISAVOW MOD
+                                case 0x40: // MOVE
+                                case 0x41: // JUNCTION
+                                    stamp.defined = true;
+                            }
+                            break;
                         case 0x16: // SYN, chaining
                             switch (stamp.code) {
                                 case 0x10: // CRC-16 CCITT
@@ -445,12 +459,6 @@ raddi::content::summary raddi::content::analysis::summarize (summary summary) co
 
     for (const auto & mark : this->marks) {
         switch (mark.type) {
-            case 0x03: // ETX, end of section
-                break;
-            case 0x04: // EOT, // reserved
-                break;
-            case 0x05: // ENQ, // reserved
-                break;
             case 0x06: // ACK, acknowledged by recepient
                 summary.ack = true;
                 break;
@@ -459,17 +467,6 @@ raddi::content::summary raddi::content::analysis::summarize (summary summary) co
                 break;
             case 0x08: // BS,  revert
                 summary.revert = true;
-                break;
-            case 0x0C: // FF,  // reserved
-                break;
-            case 0x17: // ETB, // reserved
-                break;
-            case 0x19: // EM,  // reserved
-                break;
-            case 0x1C: // FS, table  --.
-            case 0x1D: // GS, tab (?)--+-- used to render tables
-            case 0x1E: // RS, row    --|
-            case 0x1F: // US, column --'
                 break;
             case 0x7F: // DEL, delete, mod-op
                 if (summary.mod == summary::moderation::none) {
@@ -519,6 +516,7 @@ raddi::content::summary raddi::content::analysis::summarize (summary summary) co
                                 case 0x03: summary.band = summary::band_type::footer; break;
                                 case 0x04: summary.band = summary::band_type::sidebar; break;
                                 case 0x05: summary.band = summary::band_type::shoutbox; break;
+                                case 0x1F: summary.band = summary::band_type::meta; break;
                                 default:
                                     summary.band = summary::band_type::other;
                                     break;
@@ -527,47 +525,39 @@ raddi::content::summary raddi::content::analysis::summarize (summary summary) co
                     }
                 }
                 break;
+        }
+    }
+    for (const auto & stamp : this->stamps) {
+        switch (stamp.type) {
 
             case 0x15: // NAK, moderation ops
                 if (summary.mod != summary::moderation::none) {
                     summary.mod = summary::moderation::multiple;
                 } else {
-                    if (token.string) {
-                        summary.mod = summary::moderation::other; // default
+                    switch (stamp.code) {
+                        case 0x01: summary.mod = summary::moderation::nsfw; break;
+                        case 0x02: summary.mod = summary::moderation::nsfl; break;
+                        case 0x03: summary.mod = summary::moderation::spoiler; break;
 
-                        if (!token.truncated) { // ensures 'string_end' points to NUL-terminating byte
-                            auto length = token.string_end - token.string;
-                            auto text = (const char *) token.string;
+                        case 0x08: summary.mod = summary::moderation::stick; break;
+                        case 0x09: summary.mod = summary::moderation::highlight; break;
 
-                            // validate move/juncrion/...
-                            //  - same format for all these: "prefix:abcdefab0-0" to "prefix:abcdefab01234567-01234567"
-
-                            if (validate_prefixed_id <eid> (text, length, "move:")) {
-                                summary.mod = summary::moderation::move;
-                            }
-                            if (validate_prefixed_id <eid> (text, length, "junction:")) {
-                                summary.mod = summary::moderation::junction;
-                            }
-                        }
-                    } else {
-                        switch (token.code) {
-                            case 0x01: summary.mod = summary::moderation::hide; break; // use DEL mark instead
-                            case 0x02: summary.mod = summary::moderation::nuke; break;
-                            case 0x03: summary.mod = summary::moderation::ban; break;
-                            case 0x04: summary.mod = summary::moderation::nsfw; break;
-                            case 0x05: summary.mod = summary::moderation::nsfl; break;
-                            case 0x06: summary.mod = summary::moderation::spoiler; break;
-                            case 0x08: summary.mod = summary::moderation::stick; break;
-                            case 0x09: summary.mod = summary::moderation::highlight; break;
-                            default:
-                                summary.mod = summary::moderation::other;
-                                break;
-                        }
+                        case 0x10: summary.mod = summary::moderation::ban; break;
+                        case 0x30: summary.mod = summary::moderation::endorse; break;
+                        case 0x31: summary.mod = summary::moderation::disavow; break;
+                        case 0x40: summary.mod = summary::moderation::move; break;
+                        case 0x41: summary.mod = summary::moderation::junction; break;
+                        default:
+                            summary.mod = summary::moderation::other;
+                            break;
                     }
                 }
                 break;
-
-            case 0x1A: // SUB, // reserved
+            case 0x16: // SYN, chaining
+                break;
+            case 0x17: // ETB, // reserved
+                break;
+            case 0x19: // EM,  // reserved
                 break;
         }
     }

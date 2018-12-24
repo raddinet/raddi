@@ -86,36 +86,43 @@ Extraction phase:
 Following code points are removed from displayed content but their meaning is interpreted
 and applied according to user's client app settings.
 
+Several code points are followed by additional data of variable length. Their format is
+described below. If code point has no following data, NO DATA FOLLOW is specified in the
+table. Additional data types are: TOKEN and STAMP. 
+
 Leading bytes:
 	0x00: NUL, PROOF OF WORK
 		- first NUL byte that does not belong to compressed chunk (above) or does
-		  not terminate string code in this table terminates the entry and
-		  introduces PoW; generally the entry is searched backwards for the proof
+		  not terminate string STAMP in this table, terminates the entry and
+		  introduces PoW; generally the entry is parsed backwards for the proof
+		- NO DATA FOLLOW
 	0x04: EOT
-		- meaning reserved, no data follows
+		- meaning reserved
+		- NO DATA FOLLOW
 	0x05: ENQ
-		- meaning reserved, no data follows
+		- meaning reserved
+		- NO DATA FOLLOW
 	0x06: ACK
 		- indicator for private messages, or otherwise targetted messages, author
 		  reports that he has read the parent entry
-		- no code-point specific data follows
+		- NO DATA FOLLOW
 	0x07: BEL, REPORT
 		- user reports parent entry to moderators for evaluation
 		- no further content required, GUI clients should graphically distinguish
 		  the parent entry as reported for evaluation by moderators
-		- no code-point specific data follows
+		- NO DATA FOLLOW
 	0x08: BS, REVERT
 		- nullifies operations (mod ops, votes, edits, ...) in parent entry
-			- only authors can nullify their votes and edits; nullified text
+			- only authors can revert their votes and edits; reverted text
 			  content can be rendered with some "user changed his mind" icons
-			- how moderators can nullify each other's ops depends on their
-			  standing in user's subscriptions (client-specific, TBD)
-		- no code-point specific data follows
+			- how moderators can revert each other's ops depends on their
+			  standing in user's subscriptions (client-specific... TBD)
+		- multiple occurances are ignored, other content... (TBD)
+		- NO DATA FOLLOW
 	0x0B: VT, VOTE
-		- followed by either: 1B code in predefined range 0x01..0x1F,
-		  or by a NUL-terminated (UTF-8) string describing the vote type
 		- client app is free to ignore votes embedded in compressed or encrypted
 		  data (not that it isn't free to ignore them altogether, just saying)
+		- TOKEN
 		- predefined vote codes:
 			- 0x01: UP (generic agreement)
 			- 0x02: DOWN (generic disagreement)
@@ -125,7 +132,8 @@ Leading bytes:
 		- predefined vote strings:
 			- none, reserved for future extensions
 	0x0C: FF
-		- meaning reserved, no data follows
+		- meaning reserved
+		- NO DATA FOLLOW
 	0x10: DLE, SIDEBAND DATA SET/EDIT
 		- valid only if first byte in entry and if appears only once
 		- valid only if direct descendant of the announcement of the identity or
@@ -135,7 +143,8 @@ Leading bytes:
 			- client app should apply changes to channel title or sidebar (or
 			  any other sideband data) only when made by a moderator which
 			  the uses is subscribed to
-		- sideband ID byte follows, predefined:
+		- TOKEN
+		- predefined sideband ID codes:
 			- 0x01: title
 				- change identity/channel/thread name/title
 			- 0x02: header - reserved, unused
@@ -145,44 +154,48 @@ Leading bytes:
 			- 0x1F: TBD: meta channel, textual meta information, examples:
 				- channel mode suggestion, initial moderators suggestion
 				- user shares his donation cryptocurrency addresses
+				- moderators specify parameters for autoban filter(s)
 				- will also be used after byte codes like SYN/EM run out
+		- predefined sideband ID string:
+			- none
+		- TODO: again, consider turning to STAMP
 	0x15: NAK
 		- moderation; a moderator advises subscribed clients to perform an action
-		- followed by either: 1B code in predefined range 0x01..0x1F,
-		  or by a NUL-terminated (UTF-8) string describing the type
-		- predefined mod-op codes:
-			- 0x01: HIDE - same as DEL byte
-			- 0x02: BAN - moderator bans the user for this entry (how long?)
-			- 0x03: NSFW
-			- 0x04: NSFL
-			- 0x05: SPOILER
-			- 0x08: STICK
-			- 0x09: HIGHLIGHT
-		- predefined mod-op strings:
-			- "move:"<eid>
+		- STAMP
+		- defined type codes:
+			- 0x01 - NSFW
+			- 0x02 - NSFL
+			- 0x03 - SPOILER
+			- 0x08 - STICK
+			- 0x09 - HIGHLIGHT
+			- 0x10 - BAN
+				- moderator bans the user for the parent entry
+				- 2 bytes following contain number of days with 0 = 1 day
+				- clients subscribing to the moderator should hide all
+				  entries posted by the identity within the timeframe
+			- 0x30 - ENDORSE
+				- moderator or author endorses particular moderator (iid)
+				- parent entry is the channel this applies to
+				- 8 bytes following contain IID of the endorsed
+			- 0x31 - DISAVOW
+				- moderator or author disavows particular moderator (iid)
+				- parent entry is the channel this applies to
+				- 8 bytes following contain IID of the disavowed
+			- 0x40 - MOVE
 				- the parent entry should be moved under 'eid'
-			- "junction:"<eid>
+				- 'eid' is contained in the 12 bytes that follow
+			- 0x41 - JUNCTION
 				- this NAK entry should be replaced by 'eid' and
 				  everything that follows that 'eid'
+				- 'eid' is contained in the 12 bytes that follow
 				- clients should allow junctions forming cross-posted
 				  topics from anyone, and within comment tree accessible
 				  on demand from anyone
 	0x16: SYN, CHAINING
-		- followed by 1B code and hash (or other form) of parent entry to ensure
-		  valid chain of responses, the 1B code specifies the following data in
-		  format: RNNNTTTT:
-			- R - reserved bit, most significant bit (0x80)
-			- NNN - number of following bytes (unsupporting client can skip):
-				- 0 - 0 bytes
-				- 1 - 2 byte
-				- 2 - 4 bytes
-				- 3 - 8 bytes
-				- 4 - 12 bytes
-				- 5 - 16 bytes
-				- 6 - 32 bytes
-				- 7 - 64 bytes
-			- TTTT - type of data
-		- defined hash codes:
+		- followed by hash type code and the hash (or other form) of parent entry
+		  to ensure valid chain of responses
+		- STAMP
+		- defined type codes:
 			- 0x10 - CRC-16 CCITT
 			- 0x20 - CRC-32
 			- 0x51, 0x61 and 0x71 - BLAKE2b
@@ -193,14 +206,11 @@ Leading bytes:
 		- TODO: define default, probably SHA-256
 	0x17: ETB
 		- meaning reserved
-		- immediately followed by 1 byte that specifies type and amount of data
-		  that follows, format is same as for SYN (CHAINING) (RNNNTTTT above)
+		- STAMP
 	0x19: EM, ENDORSEMENT
 		- user signals endorsement of parent entry or specific IID/EID/etc
 		- multiple endorsement can appear per entry
-		- immediately followed by 1 byte that specifies type and amount of data
-		  that follows, format is same as for SYN (CHAINING) (RNNNTTTT above)
-			- TTTT is type of endorsement
+		- STAMP
 		- code byte is not required when EM byte is last; code 0x00 is assumed
 		- code 0x00 references parent entry and has multiple meanings:
 			- moderator forwards other mod's operation to his own subscribers
@@ -210,11 +220,29 @@ Leading bytes:
 			- 0x40 - moderator/channel author endorses EID
 	0x1A: SUB
 		- meaning reserved
-		- followed by either: 1B code in predefined range 0x01..0x1F,
-		  or by a NUL-terminated (UTF-8) string describing the type
+		- TOKEN
 	0x7F: DEL, DELETE
 		- moderator or author wishes to delete (hide) the parent entry
-		- no code-point specific data follows
+		- NO DATA FOLLOW
+
+Optional following variable-length data formats:
+	TOKEN: initial code point is followed by either:
+		- 1B code in predefined range 0x01..0x1F
+		- a NUL-terminated UTF-8 string
+	STAMP: initial code point is followed by 1 byte that specifies type and amount of
+	       data that follows in format RNNNTTTT where:
+		- R - reserved bit, most significant bit (0x80)
+		- NNN - number of following bytes (unsupporting client can skip):
+			- 0 - 0 bytes
+			- 1 - 2 byte
+			- 2 - 4 bytes
+			- 3 - 8 bytes
+			- 4 - 12 bytes
+			- 5 - 16 bytes
+			- 6 - 32 bytes
+			- 7 - 64 bytes
+		- TTTT - type of data
+
 
 Other code points with specific meaning:
 ----------------------------------------

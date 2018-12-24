@@ -74,16 +74,16 @@ namespace raddi {
             };
             enum class moderation : std::uint64_t {
                 none        = 0,
-                hide        = 1, // moderator/author hides this entry
-                nuke        = 2, // moderator hides this entry and all descending entries
-                ban         = 3, // moderator bans the user for this content (also hide)
-                nsfw        = 4, // moderator designates as: not safe for work, i.e. porn and professionally inappropriate stuff
-                nsfl        = 5, // moderator designates as: not safe for life, i.e. gore and gross stuff
-                spoiler     = 6, // moderator marks whole as spoiler
+                nsfw        = 1, // moderator designates as: not safe for work, i.e. porn and professionally inappropriate stuff
+                nsfl        = 2, // moderator designates as: not safe for life, i.e. gore and gross stuff
+                spoiler     = 3, // moderator marks parent as spoiler
+                hide        = 4, // moderator/author hides this entry
+                ban         = 5, // moderator bans the user for this content (also hide)
 
                 stick       = 8, // sticked to the top of the thread
                 highlight   = 9, // moderator highlights this as good content
-
+                endorse     = 10, // moderator endorses other moderator
+                disavow     = 11, // moderator disavows previously endorsed moderator
                 move        = 12, // reassigned to differ parent
                 junction    = 13, // a sub-tree beginning with an eid should be appended at this position
                 other       = 14, // contains other code or string-defined moderation opcode
@@ -105,7 +105,8 @@ namespace raddi {
                 encrypted     encryption        : 2; // 0 - nothing, 1 - partially, 2 - completely
                 std::uint64_t private_message   : 1; // contains section encrypted by parent's author public key
                 std::uint64_t stream            : 1; // this entry denotes stream and contains info necessary to receive it
-                std::uint64_t reserved_technical_bits : 8;
+                std::uint64_t chained           : 1; // entry contains SYN stamp with checksum of parent entry
+                std::uint64_t reserved_technical_bits : 7;
 
                 moderation    mod    : 4;
                 votes         vote   : 3;
