@@ -104,8 +104,8 @@ namespace raddi {
                 band_type     band              : 4;
                 encrypted     encryption        : 2; // 0 - nothing, 1 - partially, 2 - completely
                 std::uint64_t private_message   : 1; // contains section encrypted by parent's author public key
-                std::uint64_t stream            : 1; // this entry denotes stream and contains info necessary to receive it
                 std::uint64_t chained           : 1; // entry contains SYN stamp with checksum of parent entry
+                std::uint64_t stream            : 1; // this entry denotes stream and contains info necessary to receive it
                 std::uint64_t reserved_technical_bits : 7;
 
                 moderation    mod    : 4;

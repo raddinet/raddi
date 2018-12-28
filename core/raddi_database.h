@@ -78,6 +78,7 @@ namespace raddi {
             //  - number of rows, hard limit, attempt to insert will make the table to split the shard
             //  - tune carefully, shard indices are searched linearly, and re-sorted on insertion!
             //     - do not exceed 48913, that would overflow bit-field optimizations in crow/irow
+            //     - TODO: verify (against the expression) when loading from options
             //
             unsigned int maximum_shard_size = 8192;
 

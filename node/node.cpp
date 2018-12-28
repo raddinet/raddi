@@ -6,6 +6,7 @@
 #include <mstcpip.h>
 #include <mswsock.h>
 #include <shlobj.h>
+#include <powrprof.h>
 
 #include <VersionHelpers.h>
 
@@ -672,6 +673,26 @@ namespace {
         return path;
     }
 
+    ULONG CALLBACK SuspendResumeCallbackRoutine (PVOID context, ULONG type, PVOID data) {
+        // data == POWERBROADCAST_SETTING* when service, otherwise NULL
+        switch (type) {
+            case PBT_APMSUSPEND:
+                raddi::log::event (0x09);
+                coordinator->flush ();
+                coordinator->disconnect ();
+                break;
+            case PBT_APMRESUMESUSPEND:
+            case PBT_APMRESUMECRITICAL:
+            case PBT_APMRESUMEAUTOMATIC:
+                raddi::log::event (0x0A);
+
+                // TODO: reset coordinator peer re-connection counters and parameters
+                // TODO: more than one may come in succession, check with timer
+                break;
+        }
+        return ERROR_SUCCESS;
+    }
+
     void WINAPI service (DWORD argc, LPWSTR * argw) {
         const bool global = (status.dwWin32ExitCode == NO_ERROR);
 
@@ -733,6 +754,11 @@ namespace {
             raddi::log::display (L"disabled");
         } else {
             status.dwWin32ExitCode = 0;
+        }
+
+        if (!global) {
+            DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS callback = { SuspendResumeCallbackRoutine, NULL };
+            Optional <HPOWERNOTIFY, HANDLE, DWORD> (L"USER32", "RegisterSuspendResumeNotification", &callback, DEVICE_NOTIFY_CALLBACK);
         }
 
         // overview
@@ -1097,7 +1123,7 @@ namespace {
                         [[ fallthrough ]];
                         
                 // optimize
-                //  - low memory detected in worker or by service handler
+                //  - low memory state hit in worker or detected by service handler
                 // 
                 case WAIT_OBJECT_0 + 5:
                         if (!initial_optimize) {
@@ -1243,7 +1269,10 @@ namespace {
         return 0;
     }
 
-    DWORD WINAPI handler (DWORD code, DWORD event, LPVOID data, LPVOID) {
+    DWORD WINAPI handler (DWORD code, DWORD event, LPVOID data, LPVOID context) {
+        if (code != SERVICE_CONTROL_INTERROGATE) {
+            raddi::log::event (7, raddi::log::rsrc_string (0x00100 + code));
+        }
         switch (code) {
             case SERVICE_CONTROL_PRESHUTDOWN:
             case SERVICE_CONTROL_SHUTDOWN:
@@ -1259,13 +1288,16 @@ namespace {
 
             case SERVICE_CONTROL_TIMECHANGE:
                 if (auto change = static_cast <SERVICE_TIMECHANGE_INFO *> (data)) {
-                    raddi::log::event (0x02, *(FILETIME*) &change->liOldTime, *(FILETIME*) &change->liNewTime);
+                    raddi::log::event (2, *(FILETIME*) &change->liOldTime, *(FILETIME*) &change->liNewTime);
                 }
                 break;
             case SERVICE_CONTROL_LOWRESOURCES:
             case SERVICE_CONTROL_SYSTEMLOWRESOURCES:
                 SetEvent (optimize);
                 break;
+
+            case SERVICE_CONTROL_POWEREVENT:
+                return SuspendResumeCallbackRoutine (context, event, data);
 
             default:
                 return ERROR_CALL_NOT_IMPLEMENTED;
@@ -1274,6 +1306,8 @@ namespace {
     }
 
     BOOL WINAPI console (DWORD code) {
+        raddi::log::event (8, raddi::log::rsrc_string (0x00010 + code));
+        
         switch (code) {
             case CTRL_C_EVENT:
             case CTRL_BREAK_EVENT:

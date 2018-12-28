@@ -115,10 +115,38 @@ void raddi::coordinator::optimize () {
     }
 }
 
+void raddi::coordinator::disconnect (unsigned int timeout) {
+    this->lock.acquire_shared ();
+
+    // disconnect all connections
+
+    for (auto & connection : this->connections) {
+        connection.cancel ();
+    }
+
+    // wait for connections to finish
+    //  - limit waiting to 'timeout', then forcefully terminate connections
+    //  - 'lock' needs to be released at least once for a short delay before
+    //    the stopped facilities above are released to allow them to process
+    //    cancellation callbacks which would otherwise crash
+
+    const auto threshold = raddi::now () + timeout;
+    do {
+        this->lock.release_shared ();
+
+        Sleep (100);
+        this->sweep ();
+
+        this->lock.acquire_shared ();
+    } while (!this->connections.empty () && raddi::older (raddi::now (), threshold));
+
+    this->lock.release_shared ();
+}
+
 void raddi::coordinator::terminate () {
     this->lock.acquire_shared ();
 
-    // cancel connections and listeners
+    // stop listeners
 
     for (auto & listener : this->listeners) {
         listener.stop ();
@@ -126,27 +154,14 @@ void raddi::coordinator::terminate () {
     for (auto & discoverer : this->discoverers) {
         discoverer.stop ();
     }
-    for (auto & connection : this->connections) {
-        connection.cancel ();
-    }
+    
+    // wait 15s for connections to finish, then forcefully terminate connections
+    //  - TODO: improve by having Listener/UdpPoint some 'terminated' state
+    //          and wait for all of them to enter it before clearing
 
-    // wait for connections to finish
-    //  - limit waiting to 15s, then forcefully terminate connections
-    //  - 'lock' needs to be released at least once for a short delay before
-    //    the stopped facilities above are released to allow them to process
-    //    cancellation callbacks which would otherwise crash
-    //     - TODO: improve by having Listener/UdpPoint some 'terminated' state
-    //             and wait for all of them to enter it before clearing
-
-    const auto threshold = raddi::now () + 15;
-    do {
-        this->lock.release_shared ();
-        
-        Sleep (100);
-        this->sweep ();
-
-        this->lock.acquire_shared ();
-    } while (!this->connections.empty () && raddi::older (raddi::now (), threshold));
+    this->lock.release_shared ();
+    this->disconnect (15);
+    this->lock.acquire_shared ();
 
     this->flush ();
 
@@ -632,6 +647,15 @@ bool raddi::coordinator::process_history (const raddi::request::subscription * s
     this->report (log::level::event, 0x27, connection->peer, channel,
                   oldest, latest, map.size (), size, total, subscription->history.threshold);
 
+    if (map.empty ()) {
+        oldest = subscription->history.threshold;
+    }
+    if (oldest) {
+        // first send all old thread-level entries (also meta, sideband updates, etc.)
+        auto n = this->database.threads->select (0, oldest, constrain, decission, transmitter);
+        this->report (log::level::note, 0x2B, connection->peer, channel, oldest, n);
+    }
+    
     for (const auto & m : map) {
         auto n = this->database.data->count (m.first.first, m.first.second);
         this->report (log::level::note, 0x27, connection->peer, channel, m.first.first, m.first.second, m.second, n);
@@ -960,24 +984,24 @@ void raddi::coordinator::established (connection * connection) {
     this->report_table_history (connection, request::type::channels, this->database.channels.get ());
 
     // subscribe to content
-    //  - leaf nodes enumerate subscribed channels/threads to the peer to conserve bandwidth
-    //     - we request data on identity channels only from core nodes (hopefully trustworthy)
-    //       to limit potential of discovering real-world identity between peers
     //  - non-leaf nodes participate in network propagation so request everything
+    //  - enumerate subscribed channels/threads to the peer
+    //     - if peer has the channel it will send us all threads and everything we might have missed
+    //     - request data on identity channels only from core nodes (hopefully trustworthy)
+    //       to limit potential of discovering real-world identity between peers
 
     if (this->settings.network_propagation_participation) {
         connection->send (request::type::everything);
-    } else {
-        this->subscriptions.enumerate ([this, connection] (auto eid) {
-            if ((eid.timestamp != eid.identity.timestamp) || (connection->level == core_nodes)) {
-                
-                request::subscription packet;
-                if (auto size = this->gather_history (eid, &packet)) {
-                    connection->send (request::type::subscribe, &packet, size);
-                }
-            }
-        });
     }
+    this->subscriptions.enumerate ([this, connection] (auto eid) {
+        if ((eid.timestamp != eid.identity.timestamp) || (connection->level == core_nodes)) {
+                
+            request::subscription packet;
+            if (auto size = this->gather_history (eid, &packet)) {
+                connection->send (request::type::subscribe, &packet, size);
+            }
+        }
+    });
 
     // core nodes sync
     //  - if connected to core node, and we allow full download queries, send one

@@ -177,6 +177,7 @@ namespace raddi {
 
     public:
         explicit coordinator (db & database);
+        void disconnect (unsigned int timeout = 2);
         void terminate ();
 
         // process

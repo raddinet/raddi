@@ -113,6 +113,12 @@ merge raddi::detached, raddi::noticed and raddi::subscriptions
 split raddi stuff from node.cpp to raddi_node.cpp
  - rename node.cpp to node_win.cpp and keep all Win32/service stuff there
 
+shell32.dll - SHGetFolderPath (use install path as default for db/log???)
+user32.dll - LoadStringW
+ole32.dll - StringFromGUID2
+ - rewrite those functions because those DLLs load GDI32.dll into raddi##.exe service
+   (more secure, less resources)
+
 rewrite log as noted in log.cpp or somewhere there in comment
 
 SETTINGS GUIDE: settings for most privacy concerned users, first run (proxy, tor, listeners, xor-mask)
