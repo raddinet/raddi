@@ -406,8 +406,11 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
             //  - only validate correct protocol
 
             case request::type::initial:
-                return std::memcmp (r->content (), raddi::protocol::magic, sizeof raddi::protocol::magic) == 0
-                    || this->report (log::level::data, 0x25, connection->peer);
+                if (std::memcmp (r->content (), raddi::protocol::magic, sizeof raddi::protocol::magic) == 0) {
+                    this->corroborated (connection);
+                    return true;
+                } else
+                    return this->report (log::level::data, 0x25, connection->peer);
 
             // listening request
             //  - peer announces port number it supposedly listens on
@@ -977,6 +980,9 @@ void raddi::coordinator::established (connection * connection) {
         // inbound connection, give our friend a few randomly selected peer addresses
         this->announce_random_peers (connection);
     }
+}
+
+void raddi::coordinator::corroborated (connection * connection) {
 
     // request identities and channels we may have missed
 

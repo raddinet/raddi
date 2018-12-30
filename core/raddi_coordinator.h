@@ -192,9 +192,14 @@ namespace raddi {
 
         // established
         //  - connection to peer successfully established and secured
-        //  - announces our listening ports to outbound connections
         //
         void established (connection * peer);
+
+        // corroborated
+        //  - connection succesfully received initial packet from peer
+        //  - announces our listening ports to outbound connections
+        //
+        void corroborated (connection * peer);
 
         // unavailable
         //  - failed establish connection

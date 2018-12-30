@@ -3,9 +3,7 @@ TODO
 
 threads are inserted duplicated (race condition?) - might've been fixed
 
-peer addresses appear in validated or are validate even though it's not possible to connect to them
-
-consider: send peers/histories only after successfully received initial packet
+peer addresses appear validated or are validated even though it's not possible to connect to them
 
 hybrid (?) mode - bypass proxy for certain ports (80,443) or attempt connection both through proxy and directly
 
@@ -45,9 +43,7 @@ outbound data sorting in raddi::connection::send
 
 report bad inputs (from source) in node
 
-log when node was hibernated
-
-extend log so it can also output binary to named section (one for every level] for multiple clients to read
+extend log so it can also output binary to named section (one for every level) for multiple clients to read
 
 support reading options from file
  - and registry
@@ -135,6 +131,7 @@ common/string.h
    (UTF-16 on Windows, UTF-8 on Linux), auto converting
  - use for paths and everything
     - options?
+    - for comparisons use TEXT macro, define platform-specific for non-_WIN32
     - node.cpp/raddi.com.cpp -> main args?
  - AND THEN DROP ALL wchar_t* OVERLOADS
 
