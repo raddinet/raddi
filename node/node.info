@@ -8,9 +8,9 @@
 	internalname		= node
 
 	major = 0
-	minor = 3
+	minor = 4
 	patch = 0
-	build = 2669
+	build = 2700
 
 [versioninfo]
 	filename	= %dir%\%internalname%-vi.rc

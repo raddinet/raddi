@@ -5,9 +5,6 @@
     <ClCompile Include="..\common\lock.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\log.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="..\core\raddi_command.cpp">
       <Filter>Core\Local</Filter>
     </ClCompile>
@@ -62,6 +59,9 @@
     <ClCompile Include="..\core\raddi_content.cpp">
       <Filter>Core\Structures</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\log.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="raddi.com-en.rc">
@@ -82,9 +82,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\lock.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\log.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\common\options.h">
@@ -158,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="..\core\raddi_content.h">
       <Filter>Core\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\log.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

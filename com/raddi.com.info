@@ -8,9 +8,9 @@
 	internalname		= raddi.com
 
 	major = 0
-	minor = 3
+	minor = 4
 	patch = 0
-	build = 854
+	build = 888
 
 [versioninfo]
 	filename	= %dir%\%internalname%-vi.rc
