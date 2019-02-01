@@ -1,5 +1,6 @@
 TODO
 ====
+(go through all reddit comments on raddi for ideas I've already forgot)
 
 threads are inserted duplicated (race condition?) - might've been fixed
 
@@ -95,6 +96,7 @@ old data deletion (whole shards?) except 'retained' channels/threads
  - compress old shards when all data except retained are deleted
 
 Windows tray app (optional) to monitor Node service
+ - raddinfo.exe?
 
 coordinator: congestion control
 coordinator: small random delay to sends to harden agains origin analysis -> connection.send
@@ -139,6 +141,7 @@ consider http server? simple GET/POST support
  - GET - db queries? lists of identities/channels
        - deep tree data fetch?
        - get node status (for status button/iframe on website)
+ - perhaps simple HTML control panel
 
 document protocol
  - requirement: synchronized time
