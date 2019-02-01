@@ -465,7 +465,7 @@ int wmain (int argc, wchar_t ** argw) {
     raddi::log::display (L"data");
 #endif
     raddi::log::display (option (argc, argw, L"display"));
-    raddi::log::initialize (option (argc, argw, L"log"), L"\\RADDI.net\\", L"cmd", false);
+    raddi::log::initialize (option (argc, argw, L"log"), raddi::defaults::log_subdir, L"cmd", false);
 
     raddi::log::event (0x01,
                        (unsigned long) HIWORD (version->dwProductVersionMS),

@@ -651,7 +651,7 @@ namespace {
 
         wchar_t path [32768];
         if (SHGetFolderPath (NULL, global ? CSIDL_COMMON_APPDATA : CSIDL_LOCAL_APPDATA, NULL, 0, path) == S_OK) {
-            std::wcscat (path, L"\\RADDI.net\\");
+            std::wcscat (path, raddi::defaults::data_subdir);
             CreateDirectory (path, NULL);
         } else {
             GetModuleFileName (NULL, path, sizeof path / sizeof path [0]);
@@ -697,7 +697,7 @@ namespace {
         const bool global = (status.dwWin32ExitCode == NO_ERROR);
 
         raddi::log::display (option (argc, argw, L"display"));
-        raddi::log::initialize (option (argc, argw, L"log"), L"\\RADDI.net\\", L"node", global);
+        raddi::log::initialize (option (argc, argw, L"log"), raddi::defaults::log_subdir, L"node", global);
 
         if (version == nullptr) {
             raddi::log::stop (0x01);

@@ -29,6 +29,10 @@ namespace raddi {
 
 
         static const wchar_t bootstrap_url [] = L"https://www.raddi.net/bootstrap.txt"; // HTTP
+
+
+        static const wchar_t data_subdir [] = L"\\RADDI.net\\";
+        static const wchar_t log_subdir [] = L"\\RADDI.net\\log\\";
     }
 }
 
