@@ -202,7 +202,7 @@ void raddi::log::internal::deliver (component c, level l, const provider_name * 
                                     unsigned int id, std::wstring message) {
     SYSTEMTIME t;
 
-    // TODO: this can become bottleneck, just push to queue here, and do write/display on separate thread
+    // TODO: this can become bottleneck, just push to queue here, and do write/display on separate thread(s)
 
     if (l >= settings::level && !logfile.closed ()) {
         GetLocalTime (&t);
@@ -212,12 +212,12 @@ void raddi::log::internal::deliver (component c, level l, const provider_name * 
                     L"%04u-%02u-%02u %02u:%02u:%02u.%03u "
                     L"\t%s\t%X\t%s"
                     L"\t%-12S\t%012zx\t%-32s"
-                    L"\t%u\t%s"
+                    L"\t%u\t%u\t%s"
                     L"\r\n",
                     t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds,
                     loglevel_name (l), id, component_name (c),
                     provider && provider->object ? provider->object : "", (std::size_t) provider, provider ? provider->instance.c_str () : L"",
-                    GetCurrentThreadId (), message.c_str ());
+                    GetCurrentProcessId (), GetCurrentThreadId (), message.c_str ());
         
         char buffer [1536];
         if (auto n = WideCharToMultiByte (CP_UTF8, 0, string, (int) std::wcslen (string), buffer, sizeof buffer, NULL, NULL)) {
