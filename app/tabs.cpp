@@ -27,17 +27,15 @@ namespace {
     enum class Index {
         Data, // vector<Tab>
         Font, // HFONT
-        Theme,
-        WndTheme,
+        Theme,   // HTHEME "TABS"
+        WndTheme,// HTHEME "WINDOW"
         Offset,  // first tab displayed
         Current, // current active tab
-        Hot,
+        Hot,     // if bit 31 is set, close button is hot
         Pressed, // which close button is pressed
-
         DPI,
         MinHeight, // computed
         WheelDelta,
-
         Size
     };
 
@@ -114,8 +112,16 @@ namespace {
     LRESULT CALLBACK Procedure (HWND hWnd, UINT message,
                                 WPARAM wParam, LPARAM lParam) {
         switch (message) {
+            case WM_NCCREATE:
+                try {
+                    auto tabs = new std::vector <Tab>;
+                    tabs->reserve (64);
+                    Set (hWnd, Index::Data, (LONG_PTR) tabs);
+                    return TRUE;
+                } catch (const std::bad_alloc &) {
+                    return FALSE;
+                }
             case WM_CREATE:
-                OnDataOperation (hWnd, message, wParam, lParam);
                 return OnCreate (hWnd, reinterpret_cast <const CREATESTRUCT *> (lParam));
             case WM_DESTROY:
                 return OnDestroy (hWnd);
@@ -226,10 +232,6 @@ namespace {
             bool update = false;
 
             switch (message) {
-                case WM_CREATE:
-                    Set (hWnd, Index::Data, (LONG_PTR) new std::vector <Tab>);
-                    break;
-
                 case TCM_INSERTITEM: // wParam = ID, lParam = LPCWSTR, returns index, replaces existing
                     tab.id = wParam;
                     if (auto psz = reinterpret_cast <const wchar_t *> (lParam)) {
@@ -322,6 +324,8 @@ namespace {
     }
 
     LRESULT OnCreate (HWND hWnd, const CREATESTRUCT * cs) {
+        Set (hWnd, Index::Offset, 0);
+        Set (hWnd, Index::Current, 0);
         Set (hWnd, Index::Hot, -1);
         Set (hWnd, Index::Pressed, -1);
         Set (hWnd, Index::Theme, (LONG_PTR) OpenThemeData (hWnd, VSCLASS_TAB));
@@ -748,21 +752,21 @@ namespace {
     LRESULT OnMouseMove (HWND hWnd, SHORT x, SHORT y) {
         POINT pt = { x, y };
 
-        auto hot = -1;
-        auto was = -1;
+        LONG_PTR hot = -1;
+        LONG_PTR was = -1;
 
         const auto & tabs = *reinterpret_cast <const std::vector <Tab> *> (Get (hWnd, Index::Data));
         for (auto i = 0u; i != tabs.size (); ++i) {
             if (PtInRect (&tabs[i].r, pt)) {
                 hot = i;
-                if (PtInRect (&tabs [i].rCloseButton, pt)) {
+                if (tabs [i].close && PtInRect (&tabs [i].rCloseButton, pt)) {
                     hot |= 0x8000'0000;
                 }
                 break;
             }
         }
 
-        was = (int) Set (hWnd, Index::Hot, hot);
+        was = Set (hWnd, Index::Hot, hot);
 
         if (was != hot) {
             if (hot != -1) {
