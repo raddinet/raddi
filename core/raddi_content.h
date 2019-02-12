@@ -144,7 +144,7 @@ namespace raddi {
 
     public:
         struct result {
-            summary summmary;
+            summary summary;
             // TODO: list of compressed blocks failed to decompress
         };
 

@@ -8,7 +8,7 @@
 #endif
 
 // TODO: rewrite:
-//  - remove note..error levels (let callsite decide importance)
+//  - remove note..error levels (let call-site decide importance)
 //  - add 'object' distinction (below component) for classes (or merge with MAIN,SERVER,SOURCE,...)
 //     - remove named components, just use code
 
@@ -99,6 +99,7 @@ namespace raddi {
         //  - converts log function argument to string, according to second 'format' parameter
         //  - provide overload to extend functionality
         //  - TODO: since we now use ADL figure out better name that won't be confusing in global namespace
+        //  - TODO: use std::wstring_view where possible
         //
         inline std::wstring translate (long long argument, const std::wstring & format) {
             return std::to_wstring (argument);
@@ -175,7 +176,7 @@ namespace raddi {
             }
 
             template <typename T>
-            void replace_argument (std::wstring & string, std::wstring prefix, T argument) {
+            void replace_argument (std::wstring & string, std::wstring prefix, T argument, bool escape = true) {
 
                 std::wstring::size_type offset = 0u;
                 while ((offset = string.find (L"{" + prefix, offset)) != std::wstring::npos) {
@@ -192,7 +193,7 @@ namespace raddi {
                     } else {
 
                         auto translated = translate (argument, fo != fe ? string.substr (fo + 1, fe - fo - 1) : std::wstring ());
-                        if (prefix != L"ERR") {
+                        if (escape) {
                             translated = L"\x201C" + translated + L"\x201D";
                         }
 
@@ -265,7 +266,7 @@ namespace raddi {
 
                 internal::capture_overriden_api_error (error, args...);
                 internal::replace_arguments (string, sizeof... (args), args...);
-                internal::replace_argument (string, L"ERR", error);
+                internal::replace_argument (string, L"ERR", error, false);
                 internal::deliver (c, ll, p, id, std::move (string));
             }
             // always return false!

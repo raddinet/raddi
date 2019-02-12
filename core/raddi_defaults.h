@@ -33,6 +33,7 @@ namespace raddi {
 
         static const wchar_t data_subdir [] = L"\\RADDI.net\\";
         static const wchar_t log_subdir [] = L"\\RADDI.net\\log\\";
+        static const wchar_t app_subdir [] = L"app\\";
     }
 }
 

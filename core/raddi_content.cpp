@@ -396,7 +396,7 @@ raddi::content::summary raddi::content::analysis::summarize (summary summary) co
         // format/formats
         //  - list of known binary attachments to categorize
         //
-        struct format {
+        static const struct format {
             enum class type : std::uint8_t {
                 document,
                 archive,
@@ -569,9 +569,11 @@ raddi::content::result raddi::content::parse (const std::uint8_t * data, std::si
     return this->parse (content::analyze (data, size));
 }
 
-raddi::content::result raddi::content::parse (const analysis &) {
-    
+raddi::content::result raddi::content::parse (const analysis & analysis) {
+    raddi::content::result r;
+    r.summary = analysis.summarize ();
+
     // TODO
 
-    return raddi::content::result ();
+    return r;
 }
