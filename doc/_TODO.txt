@@ -10,6 +10,10 @@ hybrid (?) mode - bypass proxy for certain ports (80,443) or attempt connection 
 
 will not start connecting to core nodes if connecting to validated node on same IP (different port) as other core node
 
+local only mode logs (display) attempts to connect which are ultimately not used
+
+retired connections sometimes stick around instead of deleted (and service gets stuck on exit)
+
 revocation code for identity: when received, all further messages by that identity are dropped
  - content code, 0xF8 plus fixed predefine block of content??
  - node support (list of revoked IIDs)
