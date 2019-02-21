@@ -690,6 +690,7 @@ namespace {
                     i, (DWORD_PTR) tabs [i].id, pt, HTCLIENT
                 };
                 switch (message) {
+                    case WM_RBUTTONUP: nm.hdr.code = NM_RCLICK; break;
                     case WM_RBUTTONDOWN: nm.hdr.code = NM_RDOWN; break;
                     case WM_LBUTTONDBLCLK: nm.hdr.code = NM_DBLCLK; break;
                     case WM_RBUTTONDBLCLK: nm.hdr.code = NM_RDBLCLK; break;
