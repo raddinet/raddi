@@ -45,13 +45,34 @@ static const char BUILD_TIMESTAMP [] = {
 
 #ifdef _WIN32
 #include <windows.h>
+#include <string_view>
 
 // Windows API platform helper functions
 
 DWORD GetLogicalProcessorCount ();
+DWORD GetCurrentProcessSessionId ();
 const VS_FIXEDFILEINFO * GetModuleVersionInfo (HMODULE);
 const VS_FIXEDFILEINFO * GetCurrentProcessVersionInfo ();
 bool IsWindowsBuildOrGreater (WORD wMajorVersion, WORD wMinorVersion, DWORD dwBuildNumber);
+bool IsPathAbsolute (std::wstring_view);
+
+template <typename P>
+bool Symbol (HMODULE h, P & pointer, const char * name) {
+    if (P p = reinterpret_cast <P> (GetProcAddress (h, name))) {
+        pointer = p;
+        return true;
+    } else
+        return false;
+}
+
+template <typename P>
+bool Symbol (HMODULE h, P & pointer, USHORT index) {
+    if (P p = reinterpret_cast <P> (GetProcAddress (h, MAKEINTRESOURCEA (index)))) {
+        pointer = p;
+        return true;
+    } else
+        return false;
+}
 
 template <typename Return, typename... Parameters>
 Return Optional (const wchar_t * module, const char * name, Parameters... parameters) {

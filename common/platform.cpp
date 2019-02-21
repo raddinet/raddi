@@ -1,5 +1,6 @@
 #include "platform.h"
 #include <algorithm>
+#include <cwctype>
 
 DWORD GetLogicalProcessorCount () {
     SYSTEM_INFO si;
@@ -45,4 +46,31 @@ bool IsWindowsBuildOrGreater (WORD wMajorVersion, WORD wMinorVersion, DWORD dwBu
     osvi.dwBuildNumber = dwBuildNumber;
 
     return VerifyVersionInfoW (&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER, mask) != FALSE;
+}
+
+bool IsPathAbsolute (std::wstring_view path) {
+    return ((path.length () >= 4) && std::iswalpha (path [0]) && path [1] == L':' && path [2] == L'\\')
+        || ((path.length () >= 5) && path [0] == L'\\' && path [1] == L'\\')
+        ;
+}
+
+DWORD GetCurrentProcessSessionId () {
+    if (auto hKernel32 = GetModuleHandle (L"KERNEL32")) {
+        BOOL (WINAPI * ptrProcessIdToSessionId) (DWORD, DWORD *);
+        if (Symbol (hKernel32, ptrProcessIdToSessionId, "ProcessIdToSessionId")) { // NT 5.2+
+            DWORD id = 0;
+            if (ptrProcessIdToSessionId (GetCurrentProcessId (), &id))
+                return id;
+        }
+    }
+
+#if defined (_M_AMD64)
+    return (DWORD) *reinterpret_cast <std::uint64_t *> (__readgsqword (0x60) + 0x02C0);
+#elif defined (_M_IX86)
+    __asm mov eax, fs:[0x18];
+    __asm mov eax, [eax + 0x30];
+    __asm mov eax, [eax + 0x1d4];
+#else
+    return 0;
+#endif
 }
