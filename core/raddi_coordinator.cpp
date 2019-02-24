@@ -291,19 +291,6 @@ void raddi::coordinator::operator() () {
             this->select_unused_addresses (announced_nodes, 1, addresses);
         }
 
-        if (this->settings.local_peers_only) {
-            auto i = addresses.begin ();
-            auto e = addresses.end ();
-
-            while (i != e) {
-                if (i->first.accessible ()) {
-                    i = addresses.erase (i);
-                } else {
-                    ++i;
-                }
-            }
-        }
-
         if (!addresses.empty ()) {
             exclusive guard (this->lock);
 
@@ -338,7 +325,8 @@ std::size_t raddi::coordinator::select_unused_addresses (level lvl , std::size_t
             if (!this->inuse (a)
                     && !addresses.count (a)
                     && !this->is_local (a)
-                    && !this->blacklisted (a)) {
+                    && !this->blacklisted (a)
+                    && !(this->settings.local_peers_only && a.accessible ())) {
 
                 this->report (log::level::event, 0x21, lvl, a);
                 addresses [a] = lvl;
