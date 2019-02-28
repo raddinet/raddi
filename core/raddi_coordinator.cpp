@@ -84,10 +84,10 @@ void raddi::coordinator::sweep () {
                 ++ii;
             }
         } while (ii != ie);
+    }
 
-        if (ii == ie) {
-            this->started = raddi::now ();
-        }
+    if (this->connections.empty ()) {
+        this->started = raddi::now ();
     }
 }
 

@@ -134,9 +134,9 @@ bool raddi::connection::send (enum class raddi::request::type type, const void *
 std::uint64_t raddi::connection::keepalive (std::uint64_t now, std::uint64_t expected, std::uint64_t period) {
     if (!this->retired) {
         if (std::int64_t (now - this->latest) > std::int64_t (std::max (4 * period, 1'000'000uLL))) {
-            this->cancel ();
             this->report (raddi::log::level::event, 8);
-        }
+            this->cancel ();
+        } else
         if (this->secured) {
             if (std::int64_t (now - std::max (this->latest, this->probed)) > std::int64_t (period)) {
                 if (!this->unsynchronized_is_live ()) {
