@@ -27,6 +27,7 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
     //  - service/tray/on demand (app starts node)
     //     - radio buttons with short explanation
     //     - default: service if elevated, tray otherwise
+    //     - option to just unpack portable to flash drive?
     //  - web app / win32 app (default on XP or if no "good" browser is installed)
     //     - web app will have notification tray icon, don't set as autorun separate notification tray icon
     //  - role
@@ -58,7 +59,7 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
     //  - decompress to selected location
     //     - DO NOT OVERWRITE LOCAL raddi.db IF EXISTS (actually app itself should deploy/create the default one)
     //  - create service or autorun tray icon carrier process
-    //  - add raddiXX.exe to firewall (cmd
+    //  - add raddiXX.exe to firewall
     
     return 0;
 }
