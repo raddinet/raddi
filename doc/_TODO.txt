@@ -82,15 +82,13 @@ app: master phrase/password to protect keys + misdirection phrase/password for p
     - pwd1 + hash -> main key
     - pwd2 + hash -> safety key
 
-app: https://github.com/Microsoft/console/issues/277
- - SetWindowTheme(hWnd, L"DarkMode_Explorer", nullptr);
- - AllowDarkModeForWindow
- - https://github.com/ysc3839/VCMPBrowser/blob/darkmode/DarkMode.h
-
 sane coordinator status display
 more info into overview
 
 move connection::request_limiter to separate class
+
+raddi::db::peerset::select with random number is pretty inefficient for large sets, gather N peers in one go
+ - later perhaps attempt some geographical optimization (4/8 close, 2/8 far, 1/8 very far, 1/8 core)
 
 connection members will probably need locking to protect from early deletion when retired
 
@@ -116,6 +114,10 @@ user32.dll - LoadStringW
 ole32.dll - StringFromGUID2
  - rewrite those functions because those DLLs load GDI32.dll into raddi##.exe service
    (more secure, less resources)
+
+ARM/ARM64 manifests don't need supportedOS older than (10 for ARM64, 8 for ARM)
+
+rework System (GetProcAddress) so that builds for Windows 10 link statically
 
 rewrite log as noted in log.cpp or somewhere there in comment
 
