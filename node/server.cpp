@@ -142,7 +142,9 @@ UdpPoint::Totals UdpPoint::total;
 // Overlapped
 
 void Overlapped::cancel (HANDLE h) noexcept {
-    Optional <BOOL, HANDLE, LPOVERLAPPED> (L"KERNEL32", "CancelIoEx", h, this);
+	if (Optional <BOOL, HANDLE, LPOVERLAPPED> (L"KERNEL32", "CancelIoEx", h, this)) {
+		this->Internal = STATUS_ABANDONED_WAIT_0;
+	}
 }
 
 // Socket
