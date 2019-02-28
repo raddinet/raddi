@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Portable|ARM64">
+      <Configuration>Portable</Configuration>
+      <Platform>ARM64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Portable|Win32">
       <Configuration>Portable</Configuration>
@@ -12,6 +20,10 @@
     <ProjectConfiguration Include="Portable|x64">
       <Configuration>Portable</Configuration>
       <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -31,7 +43,7 @@
     <ProjectGuid>{0FBF4072-2F99-4F25-8240-82609AE0C68F}</ProjectGuid>
     <RootNamespace>app</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
-    <ProjectName>RADDI app</ProjectName>
+    <ProjectName>app</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -61,6 +73,12 @@
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -68,7 +86,22 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Portable|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Portable|ARM64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
@@ -93,10 +126,19 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Portable|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Portable|ARM64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -126,15 +168,36 @@
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <TargetName>raddi</TargetName>
+    <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
+    <OutDir>$(SolutionDir)a64\$(Configuration)\</OutDir>
+    <IntDir>a64\$(Configuration)\</IntDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>raddi</TargetName>
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <TargetName>raddi</TargetName>
+    <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
+    <OutDir>$(SolutionDir)a64\$(Configuration)\</OutDir>
+    <IntDir>a64\$(Configuration)\</IntDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Portable|x64'">
     <TargetName>raddi</TargetName>
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Portable|ARM64'">
+    <TargetName>raddi</TargetName>
+    <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
+    <OutDir>$(SolutionDir)a64\$(Configuration)\</OutDir>
+    <IntDir>a64\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -162,7 +225,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
@@ -177,6 +240,50 @@
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>
+      </SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <PreprocessorDefinitions>SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;USING_WINSQLITE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <ControlFlowGuard>false</ControlFlowGuard>
+      <BasicRuntimeChecks>
+      </BasicRuntimeChecks>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AssemblerOutput>All</AssemblerOutput>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\a64\$(Configuration);$(SolutionDir)a64\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;winsqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <GenerateMapFile>true</GenerateMapFile>
+      <SubSystem>Windows</SubSystem>
+      <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
+      <SwapRunFromCD>true</SwapRunFromCD>
+      <SwapRunFromNET>true</SwapRunFromNET>
+      <LargeAddressAware>true</LargeAddressAware>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <SetChecksum>true</SetChecksum>
+      <AdditionalOptions>/STUB:..\tools\stub.exe %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=arm64 targetfilename=$(TargetFileName)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Portable|x64'">
@@ -205,7 +312,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
@@ -220,6 +327,50 @@
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Portable|ARM64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>
+      </SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <PreprocessorDefinitions>CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ControlFlowGuard>false</ControlFlowGuard>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <BasicRuntimeChecks>
+      </BasicRuntimeChecks>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AssemblerOutput>All</AssemblerOutput>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\a64\$(Configuration);$(SolutionDir)a64\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <GenerateMapFile>true</GenerateMapFile>
+      <SubSystem>Windows</SubSystem>
+      <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
+      <SwapRunFromCD>true</SwapRunFromCD>
+      <SwapRunFromNET>true</SwapRunFromNET>
+      <LargeAddressAware>true</LargeAddressAware>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <SetChecksum>true</SetChecksum>
+      <AdditionalOptions>/STUB:..\tools\stub.exe %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=arm64 targetfilename=$(TargetFileName)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -239,7 +390,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
@@ -269,7 +420,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
@@ -280,6 +431,36 @@
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>
+      </SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AssemblerOutput>All</AssemblerOutput>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\a64\$(Configuration);$(SolutionDir)a64\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateMapFile>true</GenerateMapFile>
+      <SubSystem>Windows</SubSystem>
+      <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
+      <SwapRunFromCD>true</SwapRunFromCD>
+      <SwapRunFromNET>true</SwapRunFromNET>
+      <AdditionalOptions>/STUB:..\tools\stub.exe %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=arm64 targetfilename=$(TargetFileName)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -308,7 +489,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
@@ -351,7 +532,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;notelemetry.obj;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
@@ -375,12 +556,17 @@
     <ClCompile Include="..\common\log.cpp" />
     <ClCompile Include="..\common\platform.cpp" />
     <ClCompile Include="..\common\uuid.cpp" />
+    <ClCompile Include="..\lib\SQLite.cpp" />
     <ClCompile Include="..\lib\sqlite3.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="app.cpp" />
+    <ClCompile Include="appapi.cpp" />
+    <ClCompile Include="data.cpp" />
     <ClCompile Include="tabs.cpp" />
+    <ClCompile Include="view.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\common\log-en.rc" />
@@ -393,7 +579,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\lib\cuckoocycle.tcc" />
+    <None Include="..\lib\SQLite.tcc" />
     <None Include="app.info" />
+    <None Include="errorbox.tcc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\img\raddi.ico" />
@@ -407,7 +595,12 @@
     <ClInclude Include="..\common\platform.h" />
     <ClInclude Include="..\common\uuid.h" />
     <ClInclude Include="..\lib\cuckoocycle.h" />
+    <ClInclude Include="..\lib\SQLite.hpp" />
+    <ClInclude Include="appapi.h" />
+    <ClInclude Include="data.h" />
+    <ClInclude Include="errorbox.h" />
     <ClInclude Include="tabs.h" />
+    <ClInclude Include="view.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
