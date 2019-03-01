@@ -27,10 +27,12 @@ struct Design {
     bool alpha = false; // need to fix alpha on glass
 
     struct {
+        DWORD accent = 0xFFFFFF;
         DWORD active = 0xFFFFFF;
         DWORD inactive = 0xFFFFFF;
     } colorization;
 
+    UINT colorset = 0;
     void update ();
 };
 

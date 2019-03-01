@@ -9,6 +9,11 @@ HDC (WINAPI * ptrGetBufferedPaintDC) (HPAINTBUFFER) = NULL;
 HRESULT (WINAPI * ptrGetBufferedPaintBits) (HPAINTBUFFER, RGBQUAD **, int *) = NULL;
 HRESULT (WINAPI * ptrDrawThemeTextEx) (HTHEME, HDC, int, int, LPCWSTR, int, DWORD, LPRECT, const DTTOPTS *) = NULL;
 
+UINT (WINAPI * ptrGetImmersiveColorTypeFromName) (LPCWSTR name) = NULL; // 96
+LPCWSTR* (WINAPI * ptrGetImmersiveColorNamedTypeByIndex) (UINT index) = NULL; // 100
+UINT (WINAPI * ptrGetImmersiveUserColorSetPreference) (BOOL reload, BOOL skip) = NULL; // 98
+UINT (WINAPI * ptrGetImmersiveColorFromColorSetEx) (UINT set, UINT type, BOOL ignoreHighContrast, UINT cachemode) = NULL; // 95
+
 BOOL (WINAPI * ptrAllowDarkModeForApp) (BOOL) = NULL;
 BOOL (WINAPI * ptrAllowDarkModeForWindow) (HWND, BOOL) = NULL;
 void (WINAPI * ptrFlushMenuThemes) () = NULL;
@@ -42,6 +47,13 @@ void AppApiInitialize () {
         Symbol (hUxTheme, ptrEndBufferedPaint, "EndBufferedPaint");
         Symbol (hUxTheme, ptrDrawThemeTextEx, "DrawThemeTextEx");
 
+        if (IsWindows8OrGreater ()) {
+            Symbol (hUxTheme, ptrGetImmersiveColorTypeFromName, 96);
+            Symbol (hUxTheme, ptrGetImmersiveColorFromColorSetEx, 95);
+            Symbol (hUxTheme, ptrGetImmersiveColorNamedTypeByIndex, 100);
+            Symbol (hUxTheme, ptrGetImmersiveUserColorSetPreference, 98);
+
+        }
         if (IsWindowsBuildOrGreater (10, 0, 17763)) {
             Symbol (hUxTheme, ptrFlushMenuThemes, 136);
             Symbol (hUxTheme, ptrAllowDarkModeForApp, 135);
@@ -223,6 +235,21 @@ void Design::update () {
         this->colorization.inactive = this->colorization.active;
     }
 
+    if (ptrGetImmersiveUserColorSetPreference) {
+        this->colorset = ptrGetImmersiveUserColorSetPreference (FALSE, FALSE);
+        /*
+        for (auto i = 0; auto name = ptrGetImmersiveColorNamedTypeByIndex (i); ++i) {
+
+            auto type = ptrGetImmersiveColorTypeFromName ((L"Immersive" + std::wstring (*name)).c_str ());
+            auto color = ptrGetImmersiveColorFromColorSetEx (this->colorset, type, false, 0);
+
+            wchar_t szcolor [9];
+            _snwprintf (szcolor, 9, L"%08X", color);
+
+            raddi::log::event (0xA1F0, i, *name, type, szcolor);
+        }*/
+    }
+
     HIGHCONTRAST hc;
     hc.cbSize = sizeof hc;
     if (SystemParametersInfo (SPI_GETHIGHCONTRAST, sizeof hc, &hc, 0)) {
@@ -244,20 +271,8 @@ void Design::update () {
     if (IsWindows10OrGreater ()) {
         this->prevalence = false;
         this->colorization.active = 0xFFFFFF;
-        this->colorization.inactive = 0xFFFFFF;
 
         HKEY hKey;
-        if (RegOpenKeyEx (HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\DWM", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
-            DWORD value = TRUE;
-            DWORD size = sizeof value;
-            RegQueryValueEx (hKey, L"AccentColor", NULL, NULL, reinterpret_cast <LPBYTE> (&this->colorization.active), &size);
-            RegQueryValueEx (hKey, L"AccentColorInactive", NULL, NULL, reinterpret_cast <LPBYTE> (&this->colorization.inactive), &size);
-            if (RegQueryValueEx (hKey, L"ColorPrevalence", NULL, NULL, reinterpret_cast <LPBYTE> (&value), &size) == ERROR_SUCCESS) {
-                this->prevalence = value;
-            }
-            RegCloseKey (hKey);
-        }
-
         if (ptrAllowDarkModeForWindow) {
             if (RegOpenKeyEx (HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
                 DWORD value = TRUE;
@@ -267,6 +282,33 @@ void Design::update () {
                 }
                 RegCloseKey (hKey);
             }
+        }
+
+        if (RegOpenKeyEx (HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\DWM", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+            DWORD value = TRUE;
+            DWORD size = sizeof value;
+            RegQueryValueEx (hKey, L"AccentColor", NULL, NULL, reinterpret_cast <LPBYTE> (&this->colorization.accent), &size);
+
+            if (RegQueryValueEx (hKey, L"ColorPrevalence", NULL, NULL, reinterpret_cast <LPBYTE> (&value), &size) == ERROR_SUCCESS) {
+                this->prevalence = value;
+            }
+            if (this->prevalence) {
+                this->colorization.active = this->colorization.accent;
+            } else {
+                if (this->light) {
+                    this->colorization.active = 0xFFFFFF;
+                } else {
+                    this->colorization.active = 0x000000;
+                }
+            }
+            if (RegQueryValueEx (hKey, L"AccentColorInactive", NULL, NULL, reinterpret_cast <LPBYTE> (&this->colorization.inactive), &size) != ERROR_SUCCESS) {
+                if (this->light) {
+                    this->colorization.inactive = 0xFFFFFF;
+                } else {
+                    this->colorization.inactive = 0x2B2B2B; // TODO: retrieve from theme, now hardcoded to match Win10 1809
+                }
+            }
+            RegCloseKey (hKey);
         }
     }
 }
