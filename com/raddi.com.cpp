@@ -472,10 +472,10 @@ int wmain (int argc, wchar_t ** argw) {
                        (unsigned long) LOWORD (version->dwProductVersionMS),
                        ARCHITECTURE, BUILD_TIMESTAMP);
 
-    if (auto h = LoadLibrary (L"sqlite3.dll")) {
+	if (auto h = LoadLibrary (SQLITE3_DLL_NAME)) {
         // raddi.com does not use sqlite, but logs version number for sake of completeness
         if (auto p = reinterpret_cast <const char * (*) ()> (GetProcAddress (h, "sqlite3_libversion"))) {
-            raddi::log::note (0x05, "sqlite3", p (), L"dynamic");
+            raddi::log::note (0x05, "sqlite3", p (), SQLITE3_DLL_TYPE);
         }
         FreeLibrary (h);
     }

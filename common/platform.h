@@ -43,6 +43,14 @@ static const char BUILD_TIMESTAMP [] = {
     __TIME__ [0], __TIME__ [1], __TIME__ [2], __TIME__ [3], __TIME__ [4], __TIME__ [5], __TIME__ [6], __TIME__ [7]
 };
 
+#ifdef USING_WINSQLITE
+#define SQLITE3_DLL_NAME L"WINSQLITE3"
+#define SQLITE3_DLL_TYPE L"system"
+#else
+#define SQLITE3_DLL_NAME L"sqlite3.dll"
+#define SQLITE3_DLL_TYPE L"dynamic"
+#endif
+
 #ifdef _WIN32
 #include <windows.h>
 #include <string_view>
