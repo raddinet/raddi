@@ -1283,16 +1283,21 @@ void raddi::coordinator::announce_random_peers (connection * c) {
                 std::uint16_t assessment;
                 address addr = this->database.peers [level]->select (this->random_distribution (this->random_generator), &assessment);
 
-                // distribute local addresses only to other peers on local network
+                // distribute private addresses only to other peers on local network
                 //  - 'allow_null_port' because peer.port is 0 for inbound connections
                 
                 if (addr.accessible () || !c->peer.accessible (address::validation::allow_null_port)) {
 
-                    // only insert addresses that are fresh or already validated
-                    //  - this prevents endless re-sharing addresses of long dead peers
+                    // do not announce localhost addresses (peers won't accept them)
 
-                    if (assessment >= db::peerset::new_record_assessment) {
-                        sample.insert (addr);
+                    if (!this->is_local (addr)) {
+
+                        // only insert addresses that are fresh or already validated
+                        //  - this should prevent endless re-sharing addresses of long dead peers
+
+                        if (assessment >= db::peerset::new_record_assessment) {
+                            sample.insert (addr);
+                        }
                     }
                 }
                 ++i;
