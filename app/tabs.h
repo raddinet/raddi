@@ -2,45 +2,47 @@
 #define TABS_H
 
 #include <windows.h>
-#include <commctrl.h>
-
-// quick and dirty TabControl for use in window caption
-
-// TODO: scroll buttons, bring tab to visibility
+#include <string>
+#include <map>
 
 ATOM InitializeTabControl (HINSTANCE);
 HWND CreateTabControl (HINSTANCE, HWND, UINT style, UINT id = 0);
 
-// WM_USER+3
-//  - returns: minimal advised height of the control
+struct Tab {
+    std::wstring    text;
+    HWND            content = NULL;
+    HFONT           font = NULL;
+    HICON           icon = NULL;
+    std::uint16_t   min_width = 0;
+    std::uint16_t   max_width = 0;
+    std::uint16_t   badge = 0;    // 0 = not rendered
+    std::uint8_t    progress = 0; // 0 = off, 1 = 0%, 255 = 100%
+    bool            close = true;
+	bool			fit = false; // fit width to text
+	bool			locked = false; // width locked to fit
+};
+struct TabControlInterface {
+    std::map <std::size_t, Tab> tabs; // IDs are application-defined
+    POINT                       dpi;
+	std::uint16_t				max_tab_width = 0;
+	bool						stacking = false; // allow user to stack tabs
+	bool						badges = false; // add padding for tab badges
 
-// TCM_INSERTITEM
-//  - wParam: some ID of the item
-//  - lParam: string (if starts with \x0001 then without close button)
-//  - returns: number of tabs
+    // computed:
+    SIZE                        minimum;
+    // TODO: overflow (which tabs couldn't be rendered)
+    //std::vector <std::size_t>   overflow;
 
-// TCM_GETITEM
-//  - wParam: tab index
-//  - returns: tab ID
+public:
+    virtual void update () = 0; // call update when 'tabs' change
+    virtual void stack (std::size_t which, std::size_t onto, bool after) = 0; // move 'which' tab into stack of 'onto' either right after or as last tab
+};
 
-// TCM_GETITEMRECT - as documented in MSDN
-// TCM_GETITEMCOUNT - as documented in MSDN
-// TCM_DELETEALLITEMS - as documented in MSDN
-
-// TCM_GETCURSEL
-//  - lParam: optional pointer to LONG_PTR to receive current tab's ID
-//  - returns: currently active tab index
-
-
-// TODO:
-
-// TCM_DELETEITEM
-//  - wParam: tab ID to delete
-//  - returns true/false (false if no such ID exists)
-
-// TCM_SETCURSEL
-//  - wParam: tab ID to activate
-//  - returns: tab index, or -1 if no such ID
-
+static inline TabControlInterface * TabControl (HWND hControl) {
+    return reinterpret_cast <TabControlInterface *> (GetWindowLongPtr (hControl, GWLP_USERDATA));
+}
+static inline TabControlInterface * TabControl (HWND hParent, UINT id) {
+    return TabControl (GetDlgItem (hParent, id));
+}
 
 #endif
