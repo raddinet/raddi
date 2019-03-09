@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <string>
+#include <vector>
 #include <map>
 
 ATOM InitializeTabControl (HINSTANCE);
@@ -24,14 +25,20 @@ struct Tab {
 struct TabControlInterface {
     std::map <std::size_t, Tab> tabs; // IDs are application-defined
     POINT                       dpi;
-	std::uint16_t				max_tab_width = 0;
+    std::uint16_t				min_tab_width = 0;
+    std::uint16_t				max_tab_width = 0;
 	bool						stacking = false; // allow user to stack tabs
 	bool						badges = false; // add padding for tab badges
 
+    enum class VisualStyle {
+        Native,
+        Light,
+        Dark
+    } style = VisualStyle::Native;
+
     // computed:
     SIZE                        minimum;
-    // TODO: overflow (which tabs couldn't be rendered)
-    //std::vector <std::size_t>   overflow;
+    std::vector <std::size_t>   overflow; // tabs that did not fit
 
 public:
     virtual void update () = 0; // call update when 'tabs' change

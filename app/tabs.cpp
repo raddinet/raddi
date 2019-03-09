@@ -1,5 +1,6 @@
 #include "tabs.h"
 #include "appapi.h"
+// #include "../common/log.h"
 #include <VersionHelpers.h>
 #include <uxtheme.h>
 #include <vsstyle.h>
@@ -42,11 +43,12 @@ namespace {
         std::size_t     top; // ID of top tab
         std::size_t     badge;
         std::uint8_t    progress;
-        bool            left;
-        bool            right;
+        std::uint8_t    left : 1;
+        std::uint8_t    right : 1;
+        std::uint8_t    locked : 1;
         std::uint16_t   min_width;
         std::uint16_t   max_width;
-		long            ideal_width;
+        std::uint16_t   ideal_width;
         RECT            r;
         RECT            rContent;
         RECT            rCloseButton;
@@ -98,6 +100,7 @@ namespace {
 
     private:
         void update_stacks_state ();
+        void update_visual_representation ();
         StackState * get_tab_stack (std::size_t tab, std::vector <StackState::TabRef> ::iterator * = nullptr);
     };
 
@@ -375,11 +378,18 @@ void TabControlState::update_stacks_state () {
 
 void TabControlState::update () {
     this->update_stacks_state ();
+    this->update_visual_representation ();
+    InvalidateRect (hWnd, NULL, FALSE);
+}
+
+void TabControlState::update_visual_representation () {
+    this->overflow.clear ();
 
     const auto size = GetClientSize (hWnd);
     for (auto & stack : this->stacks) {
         stack.left = true;
         stack.right = true;
+        stack.locked = false;
         stack.r.top = 2 * dpi.y / 96;
         stack.r.bottom = size.cy - 1 * dpi.x / 96;
     }
@@ -394,42 +404,67 @@ void TabControlState::update () {
         this->minimum.cx = 2 * dpi.x / 96;
 
 		auto ideal_width = 6 * dpi.x / 96;
-		long locked_width = 0;
 		std::size_t locked_stacks = 0;
 
-		for (auto & stack : this->stacks) {
+        for (auto & stack : this->stacks) {
 			if (this->tabs [stack.top].fit || (this->max_tab_width == 0)) {
 				RECT r = { 0,0,0,0 };
 				DrawTextEx (hDC, const_cast <LPTSTR> (this->tabs [stack.top].text.c_str ()),
 							-1, &r, DT_CALCRECT | DT_SINGLELINE, NULL);
 
-				stack.ideal_width = r.right + 12 * dpi.x / 96;
+				stack.ideal_width = (std::uint16_t) (r.right + 12 * dpi.x / 96);
 				this->minimum.cy = std::max (this->minimum.cy, r.bottom);
 			} else {
-				stack.ideal_width = this->max_tab_width * dpi.x / 96;
+				stack.ideal_width = (std::uint16_t) (this->max_tab_width * dpi.x / 96);
 			}
             if (this->badges && this->tabs [stack.top].fit) {
-                stack.ideal_width += 10 * dpi.x / 96;
+                stack.ideal_width += (std::uint16_t) (10 * dpi.x / 96);
             }
 
             if (stack.ideal_width > stack.max_width) stack.ideal_width = stack.max_width;
 			if (stack.ideal_width < stack.min_width) stack.ideal_width = stack.min_width;
+            if (stack.ideal_width < this->min_tab_width) stack.ideal_width = this->min_tab_width;
 
 			if (this->tabs [stack.top].locked) {
-				locked_width += stack.ideal_width;
+                stack.locked = true;
 				++locked_stacks;
 			}
 			ideal_width += stack.ideal_width;
 		}
 
 		bool tight = (ideal_width > size.cx);
-        auto flexible = this->stacks.size () - locked_stacks;
-        long reduce = (tight && flexible) ? (ideal_width - size.cx) / flexible : 0;
+        long reduce = 0;
+
+        if (tight) {
+            while (auto flexibility = this->stacks.size () - locked_stacks) {
+                reduce = (ideal_width - size.cx) / flexibility;
+
+                bool any = false;
+                for (auto & stack : this->stacks) {
+                    if (!stack.locked) {
+                        if (stack.ideal_width - reduce < long (stack.min_width)) {
+                            
+                            ideal_width -= stack.ideal_width;
+                            ideal_width += stack.min_width;
+                            stack.ideal_width = stack.min_width;
+                            stack.locked = true;
+
+                            ++locked_stacks;
+                            any = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!any)
+                    break;
+            }
+        }
 
         for (auto & stack : this->stacks) {
-			auto width = stack.ideal_width;
+			long width = stack.ideal_width;
 
-			if (!this->tabs [stack.top].locked) {
+			if (!stack.locked) {
 				if (width >= reduce) {
 					width -= reduce;
 				}
@@ -462,6 +497,9 @@ void TabControlState::update () {
 				if (stack.top == stack.tabs [i].id) { // current tab in stack
 					stack.tabs [i].tag.bottom = stack.tabs [i].tag.top;
 				}
+                if (this->minimum.cx > size.cx) {
+                    this->overflow.push_back (stack.tabs [i].id);
+                }
 			}
         }
 
@@ -504,7 +542,6 @@ void TabControlState::update () {
     }
 
     this->minimum.cy += 11 * dpi.y / 96;
-    InvalidateRect (hWnd, NULL, FALSE);
 }
 
 UINT TabControlState::hittest (POINT pt) {
@@ -524,7 +561,8 @@ namespace {
 }
 
 void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
-    this->update ();
+    this->update_stacks_state ();
+    this->update_visual_representation ();
 
     RECT rc = GetClientRect (hWnd);
     HDC hDC = NULL;
@@ -745,7 +783,7 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
                 RECT r = stack.rContent;
                 SetTextColor (hDC, 0x0000FF);
                 SelectObject (hDC, this->font);
-                DrawTextEx (hDC, badge, -1, &r, DT_BOTTOM | DT_RIGHT | DT_NOCLIP | DT_SINGLELINE, NULL);
+                DrawTextEx (hDC, badge, -1, &r, DT_BOTTOM | DT_RIGHT | DT_SINGLELINE, NULL);
             }
 
             if (ptrBufferedPaintSetAlpha) {
