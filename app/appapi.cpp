@@ -85,27 +85,20 @@ void AppApiInitialize () {
     }
 }
 
-POINT GetDPI (HWND hWnd) {
+UINT GetDPI (HWND hWnd) {
     if (hWnd != NULL) {
-        if (pfnGetDpiForWindow) {
-            LONG dpi = pfnGetDpiForWindow (hWnd);
-            return { dpi, dpi };
-        }
+        if (pfnGetDpiForWindow)
+            return pfnGetDpiForWindow (hWnd);
     } else {
-        if (pfnGetDpiForSystem) {
-            LONG dpi = pfnGetDpiForSystem ();
-            return { dpi, dpi };
-        }
+        if (pfnGetDpiForSystem)
+            return pfnGetDpiForSystem ();
     }
     if (HDC hDC = GetDC (hWnd)) {
-        POINT dpi = {
-            GetDeviceCaps (hDC, LOGPIXELSX),
-            GetDeviceCaps (hDC, LOGPIXELSY)
-        };
+        auto dpi = GetDeviceCaps (hDC, LOGPIXELSX);
         ReleaseDC (hWnd, hDC);
         return dpi;
     } else
-        return { 96, 96 };
+        return USER_DEFAULT_SCREEN_DPI;
 }
 
 RECT FixWindowCoordinates (int x, int y, int w, int h) {
