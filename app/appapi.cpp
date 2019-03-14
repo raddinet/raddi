@@ -200,6 +200,47 @@ HRESULT DrawCompositedText (HDC hDC, HTHEME hTheme, HFONT hFont,
                                &r, &options);
 }
 
+HRESULT BufferedPaintPremultiply (HPAINTBUFFER hBuffer, const RECT & r, UCHAR alpha, UCHAR saturation) {
+    if (ptrGetBufferedPaintBits) {
+        RGBQUAD * data;
+        int cxrow;
+        if (ptrGetBufferedPaintBits (hBuffer, &data, &cxrow) == S_OK) {
+
+            if (!IsRectEmpty (&r)) {
+                for (auto y = r.top; y != r.bottom; ++y) {
+
+                    auto x = &data [y * cxrow + r.left];
+                    auto xE = &data [y * cxrow + r.right];
+
+                    for (; x != xE; ++x) {
+                        if (saturation == 255) {
+                            x->rgbRed = x->rgbRed * alpha / 255;
+                            x->rgbBlue = x->rgbBlue * alpha / 255;
+                            x->rgbGreen = x->rgbGreen * alpha / 255;
+                        } else {
+                            // auto grayscaled = (3 * x->rgbRed / 10) + (6 * x->rgbGreen / 10) + (1 * x->rgbBlue / 10);
+                            auto grayscaled = (x->rgbRed >> 2) + (x->rgbGreen >> 1) + (x->rgbBlue >> 2);
+                            if (saturation == 0) {
+                                x->rgbRed = grayscaled * alpha / 255;
+                                x->rgbBlue = grayscaled * alpha / 255;
+                                x->rgbGreen = grayscaled * alpha / 255;
+                            } else {
+                                x->rgbRed = (saturation * x->rgbRed + (255 - saturation) * grayscaled) * alpha / 65025;
+                                x->rgbBlue = (saturation * x->rgbBlue + (255 - saturation) * grayscaled) * alpha / 65025;
+                                x->rgbGreen = (saturation * x->rgbGreen + (255 - saturation) * grayscaled) * alpha / 65025;
+                            }
+                        }
+                        x->rgbReserved = alpha;
+                    }
+                }
+            }
+
+            return S_OK;
+        }
+    }
+    return E_NOTIMPL;
+}
+
 void Cursors::update () {
     this->wait = LoadCursor (NULL, IDC_WAIT);
     this->arrow = LoadCursor (NULL, IDC_ARROW);

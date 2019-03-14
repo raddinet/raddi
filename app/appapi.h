@@ -18,6 +18,7 @@ bool IsLastWindow (HWND hWnd);
 bool IsColorDark (COLORREF color);
 
 HRESULT DrawCompositedText (HDC, HTHEME, HFONT, LPCWSTR, int, DWORD, RECT, COLORREF, UINT);
+HRESULT BufferedPaintPremultiply (HPAINTBUFFER hBuffer, const RECT & r, UCHAR alpha, UCHAR saturation = 255);
 
 struct Design {
     bool composited = true; // DWM composition is enabled
