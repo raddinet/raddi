@@ -57,6 +57,7 @@ namespace {
 
         std::vector <StackState> stacks;
         std::size_t current = 0; // current stack
+        std::size_t first_overflow_stack = -1;
 
 		struct Hot {
 			std::size_t   stack = -1; // index
@@ -160,7 +161,7 @@ namespace {
                                 (DWORD) GetMessageTime (), (LONG) GetMessagePos ()
                             };
                             SendMessage (tt, TTM_RELAYEVENT,
-                                         (WPARAM) 0,//((message == WM_MOUSEMOVE) ? GetMessageExtraInfo () : 0),
+                                         (WPARAM) ((message == WM_MOUSEMOVE) ? GetMessageExtraInfo () : 0),
                                          (LPARAM) &m);
                         }
                     }
@@ -233,9 +234,9 @@ namespace {
                         (UINT) wParam, 0u, 0u
                     };
                     if (auto tab = SendMessage (GetParent (hWnd), WM_NOTIFY, nm.hdr.idFrom, (LPARAM) &nm)) {
-                        // TODO: attempt to select 'tab'???
+                        state (hWnd)->request (tab);
                     } else {
-                        // TODO: default action
+                        // ??? typing tab text selects tab ???
                     }
                 } break;
 
@@ -262,10 +263,20 @@ namespace {
 
                 case WM_NOTIFY:
                     if (auto nm = reinterpret_cast <NMHDR *> (lParam)) {
-                        if (nm->code == TTN_GETDISPINFO) {
-                            auto nmTT = reinterpret_cast <NMTTDISPINFO  *> (nm);
+                        auto self = state (hWnd);
 
-                            nmTT->lpszText = (LPWSTR) state (hWnd)->tabs [nmTT->lParam].text.c_str ();
+                        if (nm->hwndFrom == self->hToolTipControl) {
+                            if (nm->code == TTN_GETDISPINFO) {
+                                auto nmTT = reinterpret_cast <NMTTDISPINFO  *> (nm);
+                                auto & tab = self->tabs [nmTT->lParam];
+
+                                if (tab.tip.empty ()) {
+                                    // TODO: only if text was not shortened with elipsis
+                                    nmTT->lpszText = const_cast <LPWSTR> (tab.text.c_str ());
+                                } else {
+                                    nmTT->lpszText = const_cast <LPWSTR> (tab.tip.c_str ());
+                                }
+                            }
                         }
                     }
                     break;
@@ -313,11 +324,11 @@ void TabControlState::stack (std::intptr_t which, std::intptr_t with, bool after
         if (into->tabs.size () == 1) {
             into->tabs.reserve (8);
         }
-        if (after) {
-            into->tabs.insert (++into_ii, *from_ii);
-        } else {
+        /*if (after) {
+            into->tabs.insert (into_ii, *from_ii);
+        } else {*/
             into->tabs.insert (into->tabs.end (), *from_ii);
-        }
+        //}
         from->tabs.erase (from_ii);
     }
 }
@@ -435,6 +446,7 @@ void TabControlState::update_stacks_state () {
 				if (this->current < this->stacks.size ()) {
 					if (auto h = this->tabs [this->stacks [this->current].top].content) {
 						ShowWindow (h, SW_SHOW);
+                        SendMessage (GetParent (hWnd), WM_COMMAND, MAKEWPARAM (GetDlgCtrlID (hWnd), 0), (LPARAM) hWnd);
 					}
 				}
 			} else
@@ -471,6 +483,13 @@ void TabControlState::update_stacks_state () {
             }
         }
     }
+
+    // give app feedback on current stacking
+    for (std::size_t i = 0u; i != this->stacks.size (); ++i) {
+        for (auto tabref : this->stacks [i].tabs) {
+            this->tabs [tabref.id].stack_index = i;
+        }
+    }
 }
 
 void TabControlState::update () {
@@ -481,6 +500,7 @@ void TabControlState::update () {
 
 void TabControlState::update_visual_representation () {
     this->overflow.clear ();
+    this->first_overflow_stack = -1;
 
     const auto size = GetClientSize (hWnd);
     for (auto & stack : this->stacks) {
@@ -511,7 +531,7 @@ void TabControlState::update_visual_representation () {
 			} else {
                 stack.r.right = this->max_tab_width;
             }
-            if (stack.r.right < this->min_tab_width) {
+            if (stack.r.right < this->min_tab_width && !this->tabs [stack.top].fit) {
                 stack.r.right = this->min_tab_width;
             }
             stack.r.right += 12 * dpi / 96;
@@ -539,7 +559,7 @@ void TabControlState::update_visual_representation () {
 
         if (tight) {
             while (auto flexibility = this->stacks.size () - locked) {
-                reduce = (fullwidth - size.cx) / flexibility;
+                reduce = long ((fullwidth - size.cx) / flexibility);
 
                 bool any = false;
                 for (auto & stack : this->stacks) {
@@ -591,13 +611,16 @@ void TabControlState::update_visual_representation () {
 			for (std::size_t i = 0, n = stack.tabs.size (); i != n; ++i) {
 				stack.tabs [i].tag.top = stack.r.top;
 				stack.tabs [i].tag.bottom = stack.r.top + 5 * dpi / 96;
-				stack.tabs [i].tag.left = stack.r.left + (1 * dpi / 96) + (LONG (i) + 0) * (stack.r.right - stack.r.left - (2 * dpi / 96)) / n;
-				stack.tabs [i].tag.right = stack.r.left + (1 * dpi / 96) + (LONG (i) + 1) * (stack.r.right - stack.r.left - (2 * dpi / 96)) / n;
+				stack.tabs [i].tag.left = stack.r.left + (1 * dpi / 96) + (LONG (i) + 0) * (stack.r.right - stack.r.left - (2 * dpi / 96)) / long (n);
+				stack.tabs [i].tag.right = stack.r.left + (1 * dpi / 96) + (LONG (i) + 1) * (stack.r.right - stack.r.left - (2 * dpi / 96)) / long (n);
 
 				if (stack.top == stack.tabs [i].id) { // current tab in stack
 					stack.tabs [i].tag.bottom = stack.tabs [i].tag.top;
 				}
                 if (this->minimum.cx > size.cx) {
+                    if (this->overflow.empty ()) {
+                        this->first_overflow_stack = &stack - &this->stacks [0]; // index
+                    }
                     this->overflow.push_back (stack.tabs [i].id);
                 }
 			}
@@ -665,13 +688,6 @@ UINT TabControlState::hittest (POINT pt) {
     return HTTRANSPARENT;
 };
 
-namespace {
-    bool IntersectRect (const RECT * r1, const RECT * r2) {
-        RECT rTemp;
-        return IntersectRect (&rTemp, r1, r2);
-    }
-}
-
 struct TabControlVisualStyle {
 
 };
@@ -691,7 +707,7 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
     HGDIOBJ hOffOld = NULL;
 
     if (ptrBeginBufferedPaint) {
-        hBuffered = ptrBeginBufferedPaint (_hDC, &rc, BPBF_DIB, NULL, &hDC);
+        hBuffered = ptrBeginBufferedPaint (_hDC, &rc, BPBF_TOPDOWNDIB, NULL, &hDC);
         if (hBuffered) {
             rcInvalidated = rc;
         }
@@ -734,7 +750,8 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
     for (std::size_t i = 0u; i != this->stacks.size (); ++i) {
         const auto & stack = this->stacks [i];
 
-        if (IntersectRect (&stack.r, &rcInvalidated)) {
+        RECT rStackVisible;
+        if (IntersectRect (&rStackVisible, &stack.r, &rcInvalidated)) {
 
             if (this->theme) {
                 int part = TABP_TABITEM;
@@ -899,7 +916,7 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
             }
 
             DrawTextEx (hDC, const_cast <LPTSTR> (this->tabs [stack.top].text.c_str ()),
-                        -1, &rText, DT_TOP | DT_LEFT | DT_NOCLIP | DT_SINGLELINE | DT_END_ELLIPSIS, NULL);
+                        -1, &rText, DT_TOP | DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS, NULL);
 
             // badge
 
@@ -917,8 +934,12 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
                 DrawTextEx (hDC, text, -1, &r, DT_BOTTOM | DT_RIGHT | DT_SINGLELINE, NULL);
             }
 
-            if (ptrBufferedPaintSetAlpha) {
-                ptrBufferedPaintSetAlpha (hBuffered, &stack.r, 255);
+            if (ptrBufferedPaintSetAlpha && hBuffered) {
+                if (i < this->first_overflow_stack) {
+                    ptrBufferedPaintSetAlpha (hBuffered, &rStackVisible, 255);
+                } else {
+                    BufferedPaintPremultiply (hBuffered, rStackVisible, 128, 128);
+                }
             }
         }
     }

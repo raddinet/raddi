@@ -9,11 +9,12 @@
 ATOM InitializeTabControl (HINSTANCE);
 HWND CreateTabControl (HINSTANCE, HWND, UINT style, UINT id = 0);
 
-// TODO: drag&drop with stacking
+// TODO: drag&drop with stacking, when enabled
+// TODO: show tip only for tabs with shortened texts
 
 struct Tab {
     std::wstring    text;
-    // TODO: std::wstring tip;
+    std::wstring    tip;
     HWND            content = NULL;
     HFONT           font = NULL;
     HICON           icon = NULL;
@@ -22,9 +23,12 @@ struct Tab {
 	bool			fit = false; // fit width to text
 	bool			locked = false; // width locked to fit
     unsigned int    badge = 0;    // 0 = not rendered
+    
+    // computed:
+    std::size_t     stack_index = 0;
 };
 
-struct TabControlVisualStyle;
+struct TabControlVisualStyle; // TODO
 extern TabControlVisualStyle DarkTabControlVisualStyle;
 extern TabControlVisualStyle LightTabControlVisualStyle;
 
