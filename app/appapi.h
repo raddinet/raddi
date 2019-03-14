@@ -9,6 +9,7 @@
 void AppApiInitialize (); // loads ptrAbcXyz functions below
 
 UINT GetDPI (HWND hWnd);
+bool AreDpiApisScaled (HWND hWnd);
 HICON LoadBestIcon (HMODULE hModule, LPCWSTR resource, SIZE size);
 HBRUSH CreateSolidBrushEx (COLORREF color);
 HBRUSH CreateSolidBrushEx (COLORREF color, unsigned char alpha);

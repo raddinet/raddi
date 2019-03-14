@@ -101,6 +101,13 @@ UINT GetDPI (HWND hWnd) {
         return USER_DEFAULT_SCREEN_DPI;
 }
 
+bool AreDpiApisScaled (HWND hWnd) {
+    if (ptrGetWindowDpiAwarenessContext && ptrAreDpiAwarenessContextsEqual) {
+        return ptrAreDpiAwarenessContextsEqual (ptrGetWindowDpiAwarenessContext (hWnd), DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    } else
+        return false;
+}
+
 RECT FixWindowCoordinates (int x, int y, int w, int h) {
     if ((w > 0) && (h > 0)) {
         RECT r = { x, y, x + w, y + h };
