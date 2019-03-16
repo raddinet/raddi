@@ -44,6 +44,7 @@ namespace {
         std::uint8_t    left : 1;
         std::uint8_t    right : 1;
         std::uint8_t    locked : 1;
+        long            text_width = 0;
         RECT            r;
         RECT            rContent;
         RECT            rCloseButton;
@@ -271,8 +272,9 @@ namespace {
                                 auto & tab = self->tabs [nmTT->lParam];
 
                                 if (tab.tip.empty ()) {
-                                    // TODO: only if text was not shortened with elipsis
-                                    nmTT->lpszText = const_cast <LPWSTR> (tab.text.c_str ());
+                                    if (tab.ellipsis) {
+                                        nmTT->lpszText = const_cast <LPWSTR> (tab.text.c_str ());
+                                    }
                                 } else {
                                     nmTT->lpszText = const_cast <LPWSTR> (tab.tip.c_str ());
                                 }
@@ -386,6 +388,8 @@ bool TabControlState::switch_to_stack_tab_unchecked (std::size_t i, std::intptr_
 }
 
 void TabControlState::update_stacks_state () {
+    bool changed = false;
+
     // create stacks for new tabs
     for (const auto & tab : this->tabs) {
         const auto id = tab.first;
@@ -402,6 +406,7 @@ void TabControlState::update_stacks_state () {
                 };
                 SendMessage (this->hToolTipControl, TTM_ADDTOOL, 0, (LPARAM) &tt);
             }
+            changed = true;
         }
     }
 
@@ -417,15 +422,25 @@ void TabControlState::update_stacks_state () {
             if (!this->tabs.count (ti->id)) {
                 bool top = (i->top == ti->id);
 
+                if (top && (i->top == this->current)) {
+                    if (auto h = this->tabs [ti->id].content) {
+                        ShowWindow (h, SW_HIDE);
+                        SendMessage (GetParent (hWnd), WM_COMMAND, MAKEWPARAM (GetDlgCtrlID (hWnd), 0), (LPARAM) hWnd); // ??
+                    }
+                }
+
                 ti = i->tabs.erase (ti);
                 te = i->tabs.end ();
+
                 if (top) {
                     if (ti == te) {
                         if (!i->tabs.empty ()) {
                             i->top = i->tabs.back ().id;
+                            changed = true;
                         }
                     } else {
                         i->top = ti->id;
+                        changed = true;
                     }
                 }
             } else {
@@ -462,7 +477,8 @@ void TabControlState::update_stacks_state () {
                 };
                 SendMessage (this->hToolTipControl, TTM_DELTOOL, 0, (LPARAM) &tt);
             }
-		} else {
+            changed = true;
+        } else {
 			++i;
         }
     }
@@ -490,6 +506,11 @@ void TabControlState::update_stacks_state () {
             this->tabs [tabref.id].stack_index = i;
         }
     }
+
+    if (changed) {
+        NMHDR nm = { this->hWnd, (UINT) GetDlgCtrlID (this->hWnd), (UINT) RBN_LAYOUTCHANGED };
+        SendMessage (GetParent (this->hWnd), WM_NOTIFY, nm.idFrom, (LPARAM) &nm);
+    }
 }
 
 void TabControlState::update () {
@@ -509,6 +530,7 @@ void TabControlState::update_visual_representation () {
         stack.locked = false;
         stack.r.top = 2 * dpi / 96;
         stack.r.left = 0;
+        stack.text_width = 0;
     }
     if (!this->stacks.empty ()) {
         this->stacks.front ().r.left = 2 * dpi / 96;
@@ -517,32 +539,38 @@ void TabControlState::update_visual_representation () {
     if (auto hDC = GetDC (hWnd)) {
         auto hPreviousFont = SelectObject (hDC, this->font);
         
-        this->minimum.cy = 0;
-        this->minimum.cx = 2 * dpi / 96;
-
 		auto fullwidth = 6 * dpi / 96;
 		auto locked = 0u;
+        auto width = 2 * dpi / 96;
+
+        auto xextent = 12 * dpi / 96;
+
+        this->minimum.cy = 0;
+        this->minimum.cx = 2 * width + this->min_tab_width + 2 * xextent;
 
         for (auto & stack : this->stacks) {
-			if (this->tabs [stack.top].fit || (this->max_tab_width == 0)) {
-                stack.r.bottom = DrawTextEx (hDC, const_cast <LPTSTR> (this->tabs [stack.top].text.c_str ()),
-							                 -1, &stack.r, DT_CALCRECT | DT_SINGLELINE, NULL);
-                this->minimum.cy = std::max (this->minimum.cy, stack.r.bottom);
-			} else {
-                stack.r.right = this->max_tab_width;
-            }
-            if (stack.r.right < this->min_tab_width && !this->tabs [stack.top].fit) {
-                stack.r.right = this->min_tab_width;
-            }
-            stack.r.right += 12 * dpi / 96;
-            if (this->badges && this->tabs [stack.top].fit) {
-                stack.r.right += (std::uint16_t) (10 * dpi / 96);
+            stack.r.bottom = DrawTextEx (hDC, const_cast <LPTSTR> (this->tabs [stack.top].text.c_str ()),
+                                         -1, &stack.r, DT_CALCRECT | DT_SINGLELINE, NULL);
+            stack.text_width = stack.r.right;
+            this->minimum.cy = std::max (this->minimum.cy, stack.r.bottom);
+
+            if (this->tabs [stack.top].fit) {
+                if (this->badges) {
+                    stack.r.right += (std::uint16_t) (10 * dpi / 96);
+                }
+                this->minimum.cx += stack.r.right - stack.r.left + xextent;
+                stack.locked = true;
+                ++locked;
+            } else {
+                if (this->max_tab_width != 0) {
+                    stack.r.right = this->max_tab_width;
+                }
+                if (stack.r.right < this->min_tab_width) {
+                    stack.r.right = this->min_tab_width;
+                }
             }
 
-			if (this->tabs [stack.top].locked) {
-                stack.locked = true;
-				++locked;
-			}
+            stack.r.right += xextent;
 			fullwidth += stack.r.right;
 		}
         if (this->minimum.cy == 0) {
@@ -564,11 +592,11 @@ void TabControlState::update_visual_representation () {
                 bool any = false;
                 for (auto & stack : this->stacks) {
                     if (!stack.locked) {
-                        if (stack.r.right - reduce < this->min_tab_width + 12 * dpi / 96) {
+                        if (stack.r.right - reduce < this->min_tab_width + xextent) {
                             
                             fullwidth -= stack.r.right;
-                            fullwidth += this->min_tab_width + 12 * dpi / 96;
-                            stack.r.right = this->min_tab_width + 12 * dpi / 96;
+                            fullwidth += this->min_tab_width + xextent;
+                            stack.r.right = this->min_tab_width + xextent;
                             stack.locked = true;
 
                             ++locked;
@@ -590,7 +618,7 @@ void TabControlState::update_visual_representation () {
 				}
 			}
 
-            stack.r.left = this->minimum.cx;
+            stack.r.left = width;
             stack.r.right += stack.r.left;
 
             stack.rContent = stack.r;
@@ -605,8 +633,9 @@ void TabControlState::update_visual_representation () {
                 stack.rCloseButton.right = stack.r.right - dpi * 4 / 96;
                 stack.rCloseButton.bottom = stack.r.bottom - dpi * 4 / 96;
             }
+            this->tabs [stack.top].ellipsis = (stack.text_width > (stack.rContent.right - stack.rContent.left));
 
-            this->minimum.cx = stack.r.right;
+            width = stack.r.right;
 
 			for (std::size_t i = 0, n = stack.tabs.size (); i != n; ++i) {
 				stack.tabs [i].tag.top = stack.r.top;
@@ -617,7 +646,7 @@ void TabControlState::update_visual_representation () {
 				if (stack.top == stack.tabs [i].id) { // current tab in stack
 					stack.tabs [i].tag.bottom = stack.tabs [i].tag.top;
 				}
-                if (this->minimum.cx > size.cx) {
+                if (width > size.cx) {
                     if (this->overflow.empty ()) {
                         this->first_overflow_stack = &stack - &this->stacks [0]; // index
                     }
@@ -707,10 +736,7 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
     HGDIOBJ hOffOld = NULL;
 
     if (ptrBeginBufferedPaint) {
-        hBuffered = ptrBeginBufferedPaint (_hDC, &rc, BPBF_TOPDOWNDIB, NULL, &hDC);
-        if (hBuffered) {
-            rcInvalidated = rc;
-        }
+        hBuffered = ptrBeginBufferedPaint (_hDC, &rcInvalidated, BPBF_TOPDOWNDIB, NULL, &hDC);
     }
 
     if (!hBuffered) {
