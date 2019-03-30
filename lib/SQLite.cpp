@@ -66,7 +66,9 @@ bool SQLite::Statement::empty () const {
 void SQLite::Statement::execute () {
     this->row = 0;
     if (sqlite3_step (this->stmt) != SQLITE_DONE)
-        throw SQLite::InStatementException ("step !done", *this);
+        throw SQLite::InStatementException ("not executed", *this);
+    if (sqlite3_reset (this->stmt) != SQLITE_OK)
+        throw SQLite::InStatementException ("reset", *this);
 }
 
 bool SQLite::Statement::next () {
@@ -132,6 +134,13 @@ template <> std::wstring SQLite::Statement::get <std::wstring> (int column) cons
         return std::wstring (data, data + size);
     } else
         return std::wstring ();
+}
+
+void SQLite::Statement::unbind () {
+    this->bi = 0;
+    this->row = 0;
+    if (sqlite3_clear_bindings (this->stmt) != SQLITE_OK)
+        throw SQLite::InStatementException ("unbind", *this);
 }
 
 void SQLite::Statement::bind (int value) {
@@ -216,6 +225,44 @@ SQLite::Statement SQLite::prepare (std::wstring_view query) {
         return statement;
     } else
         throw SQLite::PrepareException (query, this->db);
+}
+
+bool SQLite::begin (SQLite::TransactionType mode) {
+    try {
+        switch (mode) {
+            case TransactionType::deferred:
+                this->execute (L"BEGIN DEFERRED TRANSACTION");
+                break;
+            case TransactionType::immediate:
+                this->execute (L"BEGIN IMMEDIATE TRANSACTION");
+                break;
+            case TransactionType::exclusive:
+                this->execute (L"BEGIN EXCLUSIVE TRANSACTION");
+                break;
+        }
+        return true;
+    } catch (SQLite::InStatementException &) {
+        // TODO: which error codes are relevant? SQLITE_BUSY?
+        return false;
+    }
+}
+bool SQLite::commit () {
+    try {
+        this->execute (L"COMMIT");
+        return true;
+    } catch (SQLite::InStatementException &) {
+        // TODO: which error codes are relevant? SQLITE_BUSY?
+        return false;
+    }
+}
+bool SQLite::rollback () {
+    try {
+        this->execute (L"ROLLBACK");
+        return true;
+    } catch (SQLite::InStatementException &) {
+        // TODO: which error codes are relevant? SQLITE_BUSY?
+        return false;
+    }
 }
 
 std::size_t SQLite::changes () const {

@@ -78,7 +78,9 @@ public:
 
         // insert/update/delete
         //  - binds to 1st, 2nd, 3rd, etc... parameters
-        //  - call reset to start at 1st again
+        //  - call unbind or reset (does not unbind) to start at 1st again
+
+        void unbind ();
 
         void bind (int);
         void bind (double);
@@ -161,10 +163,11 @@ public:
 
         template <typename R, typename... Args>
         R query (Args... args) {
-            this->reset ();
             this->bind (args...);
             if (this->next ()) {
-                return this->get <R> (0);
+                auto value = this->get <R> (0);
+                this->reset ();
+                return value;
             } else
                 throw SQLite::InStatementException ("no data", *this);
         }
@@ -191,6 +194,19 @@ public:
     //  - creates new statement based on SQL query
     //
     Statement prepare (std::wstring_view);
+
+    enum class TransactionType {
+        deferred,
+        immediate,
+        exclusive
+    };
+
+    // begin/commit/rollback
+    //  - 
+    //
+    bool begin (TransactionType = TransactionType::deferred);
+    bool commit ();
+    bool rollback ();
 
     // execute
     //  - executes string query
