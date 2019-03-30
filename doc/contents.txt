@@ -153,10 +153,14 @@ Leading bytes:
 			- 0x05: shoutbox - twitter-like feed
 			- 0x1F: TBD: meta channel, textual meta information, examples:
 				- channel mode suggestion, initial moderators suggestion
+					- modes: only author, only approved people, ...
+				- TODO: channel favicon?
+				- TODO: channel topics (list of keywords)
 				- user shares his donation cryptocurrency addresses
 				- moderators specify parameters for autoban filter(s)
 				- will also be used after byte codes like SYN/EM run out
-		- predefined sideband ID string:
+				- how fast to delete data from the channel
+		- predefined sideband ID strings:
 			- none
 		- TODO: again, consider turning to STAMP
 	0x15: NAK
