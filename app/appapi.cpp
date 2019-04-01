@@ -134,6 +134,18 @@ RECT FixWindowCoordinates (int x, int y, int w, int h) {
     return { CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT };
 }
 
+bool IsWindowClass (HWND hWnd, std::wstring_view name) {
+    wchar_t classname [257];
+    if (auto n = GetClassName (hWnd, classname, 257)) {
+        if (n == name.length ()) {
+
+            if (CompareString (LOCALE_INVARIANT, NORM_IGNORECASE, classname, n, name.data (), name.length ()) == CSTR_EQUAL)
+                return true;
+        }
+    }
+    return false;
+}
+
 bool IsLastWindow (HWND hWnd) {
     auto atom = GetClassLongPtr (hWnd, GCW_ATOM);
     return FindWindowEx (NULL, hWnd, (LPCTSTR) atom, NULL) == NULL
@@ -181,10 +193,12 @@ bool IsColorDark (COLORREF color) {
     // return 299 * GetRValue (color) + 587 * GetGValue (color) + 114 * GetBValue (color) <= 128000; // YIQ?
 }
 
-HRESULT DrawCompositedText (HDC hDC, HTHEME hTheme, HFONT hFont,
-                            LPCWSTR string, int length, DWORD format, RECT r,
-                            COLORREF color, UINT glow) {
-    SelectObject (hDC, hFont);
+HRESULT DrawCompositedTextDIB (HDC hDC, HTHEME hTheme, HFONT hFont,
+                               LPCWSTR string, int length, DWORD format, RECT r,
+                               COLORREF color, UINT glow) {
+    if (hFont) {
+        SelectObject (hDC, hFont);
+    }
 
     DTTOPTS options;
     options.dwSize = sizeof options;
@@ -198,6 +212,89 @@ HRESULT DrawCompositedText (HDC hDC, HTHEME hTheme, HFONT hFont,
     return ptrDrawThemeTextEx (hTheme, hDC, 0, 0,
                                string, length, format & ~(DT_MODIFYSTRING | DT_CALCRECT),
                                &r, &options);
+}
+
+HRESULT DrawCompositedText (HDC hDC, HTHEME hTheme, HFONT hFont,
+                            LPCWSTR string, int length, DWORD format, RECT * rc,
+                            COLORREF color, LONG glow) {
+    if (ptrDrawThemeTextEx && hTheme) {
+
+        HRESULT result = -1;
+        if (HDC hMemoryDC = CreateCompatibleDC (hDC)) {
+
+            BITMAPINFO info;
+            std::memset (&info, 0, sizeof info);
+
+            info.bmiHeader.biSize = sizeof info;
+            info.bmiHeader.biWidth = 2 * glow + rc->right - rc->left;
+            info.bmiHeader.biHeight = -(2 * glow + rc->bottom - rc->top);
+            info.bmiHeader.biPlanes = 1;
+            info.bmiHeader.biBitCount = 32;
+            info.bmiHeader.biCompression = BI_RGB;
+
+            if (HBITMAP dib = CreateDIBSection (hDC, &info, DIB_RGB_COLORS,
+                                                NULL, NULL, 0u)) {
+
+                HFONT hFont = (HFONT) SelectObject (hDC, GetStockObject (DEFAULT_GUI_FONT));
+
+                SelectObject (hMemoryDC, dib);
+                SelectObject (hMemoryDC, hFont);
+
+                RECT bounds = {
+                    glow, glow,
+                    glow + rc->right - rc->left,
+                    glow + rc->bottom - rc->top
+                };
+                if (GetBkMode (hDC) == TRANSPARENT) {
+                    BitBlt (hMemoryDC,
+                            0, 0, bounds.right + glow, bounds.bottom + glow,
+                            hDC, rc->left - glow, rc->top - glow, SRCCOPY);
+                }
+
+                DTTOPTS options;
+                options.dwSize = sizeof options;
+                options.dwFlags = DTT_COMPOSITED | DTT_TEXTCOLOR;
+                options.crText = color;
+
+                if (glow) {
+                    options.dwFlags |= DTT_GLOWSIZE;
+                    options.iGlowSize = glow;
+                }
+                if (format & DT_CALCRECT) {
+                    options.dwFlags |= DTT_CALCRECT;
+                }
+
+                result = ptrDrawThemeTextEx (hTheme, hMemoryDC, 0, 0,
+                                             string, length, format,
+                                             &bounds, &options);
+
+                if (result == S_OK) {
+                    if (format & DT_CALCRECT) {
+                        rc->right = rc->left + bounds.right;
+                        rc->bottom = rc->top + bounds.bottom;
+                    }
+
+                    BitBlt (hDC, rc->left - glow, rc->top - glow,
+                            bounds.right + glow, bounds.bottom + glow,
+                            hMemoryDC, 0, 0, SRCCOPY);
+                }
+                DeleteObject (dib);
+                SelectObject (hDC, hFont);
+            }
+            DeleteDC (hMemoryDC);
+        }
+
+        if (result != -1)
+            return result;
+        else
+            return GetLastError ();
+    } else {
+        format &= ~DT_MODIFYSTRING;
+        if (DrawTextEx (hDC, const_cast <LPWSTR> (string), length, rc, format, NULL)) {
+            return S_OK;
+        } else
+            return GetLastError ();
+    }
 }
 
 HRESULT BufferedPaintPremultiply (HPAINTBUFFER hBuffer, const RECT & r, UCHAR alpha, UCHAR saturation) {

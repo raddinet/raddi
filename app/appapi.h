@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <uxtheme.h>
+#include <string_view>
 
 #include "../common/platform.h"
 
@@ -16,8 +17,10 @@ HBRUSH CreateSolidBrushEx (COLORREF color, unsigned char alpha);
 RECT FixWindowCoordinates (int x, int y, int w, int h);
 bool IsLastWindow (HWND hWnd);
 bool IsColorDark (COLORREF color);
+bool IsWindowClass (HWND hWnd, std::wstring_view name);
 
-HRESULT DrawCompositedText (HDC, HTHEME, HFONT, LPCWSTR, int, DWORD, RECT, COLORREF, UINT);
+HRESULT DrawCompositedTextDIB (HDC, HTHEME, HFONT, LPCWSTR, int, DWORD, RECT, COLORREF, UINT);
+HRESULT DrawCompositedText (HDC, HTHEME, HFONT, LPCWSTR, int, DWORD, RECT *, COLORREF, LONG);
 HRESULT BufferedPaintPremultiply (HPAINTBUFFER hBuffer, const RECT & r, UCHAR alpha, UCHAR saturation = 255);
 
 struct Design {
