@@ -2,7 +2,7 @@ TODO
 ====
 (go through all reddit comments on raddi for ideas I've already forgot)
 
-threads are inserted duplicated (race condition?) - might've been fixed
+threads are inserted duplicated (race condition?)
 
 peer addresses appear validated or are validated even though it's not possible to connect to them
 
@@ -13,6 +13,8 @@ will not start connecting to core nodes if connecting to validated node on same 
 retired connections sometimes stick around instead of deleted (and service gets stuck on exit)
 
 core/core sync does not always work, core node will not recognize other core node
+
+fix continuous re-sharing no longer available node addresses
 
 revocation code for identity: when received, all further messages by that identity are dropped
  - content code, 0xF8 plus fixed predefine block of content??
