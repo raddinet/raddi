@@ -14,7 +14,7 @@ OUT NONCE, byte 7 (eight), bit 0 (LSB)
  - 1 - AES-256-GCM available
  - 0 - AES-256-GCM not available or disabled
 
-AES is used only when both parties signal the bit. In both direction in that case.
+AES is used only when both parties signal the bit. In both directions in that case.
 
 In/Out keys are established using D-H from IN KEY and OUT KEY. The protocol uses distinct
 keys/nonces for each direction.
