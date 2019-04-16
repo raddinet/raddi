@@ -6,6 +6,8 @@
 #include <vssym32.h>
 #include <algorithm>
 
+#include "../common/log.h"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -91,7 +93,7 @@ namespace {
         void stack (std::intptr_t which, std::intptr_t into, bool after) override;
         bool request (std::intptr_t tab) override;
         bool request_stack (std::size_t index) override;
-        HWND addbutton (std::intptr_t id, const wchar_t * text, bool right) override;
+        HWND addbutton (std::intptr_t id, const wchar_t * text, UINT hint, bool right) override;
         RECT outline (std::intptr_t tab) override;
         
         void repaint (HDC, RECT rc);
@@ -141,7 +143,7 @@ ATOM InitializeTabControl (HINSTANCE hInstance) {
 
 TabControlInterface * CreateTabControl (HINSTANCE hInstance, HWND hParent, UINT style, UINT id) {
     TabControlInterface * tc = nullptr;
-    if (auto hTabs = CreateWindowEx (WS_EX_NOPARENTNOTIFY/* | WS_EX_CONTROLPARENT*/, L"RADDI:Tabs", L"",
+    if (auto hTabs = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"RADDI:Tabs", L"",
                                      style | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                                      0,0,0,0, hParent, (HMENU) (std::intptr_t) id, hInstance, &tc)) {
         if (tc) {
@@ -162,6 +164,14 @@ namespace {
             s.resize (GetWindowText (hWnd, &s [0], length + 1));
         }
         return s;
+    }
+
+    bool OnlySymbolicButtons () {
+        // TODO: configurable?
+        BOOL composited = FALSE;
+        return ptrDwmIsCompositionEnabled
+            && ptrDwmIsCompositionEnabled (&composited) == S_OK
+            && composited;
     }
 
     LRESULT CALLBACK Procedure (HWND hWnd, UINT message,
@@ -293,9 +303,6 @@ namespace {
                     break;
 
                 case WM_COMMAND:
-                    if (IsWindowClass ((HWND) lParam, L"BUTTON")) {
-                        SetWindowLongPtr ((HWND) lParam, GWL_STYLE, GetWindowLongPtr ((HWND) lParam, GWL_STYLE) & ~BS_DEFPUSHBUTTON);
-                    }
                     return SendMessage (GetParent (hWnd), message, wParam, lParam);
 
                 case WM_NOTIFY:
@@ -305,49 +312,57 @@ namespace {
                         if (nm->hwndFrom == self->hToolTipControl) {
                             if (nm->code == TTN_GETDISPINFO) {
                                 auto nmTT = reinterpret_cast <NMTTDISPINFO  *> (nm);
-                                auto & tab = self->tabs [nmTT->lParam];
-
-                                if (tab.tip.empty ()) {
-                                    if (tab.ellipsis) {
-                                        nmTT->lpszText = const_cast <LPWSTR> (tab.text.c_str ());
-                                    }
+                                if (nmTT->uFlags & TTF_IDISHWND) {
+                                    nmTT->lpszText = MAKEINTRESOURCE (nmTT->lParam);
                                 } else {
-                                    nmTT->lpszText = const_cast <LPWSTR> (tab.tip.c_str ());
+                                    auto & tab = self->tabs [nmTT->lParam];
+
+                                    if (tab.tip.empty ()) {
+                                        if (tab.ellipsis) {
+                                            nmTT->lpszText = const_cast <LPWSTR> (tab.text.c_str ());
+                                        }
+                                    } else {
+                                        nmTT->lpszText = const_cast <LPWSTR> (tab.tip.c_str ());
+                                    }
                                 }
                             }
                         }
 
                         if (nm->code == NM_CUSTOMDRAW && IsWindowClass (nm->hwndFrom, L"BUTTON")) {
-                            BOOL composited = FALSE;
-                            if (ptrDwmIsCompositionEnabled
-                                && ptrDwmIsCompositionEnabled (&composited) == S_OK
-                                && composited) {
+                            if (OnlySymbolicButtons ()) {
 
                                 auto * nmDraw = reinterpret_cast <NMCUSTOMDRAW *> (nm);
 
-                                if (nmDraw->dwDrawStage == CDDS_PREPAINT) {
-
+                                if (nmDraw->dwDrawStage == CDDS_PREERASE) {
                                     auto text = GetWindowString (nm->hwndFrom);
                                     if (!text.empty ()) {
-                                        if (auto theme = OpenThemeData (nm->hwndFrom, L"BUTTON")) {
+                                        DrawCompositedTextOptions options;
 
-                                            COLORREF color;
-                                            if (IsWindowEnabled (nm->hwndFrom)) {
-                                                if (GetThemeColor (theme, BP_PUSHBUTTON, PBS_NORMAL, TMT_TEXTCOLOR, &color) != S_OK) {
-                                                    color = GetSysColor (COLOR_BTNTEXT);
-                                                }
-                                            } else {
-                                                if (GetThemeColor (theme, BP_PUSHBUTTON, PBS_DISABLED, TMT_TEXTCOLOR, &color) != S_OK) {
-                                                    color = GetSysColor (COLOR_GRAYTEXT);
-                                                }
-                                            }
+                                        options.theme = OpenThemeData (nm->hwndFrom, L"BUTTON");
+                                        options.font = (HFONT) SendMessage (nm->hwndFrom, WM_GETFONT, 0, 0);
+                                        options.color = self->buttons.color;
 
-                                            SetBkMode (nmDraw->hdc, TRANSPARENT);
-                                            DrawCompositedText (nmDraw->hdc, theme,
-                                                                (HFONT) SendMessage (nm->hwndFrom, WM_GETFONT, 0, 0),
-                                                                text.c_str (), text.length (), DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP,
-                                                                &nmDraw->rc, color, 0);
-                                            CloseThemeData (theme);
+                                        if (nmDraw->uItemState & (CDIS_HOT | CDIS_FOCUS)) {
+                                            options.color = self->buttons.hot;
+                                        }
+                                        if (nmDraw->uItemState & CDIS_SELECTED) {
+                                            options.color = self->buttons.down;
+                                        }
+
+                                        if (IsWindows8OrGreater ()) {
+                                            // options.shadow.size = 1 * self->dpi / 96;
+                                            // options.shadow.offset.x = 1;
+                                            // options.shadow.offset.y = 1;
+                                        } else {
+                                            options.glow = self->buttons.glow;
+                                        }
+
+                                        SetBkMode (nmDraw->hdc, TRANSPARENT);
+                                        DrawCompositedText (nmDraw->hdc, text, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP,
+                                                            nmDraw->rc, &options);
+
+                                        if (options.theme) {
+                                            CloseThemeData (options.theme);
                                         }
                                     }
                                     return CDRF_SKIPDEFAULT;
@@ -371,10 +386,20 @@ namespace {
     }
 }
 
-HWND TabControlState::addbutton (std::intptr_t id, const wchar_t * text, bool right) {
+HWND TabControlState::addbutton (std::intptr_t id, const wchar_t * text, UINT hint, bool right) {
+    auto hInstance = (HINSTANCE) GetClassLongPtr (this->hWnd, GCLP_HMODULE);
     if (auto h = CreateWindow (L"BUTTON", text, WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE, 0,0,0,0,
-                               this->hWnd, (HMENU) id, (HINSTANCE) GetClassLongPtr (this->hWnd, GCLP_HMODULE), NULL)) {
+                               this->hWnd, (HMENU) id, hInstance, NULL)) {
         SetWindowLongPtr (h, GWLP_USERDATA, right);
+
+        if (hint && this->hToolTipControl) {
+            TOOLINFO tt = {
+                sizeof (TOOLINFO), TTF_IDISHWND | TTF_SUBCLASS,
+                this->hWnd, (UINT_PTR) h, {0,0,0,0},
+                hInstance, LPSTR_TEXTCALLBACK, (LPARAM) hint, NULL
+            };
+            SendMessage (this->hToolTipControl, TTM_ADDTOOL, 0, (LPARAM) &tt);
+        }
         return h;
     } else
         return NULL;
@@ -487,7 +512,6 @@ bool TabControlState::switch_to_stack_tab_unchecked (std::size_t i, std::intptr_
 
         NMHDR nm = { hWnd, (UINT) GetDlgCtrlID (hWnd), (UINT) TCN_SELCHANGE };
         SendMessage (GetParent (hWnd), WM_NOTIFY, nm.idFrom, (LPARAM) &nm);
-        // SendMessage (GetParent (hWnd), WM_COMMAND, MAKEWPARAM (GetDlgCtrlID (hWnd), 0), (LPARAM) hWnd);
         return true;
     } else
         return false;
@@ -693,7 +717,7 @@ void TabControlState::update_visual_representation () {
         long button_counts [2] = { 0 ,0 };
         EnumChildWindows (this->hWnd,
                           [](HWND hCtrl, LPARAM param)->BOOL {
-                              if (IsWindowClass (hCtrl, L"BUTTON")) {
+                              if (IsWindowVisible (hCtrl) && IsWindowClass (hCtrl, L"BUTTON")) {
                                   auto control_data = GetWindowLongPtr (hCtrl, GWLP_USERDATA);
                                   auto button_counts = reinterpret_cast <long *> (param);
 
@@ -829,31 +853,45 @@ void TabControlState::update_visual_representation () {
         ReleaseDC (hWnd, hDC);
 
         if (buttons) {
-            long data [] = { 0, 0, this->width, size.cx, size.cy, 2 * dpi / 96, IsAppThemed () ? 1 : 0 };
+            struct RepositionData {
+                HDWP hDwp;
+                long count [2];
+                long width;
+                SIZE size;
+                long border;
+            
+            } data = {
+                BeginDeferWindowPos (button_counts [0] + button_counts [1]),
+                { 0, 0 },
+                this->width, size, 2 * dpi / 96
+            };
+            if (IsAppThemed ()) {
+                data.border -= 1;
+            }
+
             EnumChildWindows (this->hWnd,
                               [](HWND hCtrl, LPARAM param)->BOOL {
-                                  if (IsWindowClass (hCtrl, L"BUTTON")) {
-                                      auto control_data = GetWindowLongPtr (hCtrl, GWLP_USERDATA);
-                                      auto position_data = reinterpret_cast <long *> (param);
+                                  if (IsWindowVisible (hCtrl) && IsWindowClass (hCtrl, L"BUTTON")) {
+                                      auto alignment = GetWindowLongPtr (hCtrl, GWLP_USERDATA) & 1;
+                                      auto data = reinterpret_cast <RepositionData *> (param);
 
-                                      auto cx = position_data [3];
-                                      auto cy = position_data [4];
-                                      auto w = position_data [2];
-                                      auto border = position_data [5];
-                                      auto o = position_data [6];
+                                      data->count [alignment] += 1;
 
                                       long x;
-                                      if (control_data & 1) {
-                                          x = cx - cy * (position_data [control_data & 1] + 1) - border;
+                                      if (alignment) {
+                                          x = data->size.cx - data->size.cy * data->count [alignment] - data->border;
                                       } else {
-                                          x = w + cy * (position_data [control_data & 1] + 0);
+                                          x = data->width + data->size.cy * (data->count [alignment] - 1);
                                       }
-                                      ++position_data [control_data & 1];
 
-                                      MoveWindow (hCtrl, x + 2 * border, border - o, cy - 2 * border, cy - 2 * border, TRUE);
+                                      data->hDwp = DeferWindowPos (data->hDwp, hCtrl, NULL,
+                                                                   x + 2 * data->border, data->border,
+                                                                   data->size.cy - 2 * data->border, data->size.cy - 2 * data->border,
+                                                                   SWP_NOACTIVATE | SWP_NOZORDER);
                                   }
                                   return TRUE;
-                              }, (LPARAM) data);
+                              }, (LPARAM) &data);
+            EndDeferWindowPos (data.hDwp);
         }
     }
 

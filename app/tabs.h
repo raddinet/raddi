@@ -45,6 +45,12 @@ struct TabControlInterface {
 	bool					stacking = false; // allow user to stack tabs
 	bool					badges = false; // add padding for tab badges
     TabControlVisualStyle * style = nullptr; // NULL - native
+    struct {
+        COLORREF            color = 0xFFFFFF;
+        COLORREF            hot = 0xFFFFFF;
+        COLORREF            down = 0x7F7F7F;
+        UINT                glow = 0;
+    } buttons;
     HWND                    hToolTipControl = NULL;
     std::intptr_t           contextual = 0; // ID of last right-clicked tab
 
@@ -62,7 +68,7 @@ public:
     virtual bool request (std::intptr_t tab) = 0; // returns false if no such tab exists
     virtual bool request_stack (std::size_t index) = 0;
     virtual void stack (std::intptr_t which, std::intptr_t onto, bool after) = 0; // move 'which' tab into stack of 'onto' either right after or as last tab
-    virtual HWND addbutton (std::intptr_t id, const wchar_t * text, bool right = false) = 0;
+    virtual HWND addbutton (std::intptr_t id, const wchar_t * text, UINT hint = 0, bool right = false) = 0;
     virtual RECT outline (std::intptr_t tab) = 0;
 };
 
