@@ -1,0 +1,28 @@
+RADDI Basic Client Application Keyboard Shortcuts
+=================================================
+
+App
+---
+Ctrl+Q	- Quit the Application with Stashing all Windows
+
+Windows
+-------
+Ctrl+N	- New Window
+Alt+F4	- Close Window (with prompt to Stash if not last one)
+
+View Tabs
+---------
+Ctrl+T	- New Tab
+Ctrl+Y	- New Tab stacked on current Tab
+Ctrl+K	- Duplicate Tab (SHIFT = don't activate)
+Ctrl+W	- Close current Tab
+Ctrl+F4	- Close current Tab
+
+GUI
+---
+F4	- Show/Hide right pane
+
+History
+-------
+Ctrl+Shift+T	- reopen last closed Tab
+
