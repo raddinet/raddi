@@ -19,8 +19,22 @@ bool IsLastWindow (HWND hWnd);
 bool IsColorDark (COLORREF color);
 bool IsWindowClass (HWND hWnd, std::wstring_view name);
 
+struct DrawCompositedTextOptions {
+    HTHEME  theme = NULL;
+    HFONT   font = NULL;
+    COLORREF color = 0x000000;
+    LONG    glow = 0;
+    //struct {
+    //    LONG size = 0;
+    //    POINT offset = { 0, 0 };
+    //    COLORREF color = 0x000000;
+    //    UCHAR alpha;
+    //} shadow;
+    // UCHAR alpha
+};
+
 HRESULT DrawCompositedTextDIB (HDC, HTHEME, HFONT, LPCWSTR, int, DWORD, RECT, COLORREF, UINT);
-HRESULT DrawCompositedText (HDC, HTHEME, HFONT, LPCWSTR, int, DWORD, RECT *, COLORREF, LONG);
+HRESULT DrawCompositedText (HDC, std::wstring_view, DWORD, RECT, const DrawCompositedTextOptions * = NULL);
 HRESULT BufferedPaintPremultiply (HPAINTBUFFER hBuffer, const RECT & r, UCHAR alpha, UCHAR saturation = 255);
 
 struct Design {

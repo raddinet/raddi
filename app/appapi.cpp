@@ -1,5 +1,6 @@
 #include "appapi.h"
 #include <VersionHelpers.h>
+#include <algorithm>
 
 HRESULT (WINAPI * ptrBufferedPaintInit) () = NULL;
 HRESULT (WINAPI * ptrBufferedPaintSetAlpha) (HPAINTBUFFER, const RECT *, BYTE) = NULL;
@@ -214,72 +215,144 @@ HRESULT DrawCompositedTextDIB (HDC hDC, HTHEME hTheme, HFONT hFont,
                                &r, &options);
 }
 
-HRESULT DrawCompositedText (HDC hDC, HTHEME hTheme, HFONT hFont,
-                            LPCWSTR string, int length, DWORD format, RECT * rc,
-                            COLORREF color, LONG glow) {
-    if (ptrDrawThemeTextEx && hTheme) {
+HRESULT DrawCompositedText (HDC hDC, std::wstring_view string, DWORD format, RECT r, const DrawCompositedTextOptions * options) {
+    static const DrawCompositedTextOptions defaultOptions;
+    if (options == nullptr) {
+        options = &defaultOptions;
+    }
+    
+    if (ptrDrawThemeTextEx && options->theme) {
+        auto padding = options->glow;
+        //auto padding = std::max (options->glow,
+        //                         options->shadow.size + std::max (std::abs (options->shadow.offset.x),
+        //                                                          std::abs (options->shadow.offset.y)) + 1);
 
         HRESULT result = -1;
         if (HDC hMemoryDC = CreateCompatibleDC (hDC)) {
-
             BITMAPINFO info;
             std::memset (&info, 0, sizeof info);
 
             info.bmiHeader.biSize = sizeof info;
-            info.bmiHeader.biWidth = 2 * glow + rc->right - rc->left;
-            info.bmiHeader.biHeight = -(2 * glow + rc->bottom - rc->top);
+            info.bmiHeader.biWidth = 2 * padding + r.right - r.left + 1;
+            info.bmiHeader.biHeight = -(2 * padding + r.bottom - r.top + 1);
             info.bmiHeader.biPlanes = 1;
             info.bmiHeader.biBitCount = 32;
             info.bmiHeader.biCompression = BI_RGB;
 
-            if (HBITMAP dib = CreateDIBSection (hDC, &info, DIB_RGB_COLORS,
-                                                NULL, NULL, 0u)) {
+            void * bits = nullptr;
+            if (HBITMAP dib = CreateDIBSection (hDC, &info, DIB_RGB_COLORS, &bits, NULL, 0u)) {
 
-                HFONT hFont = (HFONT) SelectObject (hDC, GetStockObject (DEFAULT_GUI_FONT));
-
-                SelectObject (hMemoryDC, dib);
-                SelectObject (hMemoryDC, hFont);
+                auto hOldBitmap = SelectObject (hMemoryDC, dib);
+                auto hOldFont = SelectObject (hMemoryDC, options->font ? options->font : GetStockObject (DEFAULT_GUI_FONT));
 
                 RECT bounds = {
-                    glow, glow,
-                    glow + rc->right - rc->left,
-                    glow + rc->bottom - rc->top
+                    padding, padding,
+                    padding + r.right - r.left,
+                    padding + r.bottom - r.top
                 };
                 if (GetBkMode (hDC) == TRANSPARENT) {
                     BitBlt (hMemoryDC,
-                            0, 0, bounds.right + glow, bounds.bottom + glow,
-                            hDC, rc->left - glow, rc->top - glow, SRCCOPY);
+                            0, 0, bounds.right + padding, bounds.bottom + padding,
+                            hDC, r.left - padding, r.top - padding, SRCCOPY);
                 }
 
-                DTTOPTS options;
-                options.dwSize = sizeof options;
-                options.dwFlags = DTT_COMPOSITED | DTT_TEXTCOLOR;
-                options.crText = color;
+                DTTOPTS dtt;
+                dtt.dwSize = sizeof dtt;
+                dtt.dwFlags = DTT_COMPOSITED | DTT_TEXTCOLOR;
 
-                if (glow) {
-                    options.dwFlags |= DTT_GLOWSIZE;
-                    options.iGlowSize = glow;
-                }
-                if (format & DT_CALCRECT) {
-                    options.dwFlags |= DTT_CALCRECT;
+                if (options->glow) {
+                    dtt.dwFlags |= DTT_GLOWSIZE;
+                    dtt.iGlowSize = options->glow;
+                } else {
+                    /*if (options->shadow.size) {
+
+
+                        if (HDC hShadowDC = CreateCompatibleDC (hDC)) {
+                            BITMAPINFO info;
+                            std::memset (&info, 0, sizeof info);
+
+                            info.bmiHeader.biSize = sizeof info;
+                            info.bmiHeader.biWidth = 2 * padding + r.right - r.left + 1;
+                            info.bmiHeader.biHeight = -(2 * padding + r.bottom - r.top + 1);
+                            info.bmiHeader.biPlanes = 1;
+                            info.bmiHeader.biBitCount = 32;
+                            info.bmiHeader.biCompression = BI_RGB;
+
+                            void * bits = nullptr;
+                            if (HBITMAP dib = CreateDIBSection (hDC, &info, DIB_RGB_COLORS, &bits, NULL, 0u)) {
+
+                                SelectObject (hShadowDC, dib);
+
+                                DeleteObject (dib);
+                                if (hOldFont) {
+                                    SelectObject (hShadowDC, hOldFont);
+                                }
+                            }
+                            DeleteDC (hShadowDC);
+                        }
+                    
+
+
+                        // TODO: draw into separate dib
+
+                        for (auto y = -options->shadow.size; y != options->shadow.size + 1; ++y) {
+                            if (y != 0) {
+                                for (auto x = -options->shadow.size; x != options->shadow.size + 1; ++x) {
+                                    if (x != 0) {
+                                        RECT rx = bounds;
+                                        rx.top += y + options->shadow.offset.y;
+                                        rx.left += x + options->shadow.offset.x;
+                                        rx.right += x + options->shadow.offset.x;
+                                        rx.bottom += y + options->shadow.offset.y;
+
+                                        dtt.crText = options->shadow.color;
+                                        ptrDrawThemeTextEx (options->theme, hMemoryDC, 0, 0, string.data (), string.length (), format & ~DT_CALCRECT, &rx, &dtt);
+                                    }
+                                }
+                            }
+                        }
+
+                        // TODO: get text frame, blur only that area
+
+                        for (auto py = bounds.top; py != bounds.bottom; ++py) {
+                            for (auto px = bounds.left; px != bounds.right; ++px) {
+                                auto aR = 0u;
+                                auto aG = 0u;
+                                auto aB = 0u;
+                                auto n = 0u;
+
+                                for (auto y = -padding; y < padding; ++y) {
+                                    for (auto x = -padding; x < padding -1; ++x) {
+                                        auto src = static_cast <COLORREF *> (bits) [(py + y) * info.bmiHeader.biWidth + (px + x)];
+                                        aR += GetRValue (src);
+                                        aG += GetGValue (src);
+                                        aB += GetBValue (src);
+                                        ++n;
+                                    }
+                                }
+
+                                static_cast <COLORREF *> (bits) [py * info.bmiHeader.biWidth + px] = RGB (aR / n, aG / n, aB / n);// | ((aA / n) << 24);
+                            }
+                        }
+                    }*/
                 }
 
-                result = ptrDrawThemeTextEx (hTheme, hMemoryDC, 0, 0,
-                                             string, length, format,
-                                             &bounds, &options);
+                dtt.crText = options->color;
+                result = ptrDrawThemeTextEx (options->theme, hMemoryDC, 0, 0, string.data (), string.length (), format & ~DT_CALCRECT, &bounds, &dtt);
 
                 if (result == S_OK) {
-                    if (format & DT_CALCRECT) {
-                        rc->right = rc->left + bounds.right;
-                        rc->bottom = rc->top + bounds.bottom;
-                    }
-
-                    BitBlt (hDC, rc->left - glow, rc->top - glow,
-                            bounds.right + glow, bounds.bottom + glow,
+                    BitBlt (hDC, r.left - padding, r.top - padding,
+                            bounds.right + padding, bounds.bottom + padding,
                             hMemoryDC, 0, 0, SRCCOPY);
                 }
+
+                if (hOldBitmap) {
+                    SelectObject (hMemoryDC, hOldBitmap);
+                }
+                if (hOldFont) {
+                    SelectObject (hMemoryDC, hOldFont);
+                }
                 DeleteObject (dib);
-                SelectObject (hDC, hFont);
             }
             DeleteDC (hMemoryDC);
         }
@@ -290,7 +363,7 @@ HRESULT DrawCompositedText (HDC hDC, HTHEME hTheme, HFONT hFont,
             return GetLastError ();
     } else {
         format &= ~DT_MODIFYSTRING;
-        if (DrawTextEx (hDC, const_cast <LPWSTR> (string), length, rc, format, NULL)) {
+        if (DrawTextEx (hDC, const_cast <LPWSTR> (string.data ()), string.length (), &r, format, NULL)) {
             return S_OK;
         } else
             return GetLastError ();
