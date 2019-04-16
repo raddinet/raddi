@@ -157,6 +157,26 @@ Node database behavior parameters:
 			  for anything discrediting, regardless the author of such data
 		- default is 256, set to 0 to keep database unencrypted
 
+RADDI.exe application optional parameters:
+	- data:<filename>
+		- application's data SQLite file name/path
+			- the directory must be writable
+			- applications are locking over this file; if there already is
+			  one running on the data file, newly started executable passes
+			  relevant arguments to that instance (if possible) and exits
+		- filename, if not absolute path, is relative to current directory
+		- without this parameter the data file's name is constructed by taking
+		  application's file name, replacing its extension (typically .exe) with
+		  .db, then searched for in following order in following directories:
+			1) current directory
+			2) application directory
+			3) user local app data path
+				- file is finally created here if not found anywhere else
+				  and usually split into several parts for resiliency
+	- raddi:<iid/eid>
+		- requests application to open one or more tabs with specified content
+		- designed to work as URI handler, i.e. "raddi.exe raddi://1234-5678..."
+
 RADDI.com utility functions:
 	- timestamp
 	- timestamp:<N>
@@ -309,7 +329,6 @@ RADDI.com utility functions:
 	- unblacklist:<eid>
 	- retain:<eid>
 	- unretain:<eid>
-
 
 RADDI.com utility additional and optional parameters to functions:
 	- instance:<pid>
