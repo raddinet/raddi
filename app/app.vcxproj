@@ -556,6 +556,9 @@
     <ClCompile Include="..\common\log.cpp" />
     <ClCompile Include="..\common\platform.cpp" />
     <ClCompile Include="..\common\uuid.cpp" />
+    <ClCompile Include="..\core\raddi_eid.cpp" />
+    <ClCompile Include="..\core\raddi_iid.cpp" />
+    <ClCompile Include="..\core\raddi_timestamp.cpp" />
     <ClCompile Include="..\lib\SQLite.cpp" />
     <ClCompile Include="..\lib\sqlite3.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -594,6 +597,9 @@
     <ClInclude Include="..\common\options.h" />
     <ClInclude Include="..\common\platform.h" />
     <ClInclude Include="..\common\uuid.h" />
+    <ClInclude Include="..\core\raddi_eid.h" />
+    <ClInclude Include="..\core\raddi_iid.h" />
+    <ClInclude Include="..\core\raddi_timestamp.h" />
     <ClInclude Include="..\lib\cuckoocycle.h" />
     <ClInclude Include="..\lib\SQLite.hpp" />
     <ClInclude Include="appapi.h" />

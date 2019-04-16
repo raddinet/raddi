@@ -1,3 +1,55 @@
 #include <windows.h>
  
 1 ICON "../img/raddi.ico"
+
+1 ACCELERATORS
+{
+    "^N", 0xC0 // Ctrl+N - new window (with IID/EID/search box)
+    "^T", 0xC1 // Ctrl+T - new tab
+    "^Y", 0xC2 // Ctrl+Y - new tab in stack (mouse menu sends 0xC3)
+    "^K", 0xC4 // Ctrl+K - duplicate tab (mouse menu sends 0xC5)
+
+    // "^R", 0xF5 // Ctrl+R - reload tab
+    // VK_F5, 0xF5, VIRTKEY // ^
+
+    //"^S", 0xC5 // Ctrl+S - save/export as text
+    //"^F", 0xC6 // Ctrl+F - find? Ctrl+G - next (same as F3)
+    //"^D", 0xC7 // Ctrl+D - add tab to favorites
+
+    "^W", 0xCE // Ctrl+W - close tab
+    VK_F4, 0xCE, VIRTKEY, CONTROL // Ctrl+F4 - close tab
+
+    "^Q", 0xCF // Ctrl+Q - quit app
+
+    VK_F4, 0xF4, VIRTKEY // F4 - show/hide right pane
+
+    // F1 - help, CTRL+F1 shortcuts list
+    // F2 - list of tabs with incremental search
+    // F3 - next in search
+    // F8/Ctrl+L - address
+    // Ctrl+(1-8) - switch tab (or stack, on repeated press switch inside stack)
+    // Ctrl+9 - last tab
+    // Ctrl+` - home tab
+    // Alt+Home - home tab
+    // Ctrl+0 - 100% zoom (also Ctrl+*), increment: (Ctrl++,Ctrl+=), decrement (Ctrl+-)
+    // Ctrl+(Shift)+Tab - cycle tabs
+
+    // Ctrl+L, Alt+D, F6 - address bar?
+    // Alt+Enter - open typed URL in new tab
+    // Ctrl+E - search box
+    // Ctrl+H - history
+    // Ctrl+J - downloads?
+    // Ctrl+D - bookmark (+B)
+    // Ctrl+Shift+Del - prompt to delete history
+    // Ctrl+P - print
+
+    // Middle Click a Tab – Close the tab.
+    // Ctrl + Left Click, Middle Click – Open a link in a background tab.
+    // Shift + Left Click – Open a link in a new browser window.
+    // Ctrl + Shift + Left Click – Open a link in a foreground tab.
+    // Alt+Left Arrow, Backspace – Back.
+    // Alt + Right Arrow, Shift + Backspace – Forward.
+
+    VK_F11, 0xFB, VIRTKEY // F11 - full screen?
+    VK_F12, 0xFC, VIRTKEY
+}

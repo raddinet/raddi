@@ -8,9 +8,9 @@
 	internalname		= app
 
 	major = 0
-	minor = 3
+	minor = 5
 	patch = 0
-	build = 2718
+	build = 5707
 
 [versioninfo]
 	filename	= %dir%\%internalname%-vi.rc
@@ -45,6 +45,7 @@
 
 	requestedExecutionLevel	= asInvoker
 	dpiAware	= True/PM
+	dpiAwareness	= PerMonitorV2,PerMonitor
 	longPathAware	= True
 
 	supportedOS:1	= e2011457-1546-43c5-a5fe-008deee3d3f0 Windows Vista/Server 2008

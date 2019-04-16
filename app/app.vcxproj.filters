@@ -10,6 +10,15 @@
     <Filter Include="Common">
       <UniqueIdentifier>{bb092c1c-d6e2-44fd-866f-bde3ab78c842}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RADDI">
+      <UniqueIdentifier>{4308fd20-43c2-45b1-a1ea-75171a9db904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RADDI\Structures">
+      <UniqueIdentifier>{a5aa90ad-85b9-4ab5-9827-41c975945de2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RADDI\Utility">
+      <UniqueIdentifier>{f59996e6-45d0-4f43-8d41-bab6f8abcbfd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="app.cpp" />
@@ -33,6 +42,22 @@
     </ClCompile>
     <ClCompile Include="..\lib\sqlite3.c">
       <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\SQLite.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="data.cpp" />
+    <ClCompile Include="view.cpp" />
+    <ClCompile Include="appapi.cpp" />
+    <ClCompile Include="tabs.cpp" />
+    <ClCompile Include="..\core\raddi_iid.cpp">
+      <Filter>RADDI\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_eid.cpp">
+      <Filter>RADDI\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_timestamp.cpp">
+      <Filter>RADDI\Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -61,6 +86,10 @@
     <None Include="..\lib\cuckoocycle.tcc">
       <Filter>Libraries</Filter>
     </None>
+    <None Include="..\lib\SQLite.tcc">
+      <Filter>Libraries</Filter>
+    </None>
+    <None Include="errorbox.tcc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\img\raddi.ico">
@@ -91,6 +120,23 @@
     </ClInclude>
     <ClInclude Include="..\common\uuid.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SQLite.hpp">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="data.h" />
+    <ClInclude Include="errorbox.h" />
+    <ClInclude Include="view.h" />
+    <ClInclude Include="appapi.h" />
+    <ClInclude Include="tabs.h" />
+    <ClInclude Include="..\core\raddi_iid.h">
+      <Filter>RADDI\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_eid.h">
+      <Filter>RADDI\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_timestamp.h">
+      <Filter>RADDI\Utility</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

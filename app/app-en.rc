@@ -1,14 +1,95 @@
 #include <windows.h>
 #include "../common/log.h"
 
-STRINGTABLE
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
-{
+
+STRINGTABLE {
+    1   "RADDI"
+    2   "UNCENSORED DISCUSSION"
+
+    0x10    "[Ctrl+T] Open New Tab, [SHIFT] to re-open last closed Tab"
+    0x11    "[Ctrl+???] History of last closed Tabs"
+    // 0x12    "[Ctrl+???] List of remaining open Tabs"
+    0x20    ""
+    0x30    "[F4] Hide/Show right pane"
+
     MAIN | EVENT | 0x01 "raddi.net {1}.{2} {3}, {4}"
-    MAIN | EVENT | 0x02 "first run, generated uuid {1}"
+    MAIN | EVENT | 0x02 "generated uuid {1}"
+    MAIN | EVENT | 0x03 "database file: {1}"
 
     MAIN | NOTE | 0x01  "using argument {1}: {2}"
     MAIN | NOTE | 0x05  "{1} version {2}, linkage: {3}"
 
-    MAIN | STOP | 1     "executable corrupted or miscompiled"
+    MAIN | NOTE | 0x10  ""
+
+    MAIN | ERROR | 0x01 "Error attaching database files. Applicataion state may be broken/lost. Identities and decryption keys may not be available. The situation might be temporary."
+    MAIN | ERROR | 0x02 "Internal error, uncaught exception: {1}.\nThe affected window has been closed. Consider restarting whole application. Also reporting the bug to developers would be nice."
+    MAIN | ERROR | 0x03 "Error reopening stashed tabs. SQLite error: {1}"
+    MAIN | ERROR | 0x04 "Error reading channel lists. SQLite error: {1}"
+    MAIN | ERROR | 0x05 "Unable to create (another) window. Not enough memory."
+    // MAIN | ERROR | 0x06 "DEBUG {1:x} {2:x} {3}"
+
+    MAIN | STOP | 0x00  "RADDI.net Application\nversion {1}, {2}, {3}\n\nError {ERR}\n\nReason: "
+    MAIN | STOP | 0x01  "Executable corrupted, miscompiled or unexpected API error"
+    MAIN | STOP | 0x02  "Failed to initialize cryptography (libsodium)"
+    MAIN | STOP | 0x03  "Failed to initialize database (sqlite)"
+    MAIN | STOP | 0x04  "Unable to open database file:\n{1}"
+    MAIN | STOP | 0x05  "Failed to initialize database file:\n{1}"
+    MAIN | STOP | 0x06  "Failed to enqueue request, error:\n{1}"
+    MAIN | STOP | 0x07  "Failed to enqueue requested URI(s) to:\n{1}\nMissing required directory permissions or similar error."
+    MAIN | STOP | 0x08  "Cannot enqueue requested URI(s) to:\n{1}\nAnother user/session is using the file."
+    MAIN | STOP | 0x09  "Failed to create application window."
+    MAIN | STOP | 0x0A  "Failed to enqueue requested URI(s) to:\n{1}\nUnable to notify running application."
+    MAIN | STOP | 0x0B  "Error {1} initializing database query:\n{2}"
 }
+
+2 ACCELERATORS {
+    
+}
+
+1 MENU {
+    POPUP "" { // Single Tab
+        MENUITEM "&New Tab\tCtrl+T", 0xC1
+        MENUITEM "&Stack New Tab\tCtrl+Y", 0xC3
+        MENUITEM SEPARATOR
+        // TODO: POPUP "Move To..." > list of other windows (highlight window when menu item is hot)
+        MENUITEM "&Duplicate\tCtrl+K", 0xC5//, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Close Tab\tCtrl+W", 0xCD
+    }
+    POPUP "" { // Stack of Tabs
+        // MENUITEM "&New Tab\tCtrl+T", 0xC1
+        MENUITEM SEPARATOR
+        // MENUITEM "&Duplicate\tCtrl+K", 0xC5//, GRAYED
+        // MENUITEM "&Close Tab\tCtrl+W", 0xCE
+        // MENUITEM "&Close Stack\tCtrl+W", 0xCE
+    }
+
+}
+
+2 MENU {
+    POPUP "" { // Lists Right Click Menu
+        MENUITEM "New List", 0xA1
+        MENUITEM SEPARATOR
+        MENUITEM "Duplicate", 0xA2
+        MENUITEM "Rename", 0xA3
+        POPUP "Merge to..." {
+            MENUITEM SEPARATOR
+        }
+        MENUITEM SEPARATOR
+        MENUITEM "Delete", 0xAD
+    }
+
+    POPUP "" // List Menu
+    {
+        // "Pin/Unpin"
+        // "Move To" ...Groups
+        // "Rename" // F2
+        // "Reset name to 'xxx'" // eid or default
+        // --
+        // New Group
+        //
+        MENUITEM SEPARATOR
+    }
+}
+
