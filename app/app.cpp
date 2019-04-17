@@ -780,7 +780,7 @@ namespace {
         return DefaultProcedure (hWnd, message, wParam, lParam);
     }
 
-    LRESULT OnSubclassPaint (HWND hWnd, HDC _hDC, RECT) {
+    LRESULT OnSubclassPaint (HWND hWnd, HDC _hDC, RECT, DWORD_PTR dwRefData) {
         RECT rc;
         GetClientRect (hWnd, &rc);
 
@@ -801,13 +801,14 @@ namespace {
         SendMessage (hWnd, WM_ERASEBKGND, (WPARAM) hDC, 0);
         SendMessage (hWnd, WM_PRINTCLIENT, (WPARAM) hDC, 0);
 
+        InflateRect (&rc, -(int) dwRefData, -(int) dwRefData);
         ptrBufferedPaintSetAlpha (hBuffered, &rc, 0xFF);
         ptrEndBufferedPaint (hBuffered, TRUE);
         return 0;
     };
 
     LRESULT CALLBACK AlphaSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
-                                             UINT_PTR  uIdSubclass, DWORD_PTR dwRefData) {
+                                             UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
         switch (message) {
             //case WM_MOUSEMOVE: // ????
             //    if (!wParam)
@@ -823,7 +824,7 @@ namespace {
                 if (design.alpha) {
                     PAINTSTRUCT ps;
                     if (HDC hDC = BeginPaint (hWnd, &ps)) {
-                        OnSubclassPaint (hWnd, hDC, ps.rcPaint);
+                        OnSubclassPaint (hWnd, hDC, ps.rcPaint, dwRefData);
                     }
                     EndPaint (hWnd, &ps);
                     return 0;
@@ -922,29 +923,29 @@ namespace {
 
         if (auto tc = (this->tabs.views = CreateTabControl (cs->hInstance, hWnd, WS_TABSTOP | WS_VISIBLE, ID::TABS_VIEWS))) {
             tc->hToolTipControl = this->hToolTip;
-            tc->addbutton (ID::ADD_TAB_BUTTON, IsWindowsVistaOrGreater () ? L"\x271A" : L"+", 0x10, false);
-            tc->addbutton (ID::HISTORY_BUTTON, IsWindows10OrGreater () ? L"\xE2AC" : L"\x21BA", 0x11, true); // TODO: What on XP? TODO: keyboard shortcut?
+            tc->addbutton (ID::ADD_TAB_BUTTON, IsWindowsVistaOrGreater () ? L"\x271A" : L"+", 0x1A, false);
+            tc->addbutton (ID::HISTORY_BUTTON, IsWindows10OrGreater () ? L"\xE2AC" : L"\x21BA", 0x1B, true); // TODO: What on XP? TODO: keyboard shortcut?
 
             tc->stacking = true;
             tc->badges = true;
 
             tc->tabs [-4].text = L"\xE128"; // "\x2081\x2082"; // NET
-            tc->tabs [-4].tip = L"[Ctrl+`] All Network View"; // rsrc, TODO: shortcut (cycle)
+            tc->tabs [-4].tip = raddi::log::translate (raddi::log::rsrc_string (0x11), std::wstring ());
             tc->tabs [-4].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"NET",
                                                     WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, NULL,
                                                     cs->hInstance, NULL);
             tc->tabs [-3].text = L"\xE1CF"; // FAVorites
-            tc->tabs [-3].tip = L"[Ctrl+`] Favorite Channels Digest";
+            tc->tabs [-3].tip = raddi::log::translate (raddi::log::rsrc_string (0x12), std::wstring ());
             tc->tabs [-3].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"FAV",
                                                     WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, NULL,
                                                     cs->hInstance, NULL);
             tc->tabs [-2].text = L"\xE142"; // "\x2085\x2086"; // NOTification
-            tc->tabs [-2].tip = L"[Ctrl+`] Replies and Notifications";
+            tc->tabs [-2].tip = raddi::log::translate (raddi::log::rsrc_string (0x13), std::wstring ());
             tc->tabs [-2].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"NOT",
                                                     WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, NULL,
                                                     cs->hInstance, NULL);
             tc->tabs [-1].text = L"\xE205"; // "\x2089\x208A";// PRIvate messages
-            tc->tabs [-1].tip = L"[Ctrl+`] Private Messages";
+            tc->tabs [-1].tip = raddi::log::translate (raddi::log::rsrc_string (0x14), std::wstring ());
             tc->tabs [-1].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"PRIV MSG",
                                                     WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, NULL,
                                                     cs->hInstance, NULL);
@@ -1023,10 +1024,10 @@ namespace {
                                 0, 0, 0, 0, hWnd, (HMENU) ID::LIST_PEOPLE, cs->hInstance, NULL);
 
             if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
-                SetWindowSubclass (tc->tabs [-7].content, AlphaSubclassProcedure, 0, 0);
-                SetWindowSubclass (tc->tabs [-3].content, AlphaSubclassProcedure, 0, 0);
+                for (auto & tab : tc->tabs) {
+                    SetWindowSubclass (tab.second.content, AlphaSubclassProcedure, 0, 0);
+                }
             }
-
             for (auto & tab : tc->tabs) {
                 tab.second.close = false;
             }
@@ -1055,6 +1056,12 @@ namespace {
             tc->tabs [3].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"TWEETS",
                                                    WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, (HMENU) ID::FEED_TWEETS,
                                                    cs->hInstance, NULL);
+
+            if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
+                for (auto & tab : tc->tabs) {
+                    SetWindowSubclass (tab.second.content, AlphaSubclassProcedure, 0, 0);
+                }
+            }
             for (auto & tab : tc->tabs) {
                 tab.second.close = false;
             }
@@ -1068,15 +1075,22 @@ namespace {
             tc->request (activate);
         }
 
-        CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"COMBOBOX", L"",
-                        WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-                        0,0,0,0, hWnd, (HMENU) ID::IDENTITIES, cs->hInstance, NULL);
+        if (auto hIdentities = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"COMBOBOX", L"",
+                                               WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
+                                               0, 0, 0, 0, hWnd, (HMENU) ID::IDENTITIES, cs->hInstance, NULL)) {
+            SendDlgItemMessage (hWnd, ID::IDENTITIES, CB_ADDSTRING, 0, (LPARAM) L"TEST TEST TEST");
+            SendDlgItemMessage (hWnd, ID::IDENTITIES, CB_ADDSTRING, 0, (LPARAM) L"AAA");
+            SendDlgItemMessage (hWnd, ID::IDENTITIES, CB_ADDSTRING, 0, (LPARAM) L"BBBBB");
+            if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
+                SetWindowSubclass (hIdentities, AlphaSubclassProcedure, 0, 2);
+            }
+        }
 
         // TODO: "manage" buttons aside of combobox
         // TODO: identities: disable mouse wheel!!! subclass
 
-        if (auto hFilters = CreateWindowEx (WS_EX_NOPARENTNOTIFY | WS_EX_CLIENTEDGE, WC_LISTVIEW, L"",
-                                            WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE |
+        if (auto hFilters = CreateWindowEx (WS_EX_NOPARENTNOTIFY, WC_LISTVIEW, L"",
+                                            WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE |// WS_BORDER |
                                             LVS_LIST | LVS_EDITLABELS | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS,
                                             0, 0, 0, 0, hWnd, (HMENU) ID::FILTERS, cs->hInstance, NULL)) {
 
@@ -1482,6 +1496,10 @@ namespace {
                         auto rFeedsTabs = this->GetFeedsTabRect (rRightPane);
                         auto rFilters = this->GetFiltersRect (&client, rRightPane);
 
+                        InflateRect (&rFilters, -2, -2);
+                        rFilters.right = rFilters.right - rFilters.left -2;
+                        rFilters.bottom = rFilters.bottom - rFilters.top;// -2;
+
                         DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::TABS_VIEWS), tabs);
                         DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::TABS_LISTS), rListTabs);
                         DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::TABS_FEEDS), rFeedsTabs);
@@ -1497,7 +1515,7 @@ namespace {
                         this->UpdateFeedsPosition (hDwp, client, rFeedsTabs);
 
                         DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::IDENTITIES), { rRightPane.left, rRightPane.top, rRightPane.right, rRightPane.bottom });
-                        DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::FILTERS), { rFilters.left, rFilters.top, rFilters.right - rFilters.left, rFilters.bottom - rFilters.top });
+                        DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::FILTERS), rFilters);
                         
                         EndDeferWindowPos (hDwp);
                     }
@@ -2147,6 +2165,9 @@ namespace {
         r.top += rRightPane.top + this->tabs.views->minimum.cy - 1 + metrics [SM_CYFRAME];
         r.left += rRightPane.left;
         r.right = r.left + rRightPane.right;
+        if (design.nice && !design.contrast) {
+            r.right += 2;
+        }
         return r;
     }
 
@@ -2264,8 +2285,6 @@ namespace {
                     const auto title_length = LoadString (reinterpret_cast <HINSTANCE> (&__ImageBase), 1, (wchar_t *) &title, 0);
                     const wchar_t * subtitle = nullptr;
                     const auto subtitle_length = LoadString (reinterpret_cast <HINSTANCE> (&__ImageBase), 2, (wchar_t *) &subtitle, 0);
-
-                    // raddi::log::translate (raddi::log::rsrc_string (2), std::wstring ());
 
                     RECT r;
                     r.top = iconPos.y;

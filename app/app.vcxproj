@@ -568,6 +568,8 @@
     <ClCompile Include="app.cpp" />
     <ClCompile Include="appapi.cpp" />
     <ClCompile Include="data.cpp" />
+    <ClCompile Include="feed.cpp" />
+    <ClCompile Include="list.cpp" />
     <ClCompile Include="tabs.cpp" />
     <ClCompile Include="view.cpp" />
   </ItemGroup>
@@ -605,6 +607,8 @@
     <ClInclude Include="appapi.h" />
     <ClInclude Include="data.h" />
     <ClInclude Include="errorbox.h" />
+    <ClInclude Include="feed.h" />
+    <ClInclude Include="list.h" />
     <ClInclude Include="tabs.h" />
     <ClInclude Include="view.h" />
   </ItemGroup>

@@ -59,6 +59,8 @@
     <ClCompile Include="..\core\raddi_timestamp.cpp">
       <Filter>RADDI\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="feed.cpp" />
+    <ClCompile Include="list.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app-en.rc">
@@ -138,5 +140,7 @@
     <ClInclude Include="..\core\raddi_timestamp.h">
       <Filter>RADDI\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="feed.h" />
+    <ClInclude Include="list.h" />
   </ItemGroup>
 </Project>
