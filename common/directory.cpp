@@ -18,7 +18,11 @@ directory::create_result directory::create (const wchar_t * path) noexcept {
         return directory::created;
     } else
     if (GetLastError () == ERROR_ALREADY_EXISTS) {
-        return directory::already_exists;
-    } else
-        return directory::create_failed;
+
+        auto attr = GetFileAttributes (path);
+        if ((attr != INVALID_FILE_ATTRIBUTES) && (attr & FILE_ATTRIBUTE_DIRECTORY))
+            return directory::already_exists;
+    }
+
+    return directory::create_failed;
 }
