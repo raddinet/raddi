@@ -40,6 +40,7 @@ namespace {
             return this->generator_parent::seed (tmp);
         }
 
+        using generator_parent::parallelism;
         using generator_parent::type;
         using generator_parent::operator ();
     };
