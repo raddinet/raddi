@@ -650,6 +650,7 @@ bool go () {
             return list_threads ();
         }
 
+        // TODO: core nodes
         // TODO: bans
         // TODO: rejected
         // TODO: subscriptions/blacklisted/retained
@@ -965,8 +966,7 @@ bool new_channel () {
     if (instance.status != ERROR_SUCCESS)
         return raddi::log::data (0x91);
 
-    raddi::db database (file::access::read,
-                        instance.get <std::wstring> (L"database").c_str ());
+    raddi::db database (file::access::read, instance.get <std::wstring> (L"database"));
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
@@ -1020,8 +1020,7 @@ bool reply (const wchar_t * opname, const wchar_t * to) {
     if (instance.status != ERROR_SUCCESS)
         return raddi::log::data (0x91);
 
-    raddi::db database (file::access::read,
-                        instance.get <std::wstring> (L"database").c_str ());
+    raddi::db database (file::access::read, instance.get <std::wstring> (L"database"));
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
@@ -1087,8 +1086,7 @@ bool list (const wchar_t * parent_) {
     if (instance.status != ERROR_SUCCESS)
         return raddi::log::data (0x91);
 
-    raddi::db database (file::access::read,
-                        instance.get <std::wstring> (L"database").c_str ());
+    raddi::db database (file::access::read, instance.get <std::wstring> (L"database"));
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
@@ -1248,8 +1246,7 @@ bool list_identities () {
     if (instance.status != ERROR_SUCCESS)
         return raddi::log::data (0x91);
 
-    raddi::db database (file::access::read,
-                        instance.get <std::wstring> (L"database").c_str ());
+    raddi::db database (file::access::read, instance.get <std::wstring> (L"database"));
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
@@ -1272,8 +1269,7 @@ bool list_channels () {
     if (instance.status != ERROR_SUCCESS)
         return raddi::log::data (0x91);
 
-    raddi::db database (file::access::read,
-                        instance.get <std::wstring> (L"database").c_str ());
+    raddi::db database (file::access::read, instance.get <std::wstring> (L"database"));
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
@@ -1311,8 +1307,7 @@ bool list_threads () {
     if (instance.status != ERROR_SUCCESS)
         return raddi::log::data (0x91);
 
-    raddi::db database (file::access::read,
-                        instance.get <std::wstring> (L"database").c_str ());
+    raddi::db database (file::access::read, instance.get <std::wstring> (L"database"));
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
@@ -1728,8 +1723,7 @@ bool get (const wchar_t * what) {
     if (instance.status != ERROR_SUCCESS)
         return raddi::log::data (0x91);
 
-    raddi::db database (file::access::read,
-                        instance.get <std::wstring> (L"database").c_str ());
+    raddi::db database (file::access::read, instance.get <std::wstring> (L"database"));
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
@@ -1771,8 +1765,7 @@ bool database_verification () {
     if (instance.status != ERROR_SUCCESS)
         return raddi::log::data (0x91);
 
-    raddi::db database (file::access::read,
-                        instance.get <std::wstring> (L"database").c_str ());
+    raddi::db database (file::access::read, instance.get <std::wstring> (L"database"));
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
