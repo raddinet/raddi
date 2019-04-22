@@ -321,9 +321,9 @@ template <typename Key>
     template <typename T, typename U, typename V>
 std::size_t raddi::db::table <Key>::select (std::uint32_t oldest, std::uint32_t latest, T constrain, U query, V callback) const {
     struct {
-        std::uint32_t shard;
-        std::uint32_t index; // row index in current shard
-        std::size_t   count; // row count in current shard
+        std::uint32_t shard = 0;
+        std::uint32_t index = 0; // row index in current shard
+        std::size_t   count = 0; // row count in current shard
 
         std::size_t   total = 0; // total evaluated entries in shards
         std::size_t   match = 0; // total rows matching timestamp range and constrain
