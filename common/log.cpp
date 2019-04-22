@@ -103,9 +103,9 @@ namespace {
         create (path);
     }
 
-    constexpr static inline HMODULE GetCurrentModuleHandle () {
+    static inline HMODULE GetCurrentModuleHandle () {
         return reinterpret_cast <HMODULE> (&__ImageBase);
-    };
+    }
 }
 
 
