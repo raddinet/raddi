@@ -45,6 +45,7 @@ namespace raddi {
     //    taking potential integer overflow into account
     //
     bool older (std::uint32_t timestamp, std::uint32_t reference);
+    bool older (std::uint64_t microtimestamp, std::uint64_t reference);
 }
 
 #endif

@@ -8,6 +8,7 @@ namespace {
     
     // difference of 1.1.2018 00:00:00 - January 1, 1601 UTC in seconds (unix timestamp minus 0x5a497a00)
     static const auto base = 0x3105a0b00uLL;
+    //static const auto base = 0x3141c7200uLL; // 1.1.2020, unix timestamp minus 0x5e0be100
 
     // difference of 1.1.1970 00:00:00 - January 1, 1601 UTC in seconds
     // static const auto base = 0x2b6109100uLL;
@@ -62,9 +63,12 @@ std::uint32_t raddi::timestamp (const std::tm & tm) {
 std::uint64_t raddi::microtimestamp () {
     uULL u;
     if (pfnGetSystemTime == nullptr) {
-        if (auto p = GetProcAddress (GetModuleHandle (L"KERNEL32"), "GetSystemTimePreciseAsFileTime")) {
-            pfnGetSystemTime = reinterpret_cast <void (WINAPI *) (LPFILETIME)> (p);
-        } else {
+        if (auto hKernel32 = GetModuleHandle (L"KERNEL32")) {
+            if (auto p = GetProcAddress (hKernel32, "GetSystemTimePreciseAsFileTime")) {
+                pfnGetSystemTime = reinterpret_cast <void (WINAPI*) (LPFILETIME)> (p);
+            }
+        }
+        if (pfnGetSystemTime == nullptr) {
             pfnGetSystemTime = GetSystemTimeAsFileTime;
         }
     }
@@ -100,5 +104,9 @@ SYSTEMTIME raddi::wintime (std::uint64_t t) {
 }
 
 bool raddi::older (std::uint32_t timestamp, std::uint32_t reference) {
-    return (timestamp - reference) > 0x80000000u;
+    return (timestamp - reference) > 0x8000'0000u;
+}
+
+bool raddi::older (std::uint64_t microtimestamp, std::uint64_t reference) {
+    return (microtimestamp - reference) > 0x8000'0000'0000'0000uLL;
 }
