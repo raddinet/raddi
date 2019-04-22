@@ -1254,7 +1254,7 @@ bool list_identities () {
         { 16, "%*ls", "iid" },
         { 9, "%*x", "shard" },
         { 5, "%*u", "i" },
-        { 5, "%*llu", "n" },
+        { 5, "%*zu", "n" },
         { 9, "%*u", "offset" },
         { 5, "%*u", "size" },
         { 30, "%-*ls", "name" }, // raddi::consensus::max_identity_name_size
@@ -1277,7 +1277,7 @@ bool list_channels () {
         { 24, "%*ls", "eid" },
         { 9, "%*x", "shard" },
         { 5, "%*u", "i" },
-        { 5, "%*llu", "n" },
+        { 5, "%*zu", "n" },
         { 9, "%*u", "offset" },
         { 5, "%*u", "size" },
         { 22, "%-*ls", "name" }, // raddi::consensus::max_channel_name_size
@@ -1332,7 +1332,7 @@ bool list_threads () {
         { 24, "%*ls", "eid" },
         { 9, "%*x", "shard" },
         { 5, "%*u", "i" },
-        { 5, "%*llu", "n" },
+        { 5, "%*zu", "n" },
         { 9, "%*u", "offset" },
         { 5, "%*u", "size" },
         { 22, "%-*ls", "name" }, // raddi::consensus::max_thread_name_size
