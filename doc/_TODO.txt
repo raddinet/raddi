@@ -16,6 +16,11 @@ core/core sync does not always work, core node will not recognize other core nod
 
 fix continuous re-sharing no longer available node addresses
 
+after connection sync reports are incorrect
+ - when reporting history, we probably add all from 0...X to first range of X+1...Y
+
+node: log subpath create!
+
 revocation code for identity: when received, all further messages by that identity are dropped
  - content code, 0xF8 plus fixed predefine block of content??
  - node support (list of revoked IIDs)
