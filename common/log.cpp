@@ -358,7 +358,9 @@ std::wstring raddi::log::translate (raddi::log::api_error argument, const std::w
         }
     }
 
-    buffer [offset - 2] = L'\0';
+    if (offset >= 2) {
+        buffer [offset - 2] = L'\0';
+    }
     return buffer;
 }
 
@@ -371,10 +373,7 @@ std::wstring raddi::log::translate (raddi::log::rsrc_string argument, const std:
 }
 
 std::wstring raddi::log::translate (const void * argument, const std::wstring &) {
-    
-    // on x86-64 display only 48-bit pointer (12 nibbles)
-    // ARM64?
-
+    // on x86-64 and ARM-64 displaying only lower 48 bits is enough
     static constexpr auto n = (sizeof (std::size_t) == 8u) ? (12u) : (2u * sizeof (std::size_t));
 
     wchar_t pointer [n + 1];
@@ -491,8 +490,10 @@ std::wstring raddi::log::translate (const SYSTEMTIME & st, const std::wstring & 
 
 std::wstring raddi::log::translate (const GUID & guid, const std::wstring &) {
     wchar_t sz [40] = { 0 };
-    StringFromGUID2 (guid, sz, 40);
-    return sz;
+    if (StringFromGUID2 (guid, sz, 40))
+        return sz;
+    else
+        return std::wstring ();
 }
 #endif
 
