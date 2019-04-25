@@ -38,6 +38,8 @@
 #include "../core/raddi_consensus.h"
 #include "../core/raddi_instance.h"
 
+#pragma warning (disable:28112) // interlocked warnings
+
 namespace {
     SERVICE_STATUS_HANDLE handle = NULL;
     SERVICE_STATUS status = {
