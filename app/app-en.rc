@@ -16,6 +16,7 @@ STRINGTABLE {
     // 0x12    "[Ctrl+???] List of remaining open Tabs"
     0x20    ""
     0x30    "[F4] Hide/Show right pane"
+    0x40    "Right Click to Manage Identities, [SHIFT+Click] to show hidden identities --- TODO"
 
     MAIN | EVENT | 0x01 "raddi.net {1}.{2} {3}, {4}"
     MAIN | EVENT | 0x02 "generated uuid {1}"
@@ -26,12 +27,22 @@ STRINGTABLE {
 
     MAIN | NOTE | 0x10  ""
 
+    // 0x2x - Node Connection (app/node.cpp)
+    MAIN | NOTE | 0x20  "initialized, parameter {2}, notifying thread {1}"
+    MAIN | NOTE | 0x21  "connected"
+    MAIN | NOTE | 0x22  "disconnected"
+    MAIN | NOTE | 0x2F  "finished"
+
     MAIN | ERROR | 0x01 "Error attaching database files. Applicataion state may be broken/lost. Identities and decryption keys may not be available. The situation might be temporary."
     MAIN | ERROR | 0x02 "Internal error, uncaught exception: {1}.\nThe affected window has been closed. Consider restarting whole application. Also reporting the bug to developers would be nice."
     MAIN | ERROR | 0x03 "Error reopening stashed tabs. SQLite error: {1}"
     MAIN | ERROR | 0x04 "Error reading channel lists. SQLite error: {1}"
     MAIN | ERROR | 0x05 "Unable to create (another) window. Not enough memory."
     // MAIN | ERROR | 0x06 "DEBUG {1:x} {2:x} {3}"
+
+    // 0x2x - Node Connection (app/node.cpp)
+    MAIN | ERROR | 0x20 "unknown exception"
+    MAIN | ERROR | 0x21 "exception {1} processing event"
 
     MAIN | STOP | 0x00  "RADDI.net Application\nversion {1}, {2}, {3}\n\nError {ERR}\n\nReason: "
     MAIN | STOP | 0x01  "Executable corrupted, miscompiled or unexpected API error"
@@ -45,6 +56,7 @@ STRINGTABLE {
     MAIN | STOP | 0x09  "Failed to create application window."
     MAIN | STOP | 0x0A  "Failed to enqueue requested URI(s) to:\n{1}\nUnable to notify running application."
     MAIN | STOP | 0x0B  "Error {1} initializing database query:\n{2}"
+    MAIN | STOP | 0x0C  "Failed to initialize node connection worker thread"
 }
 
 2 ACCELERATORS {

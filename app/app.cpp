@@ -36,9 +36,15 @@
 #include "../core/raddi_defaults.h"
 
 #include "tabs.h"
+#include "view.h"
+#include "list.h"
+#include "feed.h"
 #include "data.h"
 #include "appapi.h"
 #include "errorbox.h"
+#include "node.h"
+
+#pragma warning (disable:6053) // snprintf may not NUL terminate
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 extern "C" const IID IID_IImageList;
@@ -46,6 +52,7 @@ const VS_FIXEDFILEINFO * const version = GetCurrentProcessVersionInfo ();
 
 uuid app;
 Data database;
+Node connection;
 
 alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/1";
 
@@ -53,12 +60,12 @@ namespace {
     LPCTSTR InitializeGUI (HINSTANCE hInstance);
     void UpdateSystemThemeProperties ();
     bool InteractiveAppDataInitialization ();
-    void ThreadMessageProcedure (const MSG &);
+    void GuiThreadMessageProcedure (const MSG &);
     bool CreateWindows (HINSTANCE hInstance, LPCTSTR atom, int mode);
     LRESULT CALLBACK InitialProcedure (HWND, UINT, WPARAM, LPARAM);
 }
 
-int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
+int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
     AttachConsole (ATTACH_PARENT_PROCESS);
     if (IsDebuggerPresent ()) {
         AllocConsole ();
@@ -108,6 +115,12 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
         return GetLastError ();
     }
 
+    // TODO: if portable installation, check database for option to run own local instance
+
+    if (!connection.initialize (option (__argc, __wargv, L"instance"), WM_APP + 1)) {
+        return StopBox (0x0C);
+    }
+
     if (auto atom = InitializeGUI (hInstance)) {
         UpdateSystemThemeProperties ();
 
@@ -115,7 +128,14 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
         // RegisterApplicationRestart (... , 0);
         // RegisterApplicationRecoveryCallback()
         // SetUnhandledExceptionFilter -> record to file for upload on restart
-        
+
+        if (database.identities.size.query <int> () == 0) {
+            // TODO: if not connected, wait
+            // TODO: dialog
+            MessageBeep (0);
+            // ...quit if cancelled?
+        }
+
         if (CreateWindows (hInstance, atom, nCmdShow)) {
             if (ptrChangeWindowMessageFilter) {
                 ptrChangeWindowMessageFilter (WM_APP, MSGFLT_ADD);
@@ -139,11 +159,12 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
                         }
                     }
                 } else {
-                    ThreadMessageProcedure (message);
+                    GuiThreadMessageProcedure (message);
                 }
             }
 
             database.close ();
+            connection.terminate ();
             
             CoUninitialize ();
             return (int) message.wParam;
@@ -188,13 +209,12 @@ namespace {
         if (ptrBufferedPaintInit) {
             ptrBufferedPaintInit ();
         }
-
-        SetThemeAppProperties (STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS);
-
         if (ptrAllowDarkModeForApp) {
             ptrAllowDarkModeForApp (true);
         }
-        
+
+        SetThemeAppProperties (STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS);
+
         WNDCLASSEX wndclass = {
             sizeof (WNDCLASSEX), CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS,
             InitialProcedure, 0, 0, hInstance,  NULL,
@@ -227,6 +247,8 @@ namespace {
                 sodium_memzero (seed, sizeof seed);
             }
 
+            // TODO: database.execute (L"INSERT INTO `app` VALUES ('version',?)", ???); // update last DB version, for possible dynamic upgrades
+
             return true;
         } catch (const SQLite::Exception & x) {
             StopBox (5, x.what ());
@@ -234,7 +256,7 @@ namespace {
         }
     }
     
-    void ThreadMessageProcedure (const MSG & message) {
+    void GuiThreadMessageProcedure (const MSG & message) {
         switch (message.message) {
 
             // WM_COMMAND
@@ -296,6 +318,15 @@ namespace {
                                 // all returned TRUE, direct last active window to open 'entry' in new tab
                             }
                         }
+                        break;
+                }
+                break;
+
+            case WM_APP + 1: // node connection
+                switch (message.wParam) {
+                    case 0: // state, lParam == true/false
+                        break;
+                    case 1: // exception
                         break;
                 }
                 break;
@@ -429,13 +460,13 @@ namespace {
                         }
 
                         if (auto hNewFont = CreateFontIndirect (&lf)) {
-                            if (this->handle = NULL) {
+                            if (this->handle != NULL) {
                                 DeleteObject (this->handle);
                             }
                             this->handle = hNewFont;
                             return true;
                         } else {
-                            if (this->handle = NULL) {
+                            if (this->handle == NULL) {
                                 this->handle = (HFONT) GetStockObject (DEFAULT_GUI_FONT);
                             }
                         }
@@ -484,6 +515,8 @@ namespace {
         LRESULT OnVisualEnvironmentChange ();
         LRESULT RefreshVisualMetrics (UINT dpiNULL = GetDPI (NULL));
         
+        void AssignHint (HWND hCtrl, UINT string);
+
         std::intptr_t CreateTab (const raddi::eid & entry, const std::wstring & text, std::intptr_t id = 0);
         std::intptr_t CreateTab (const raddi::eid & entry, std::intptr_t id = 0);
         void CloseTab (std::intptr_t id);
@@ -834,6 +867,14 @@ namespace {
         return DefSubclassProc (hWnd, message, wParam, lParam);
     }
 
+    LRESULT CALLBACK DisableWheelSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR) {
+        switch (message) {
+            case WM_MOUSEWHEEL:
+                return 0;
+        }
+        return DefSubclassProc (hWnd, message, wParam, lParam);
+    }
+
     bool IsWindowsVista () {
         return IsWindowsVistaOrGreater ()
             && !IsWindows7OrGreater ();
@@ -909,6 +950,15 @@ namespace {
             this->tabs.views->tabs.erase (id);
             this->tabs.views->update ();
         }
+    }
+
+    void Window::AssignHint (HWND hCtrl, UINT string) {
+        TOOLINFO tt = {
+            sizeof (TOOLINFO), TTF_IDISHWND | TTF_SUBCLASS,
+            this->hWnd, (UINT_PTR) hCtrl, {0,0,0,0},
+            NULL, LPSTR_TEXTCALLBACK, (LPARAM) string, NULL
+        };
+        SendMessage (this->hToolTip, TTM_ADDTOOL, 0, (LPARAM) &tt);
     }
 
     LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
@@ -1048,7 +1098,7 @@ namespace {
             tc->tabs [1].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"ACTIVITY",
                                                    WS_CHILD | WS_CLIPSIBLINGS, 0,0,0,0, hWnd, (HMENU) ID::FEED_RECENT,
                                                    cs->hInstance, NULL);
-            tc->tabs [2].text = L"Followed";
+            tc->tabs [2].text = L"Interests";
             tc->tabs [2].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"FRIENDS",
                                                    WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, (HMENU) ID::FEED_FRIENDS,
                                                    cs->hInstance, NULL);
@@ -1078,22 +1128,25 @@ namespace {
         if (auto hIdentities = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"COMBOBOX", L"",
                                                WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
                                                0, 0, 0, 0, hWnd, (HMENU) ID::IDENTITIES, cs->hInstance, NULL)) {
+            
+            // database.identities.list
             SendDlgItemMessage (hWnd, ID::IDENTITIES, CB_ADDSTRING, 0, (LPARAM) L"TEST TEST TEST");
             SendDlgItemMessage (hWnd, ID::IDENTITIES, CB_ADDSTRING, 0, (LPARAM) L"AAA");
             SendDlgItemMessage (hWnd, ID::IDENTITIES, CB_ADDSTRING, 0, (LPARAM) L"BBBBB");
             if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
                 SetWindowSubclass (hIdentities, AlphaSubclassProcedure, 0, 2);
             }
+            SetWindowSubclass (hIdentities, DisableWheelSubclassProcedure, 0, 0);
+            this->AssignHint (hIdentities, 0x40);
         }
 
-        // TODO: "manage" buttons aside of combobox
-        // TODO: identities: disable mouse wheel!!! subclass
+        // TODO: "manage" button aside of combobox?
 
         if (auto hFilters = CreateWindowEx (WS_EX_NOPARENTNOTIFY, WC_LISTVIEW, L"",
                                             WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE |// WS_BORDER |
                                             LVS_LIST | LVS_EDITLABELS | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS,
                                             0, 0, 0, 0, hWnd, (HMENU) ID::FILTERS, cs->hInstance, NULL)) {
-
+            
             if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
                 SetWindowSubclass (hFilters, AlphaSubclassProcedure, 0, 0);
             }
@@ -1305,7 +1358,7 @@ namespace {
                 }
                 break;
 
-            /*default:
+            default:
                 switch (nm->code) {
                     case TTN_GETDISPINFO:
                         if (auto nmTip = reinterpret_cast <NMTTDISPINFO *> (nm)) {
@@ -1313,7 +1366,7 @@ namespace {
                             nmTip->lpszText = MAKEINTRESOURCE (nmTip->lParam);
                         }
                         break;
-                }*/
+                }
         }
         return 0;
     }
@@ -1456,7 +1509,7 @@ namespace {
                 RECT client;
                 if (GetClientRect (hWnd, &client)) {
 
-                    if (this->height) {
+                    if (this->height && client.bottom) {
                         this->dividers.feeds = (double) (this->dividers.feeds) * double (client.bottom) / double (this->height);
                     }
                     this->height = client.bottom;
@@ -1495,6 +1548,7 @@ namespace {
                         auto rRightPane = this->GetRightPane (client, rListTabs);
                         auto rFeedsTabs = this->GetFeedsTabRect (rRightPane);
                         auto rFilters = this->GetFiltersRect (&client, rRightPane);
+                        auto rIdentities = rRightPane;
 
                         InflateRect (&rFilters, -2, -2);
                         rFilters.right = rFilters.right - rFilters.left -2;
@@ -1514,7 +1568,7 @@ namespace {
                         this->UpdateListsPosition (hDwp, client, rListTabs);
                         this->UpdateFeedsPosition (hDwp, client, rFeedsTabs);
 
-                        DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::IDENTITIES), { rRightPane.left, rRightPane.top, rRightPane.right, rRightPane.bottom });
+                        DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::IDENTITIES), rIdentities);
                         DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::FILTERS), rFilters);
                         
                         EndDeferWindowPos (hDwp);

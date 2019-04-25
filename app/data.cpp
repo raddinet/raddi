@@ -312,6 +312,8 @@ bool Data::prepare_queries () {
         this->current.set = this->prepare (L"REPLACE INTO `current` (`window`,`name`,`value`) VALUES (?,?,?)");
         this->current.get = this->prepare (L"SELECT `value` FROM `current` WHERE `window`=? AND `name`=?");
 
+        this->identities.size = this->prepare (L"SELECT COUNT(*) FROM `identities`");
+
         SetLastError (ERROR_SUCCESS);
         return true;
     } catch (const SQLite::PrepareException & x) {

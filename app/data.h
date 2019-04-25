@@ -45,6 +45,11 @@ public:
         Statement set;
     } current;
 
+    struct {
+        Statement size;
+        Statement list;
+    } identities;
+
 public:
     bool initialize (HINSTANCE);
     void close ();
