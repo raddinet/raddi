@@ -117,7 +117,7 @@ namespace raddi {
         inline std::wstring translate (unsigned int argument, const std::wstring & format) { return translate ((unsigned long long) argument, format); }
 
         inline std::wstring translate (const std::wstring & argument, const std::wstring &) { return argument; }
-        inline std::wstring translate (const wchar_t * argument, const std::wstring &) { return argument; }
+        inline std::wstring translate (const wchar_t * argument, const std::wstring &) { return argument ? argument : L"<null>"; }
         inline std::wstring translate (std::nullptr_t argument, const std::wstring &) { return L""; }
 
         inline std::wstring translate (bool argument, const std::wstring &) { return argument ? L"true" : L"false"; }
