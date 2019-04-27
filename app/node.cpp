@@ -42,7 +42,7 @@ void Node::terminate () {
     iocp = NULL;
 }
 
-bool Node::connected () const {
+bool Node::connected () const  noexcept {
     if (this->instance && this->database && this->database->connected ()) {
 
         auto heartbeat = this->instance->get <unsigned long long> (L"heartbeat");
@@ -55,19 +55,17 @@ bool Node::connected () const {
 
 long Node::worker () noexcept {
     bool         previous = false;
-    BOOL         success;
+    bool         timeout = false;
     DWORD        n = 0;
     ULONG_PTR    key = 0;
     OVERLAPPED * overlapped = NULL;
 
     do {
-        success = GetQueuedCompletionStatus (iocp, &n, &key, &overlapped, 250);
+        auto success = GetQueuedCompletionStatus (iocp, &n, &key, &overlapped, 250);
         if (overlapped) {
             try {
                 static_cast <Overlapped *> (overlapped)->completion (success, n);
-
-                // TODO: notify GUI thread (views) on change to tables
-                // TODO: how to determine which table has changed (add db::table callback?)
+                // TODO: notify GUI thread... how to determine which table has changed (add db::table callback?)
 
             } catch (const std::bad_alloc & x) {
                 this->report (raddi::log::level::error, 0x21, x.what ());
@@ -80,33 +78,54 @@ long Node::worker () noexcept {
                 PostThreadMessage (this->guiThreadId, this->guiMessage, 1, 0);
                 Sleep (10);
             }
-        } else
-        if (!success && (GetLastError () == WAIT_TIMEOUT)) {
-            n = 1; // continue loop
+            timeout = false;
+        } else {
+            timeout = (!success && (GetLastError () == WAIT_TIMEOUT));
         }
 
+        if (timeout) {
+            this->lock.acquire_exclusive ();
+        } else {
+            if (!this->lock.try_acquire_exclusive ())
+                continue;
+        }
+
+        int report = 0;
         if (!this->connected ()) {
             this->disconnect ();
             if (previous) {
                 previous = false;
-                this->report (raddi::log::level::note, 0x22);
-                PostThreadMessage (this->guiThreadId, this->guiMessage, 0, FALSE);
+                report = 1;
             }
             if (this->reconnect ()) {
-                this->report (raddi::log::level::note, 0x21);
-                PostThreadMessage (this->guiThreadId, this->guiMessage, 0, TRUE);
+                report = 2;
                 previous = true;
             }
         }
+
+        this->lock.release_exclusive ();
+
+        // notify GUI
+
+        switch (report) {
+            case 1:
+                this->report (raddi::log::level::note, 0x22);
+                PostThreadMessage (this->guiThreadId, this->guiMessage, 0, FALSE);
+                break;
+            case 2:
+                this->report (raddi::log::level::note, 0x21);
+                PostThreadMessage (this->guiThreadId, this->guiMessage, 0, TRUE);
+                break;
+        }
         
-    } while (overlapped || key || n);
+    } while (overlapped || key || n || timeout);
 
     this->report (raddi::log::level::note, 0x2F);
     this->disconnect ();
     return 0;
 }
 
-bool Node::reconnect () {
+bool Node::reconnect ()  noexcept {
     try {
         this->instance = new raddi::instance (parameter);
         if (this->instance->status == ERROR_SUCCESS) {
@@ -119,7 +138,7 @@ bool Node::reconnect () {
     return false;
 }
 
-bool Node::disconnect () {
+bool Node::disconnect () noexcept {
     if (this->database || this->instance) {
         delete this->database;
         delete this->instance;

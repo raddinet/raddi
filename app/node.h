@@ -3,6 +3,7 @@
 
 #include "../core/raddi.h"
 #include "../common/log.h"
+#include "../common/lock.h"
 
 // Node
 //  - node connection for client app
@@ -12,8 +13,9 @@
 class Node
     : virtual raddi::log::provider <raddi::component::main> {
 
+    lock                lock;
     raddi::instance *   instance = nullptr; // (option (argc, argw, L"instance"));
-    raddi::db *         database = nullptr; // (file::access::read,
+    raddi::db *         database = nullptr;
     const wchar_t *     parameter = nullptr;
     DWORD               guiThreadId = 0;
     DWORD               guiMessage = 0;
@@ -24,12 +26,12 @@ public:
     bool initialize (const wchar_t * instance, DWORD message);
     void terminate ();
 
-    bool connected () const;
+    bool connected () const noexcept;
 
 private:
     long worker () noexcept;
-    bool disconnect ();
-    bool reconnect ();
+    bool disconnect () noexcept;
+    bool reconnect () noexcept;
 };
 
 #endif
