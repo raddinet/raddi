@@ -10,6 +10,8 @@ class lock {
     static void (WINAPI * pFree) (void **);
     static void (WINAPI * pAcquireShared) (void **);
     static void (WINAPI * pAcquireExclusive) (void **);
+    static bool (WINAPI * pTryAcquireShared) (void **);
+    static bool (WINAPI * pTryAcquireExclusive) (void **);
     static void (WINAPI * pReleaseShared) (void **);
     static void (WINAPI * pReleaseExclusive) (void **);
 public:
@@ -23,6 +25,9 @@ public:
 
     void acquire_exclusive () noexcept { pAcquireExclusive (&this->srw); }
     void release_exclusive () noexcept { pReleaseExclusive (&this->srw); }
+
+    bool try_acquire_shared () noexcept { return pTryAcquireShared (&this->srw); }
+    bool try_acquire_exclusive () noexcept { return pTryAcquireExclusive (&this->srw); }
 
 private:
     lock (const lock &) = delete;

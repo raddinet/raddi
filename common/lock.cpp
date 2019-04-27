@@ -16,6 +16,12 @@ namespace {
         DeleteCriticalSection (cs);
         delete cs;
     }
+    bool WINAPI defaultTry (void ** object) {
+        return TryEnterCriticalSection (static_cast <CRITICAL_SECTION *> (*object));
+    }
+    bool WINAPI failingTry (void ** object) {
+        return false;
+    }
     void WINAPI defaultAcquire (void ** object) {
         EnterCriticalSection (static_cast <CRITICAL_SECTION *> (*object));
     }
@@ -38,6 +44,8 @@ void (WINAPI * lock::pInit) (void **) = defaultInit;
 void (WINAPI * lock::pFree) (void **) = defaultFree;
 void (WINAPI * lock::pAcquireShared) (void **) = defaultAcquire;
 void (WINAPI * lock::pAcquireExclusive) (void **) = defaultAcquire;
+bool (WINAPI * lock::pTryAcquireShared) (void **) = defaultTry;
+bool (WINAPI * lock::pTryAcquireExclusive) (void **) = defaultTry;
 void (WINAPI * lock::pReleaseShared) (void **) = defaultRelease;
 void (WINAPI * lock::pReleaseExclusive) (void **) = defaultRelease;
 
@@ -47,6 +55,12 @@ bool lock::initialize () noexcept {
             Load (h, pReleaseShared, "ReleaseSRWLockShared");
             Load (h, pAcquireExclusive, "AcquireSRWLockExclusive");
             Load (h, pReleaseExclusive, "ReleaseSRWLockExclusive");
+            
+            // Vista does not have TryAcquire for SRW locks, but we cannot mix CSs and SRWs
+            if (!Load (h, pTryAcquireShared, "TryAcquireSRWLockShared") || !Load (h, pTryAcquireExclusive, "TryAcquireSRWLockExclusive")) {
+                pTryAcquireShared = failingTry;
+                pTryAcquireExclusive = failingTry;
+            }
 
             pInit = defaultNoOp;
             pFree = defaultNoOp;
