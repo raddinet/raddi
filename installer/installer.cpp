@@ -32,6 +32,7 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
     //     - web app will have notification tray icon, don't set as autorun separate notification tray icon
     //  - role
     //     - core / normal (default) / leaf
+    //  - Tor or other proxy?
     //  - installation path:
     //     - if elevated suggest "program files", otherwise users appdata (yeah, sorry)
     //     - browse button
