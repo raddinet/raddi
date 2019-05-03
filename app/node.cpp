@@ -109,12 +109,12 @@ long Node::worker () noexcept {
 
         switch (report) {
             case 1:
-                this->report (raddi::log::level::note, 0x22);
                 PostThreadMessage (this->guiThreadId, this->guiMessage, 0, FALSE);
+                this->report (raddi::log::level::note, 0x22);
                 break;
             case 2:
-                this->report (raddi::log::level::note, 0x21);
                 PostThreadMessage (this->guiThreadId, this->guiMessage, 0, TRUE);
+                this->report (raddi::log::level::note, 0x21);
                 break;
         }
         
@@ -125,11 +125,29 @@ long Node::worker () noexcept {
     return 0;
 }
 
+template <unsigned int X>
+void Node::db_table_change_notify (void * self_) {
+    auto self = reinterpret_cast <Node *> (self_);
+
+    PostThreadMessage (self->guiThreadId, self->guiMessage, 2, X);
+    this->report (raddi::log::level::note, 0x23, X);
+}
+
 bool Node::reconnect ()  noexcept {
     try {
         this->instance = new raddi::instance (parameter);
         if (this->instance->status == ERROR_SUCCESS) {
             this->database = new raddi::db (file::access::read, this->instance->get <std::wstring> (L"database"));
+
+            this->database->data->notification_callback_context = this;
+            this->database->threads->notification_callback_context = this;
+            this->database->channels->notification_callback_context = this;
+            this->database->identities->notification_callback_context = this;
+
+            this->database->data->reader_change_notification_callback = &Node::db_table_change_notify <0u>;
+            this->database->threads->reader_change_notification_callback = &Node::db_table_change_notify <1u>;
+            this->database->channels->reader_change_notification_callback = &Node::db_table_change_notify <2u>;
+            this->database->identities->reader_change_notification_callback = &Node::db_table_change_notify <3u>;
 
             return this->database->connected ();
         }

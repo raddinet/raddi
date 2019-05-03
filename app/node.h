@@ -32,6 +32,9 @@ private:
     long worker () noexcept;
     bool disconnect () noexcept;
     bool reconnect () noexcept;
+
+    template <unsigned int>
+    static void db_table_change_notify (void *);
 };
 
 #endif

@@ -27,6 +27,16 @@ public:
     const raddi::db &  db;
     const std::wstring name;
 
+    // notification_callback_context
+    //  - user-sepcified pointer passed to following callbacks
+    //
+    void * notification_callback_context = nullptr;
+
+    // reader_change_notification_callback
+    //  - if set, called by Monitor::process after the changes in the files have been processed
+    //
+    void (*reader_change_notification_callback) (void *) = nullptr;
+
 public:
     table (const std::wstring & name, const raddi::db & db)
         : Monitor (db.path + L"\\" + name + L"\\")

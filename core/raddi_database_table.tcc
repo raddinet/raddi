@@ -300,20 +300,25 @@ void raddi::db::table <Key>::enumerate_shard_info (T callback) const {
 
 template <typename Key>
 bool raddi::db::table <Key>::process (const std::wstring & filename) {
-    exclusive guard (this->lock);
+    {
+        exclusive guard (this->lock);
 
-    // exclusive guard (this->advance_lock);
-    // this->advance_marks.insert (...);
+        // exclusive guard (this->advance_lock);
+        // this->advance_marks.insert (...);
 
-    // NOTE: This needs to be implemented for any client software to work
-    // TODO: handle external changes:
-    //    - close all shards reported as new?
-    //    - mark referenced shard 'filename' to advance,
-    //    - if new then either split happened (reload table) or append happened (???)
-    //       - some shard can be pointing to file about to be deleted
+        // NOTE: This needs to be implemented for any client software to work
+        // TODO: handle external changes:
+        //    - close all shards reported as new?
+        //    - mark referenced shard 'filename' to advance,
+        //    - if new then either split happened (reload table) or append happened (???)
+        //       - some shard can be pointing to file about to be deleted
 
-    // TODO: this is run on different thread!
+        // TODO: this is run on different thread!
 
+    }
+    if (this->reader_change_notification_callback) {
+        this->reader_change_notification_callback (this->notification_callback_context);
+    }
     return true;
 }
 
