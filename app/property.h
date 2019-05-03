@@ -3,6 +3,8 @@
 
 #include "data.h"
 
+extern Data database;
+
 template <typename T>
 class property {
     LPARAM window;
