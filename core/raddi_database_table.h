@@ -164,17 +164,17 @@ public:
     // count
     //  - calls select to count number of entries within the range
     //
-    std::size_t count (std::uint32_t oldest, std::uint32_t latest) {
+    std::size_t count (std::uint32_t oldest, std::uint32_t latest) const {
         return this->select (oldest, latest,
                              [] (const Key &, const auto & detail) { return true; },
                              [] (const Key &, const auto & detail) { return false; },
                              [] (const Key &, const auto & detail, std::uint8_t *) {});
     }
-    std::size_t count () {
+    std::size_t count () const {
         std::size_t n = 0;
         immutability guard (this->lock);
         for (auto & shard : this->shards) {
-            n += shard.size ();
+            n += shard.size (this);
         }
         return n;
     }
