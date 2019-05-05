@@ -170,6 +170,14 @@ public:
                              [] (const Key &, const auto & detail) { return false; },
                              [] (const Key &, const auto & detail, std::uint8_t *) {});
     }
+    std::size_t count () {
+        std::size_t n = 0;
+        immutability guard (this->lock);
+        for (auto & shard : this->shards) {
+            n += shard.size ();
+        }
+        return n;
+    }
 
     // TODO: queries that will be needed later
     //  - select all in thread

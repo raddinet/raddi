@@ -21,7 +21,7 @@ class raddi::db::shard
 
     // cache
     //  - a primary index to the shard's data and positional information
-    //  - sorted from oldest to newest shard
+    //  - sorted from oldest to newest
     //
     std::vector <Key> cache;
 
