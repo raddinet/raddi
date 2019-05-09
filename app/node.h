@@ -8,24 +8,36 @@
 // Node
 //  - node connection for client app
 //  - singleton, mutiple instances will break!
-//  - thread that initialized the instance get
 //
 class Node
     : virtual raddi::log::provider <raddi::component::main> {
 
-    lock                lock;
-    raddi::instance *   instance = nullptr; // (option (argc, argw, L"instance"));
-    raddi::db *         database = nullptr;
     const wchar_t *     parameter = nullptr;
-    DWORD               guiThreadId = 0;
-    DWORD               guiMessage = 0;
+    DWORD               message = 0;
+
+public:
+    lock                lock;
+    raddi::instance *   instance = nullptr;
+    raddi::db *         database = nullptr;
 
 public:
     Node () : provider ("connection") {};
 
+    // initialize
+    //  - thread calling this will receive 'message' callback
+    //  - 'instance' specifies PID of concrete instance the user may want to use
+    //
     bool initialize (const wchar_t * instance, DWORD message);
     void terminate ();
 
+    // start
+    //  - actually starts connecting (in background thread)
+    //
+    void start ();
+
+    // connected 
+    //  - quick query to see if we are connected to a node software
+    //
     bool connected () const noexcept;
 
 private:

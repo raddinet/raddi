@@ -1,5 +1,7 @@
 #include "node.h"
 
+extern DWORD gui;
+
 namespace {
     HANDLE iocp = NULL;
     HANDLE thread = NULL;
@@ -15,14 +17,13 @@ bool Node::initialize (const wchar_t * pid, DWORD message) {
         iocp = CreateIoCompletionPort (INVALID_HANDLE_VALUE, NULL, 0, 0);
     }
     if (thread == NULL) {
-        thread = CreateThread (NULL, 0, forward <Node, &Node::worker>, this, 0, NULL);
+        thread = CreateThread (NULL, 0, forward <Node, &Node::worker>, this, CREATE_SUSPENDED, NULL);
     }
 
     if (iocp && thread) {
         this->parameter = pid;
-        this->guiMessage = message;
-        this->guiThreadId = GetCurrentThreadId ();
-        this->report (raddi::log::level::note, 0x20, this->guiThreadId, this->parameter);
+        this->message = message;
+        this->report (raddi::log::level::note, 0x20, gui, this->parameter);
         return true;
     } else
         return false;
@@ -31,6 +32,7 @@ bool Node::initialize (const wchar_t * pid, DWORD message) {
 void Node::terminate () {
     if (iocp && thread) {
         PostQueuedCompletionStatus (iocp, 0, 0, NULL);
+        ResumeThread (thread);
         WaitForSingleObject (thread, INFINITE);
     }
     if (thread) {
@@ -53,6 +55,10 @@ bool Node::connected () const  noexcept {
         return false;
 }
 
+void Node::start () {
+    ResumeThread (thread);
+}
+
 long Node::worker () noexcept {
     bool         previous = false;
     bool         timeout = false;
@@ -64,18 +70,24 @@ long Node::worker () noexcept {
         auto success = GetQueuedCompletionStatus (iocp, &n, &key, &overlapped, 250);
         if (overlapped) {
             try {
-                static_cast <Overlapped *> (overlapped)->completion (success, n);
-                // TODO: notify GUI thread... how to determine which table has changed (add db::table callback?)
+                // TODO: this is kinda hack, we need operation 'finalize' to wait
+                //       until all cancellations are delivered, and make sure that
+                //       they are delivered before destructor is called because
+                //       'completion' is virtual and will crash
+
+                if (success || n || GetLastError () != ERROR_OPERATION_ABORTED) { 
+                    static_cast <Overlapped *> (overlapped)->completion (success, n);
+                }
 
             } catch (const std::bad_alloc & x) {
                 this->report (raddi::log::level::error, 0x21, x.what ());
-                PostThreadMessage (this->guiThreadId, this->guiMessage, 1, ERROR_NOT_ENOUGH_MEMORY);
+                PostThreadMessage (gui, this->message, 1, ERROR_NOT_ENOUGH_MEMORY);
             } catch (const std::exception & x) {
                 this->report (raddi::log::level::error, 0x21, x.what ());
-                PostThreadMessage (this->guiThreadId, this->guiMessage, 1, 0);
+                PostThreadMessage (gui, this->message, 1, 0);
             } catch (...) {
                 this->report (raddi::log::level::error, 0x20);
-                PostThreadMessage (this->guiThreadId, this->guiMessage, 1, 0);
+                PostThreadMessage (gui, this->message, 1, 0);
                 Sleep (10);
             }
             timeout = false;
@@ -109,11 +121,11 @@ long Node::worker () noexcept {
 
         switch (report) {
             case 1:
-                PostThreadMessage (this->guiThreadId, this->guiMessage, 0, FALSE);
+                PostThreadMessage (gui, this->message, 0, FALSE);
                 this->report (raddi::log::level::note, 0x22);
                 break;
             case 2:
-                PostThreadMessage (this->guiThreadId, this->guiMessage, 0, TRUE);
+                PostThreadMessage (gui, this->message, 0, TRUE);
                 this->report (raddi::log::level::note, 0x21);
                 break;
         }
@@ -129,8 +141,8 @@ template <unsigned int X>
 void Node::db_table_change_notify (void * self_) {
     auto self = reinterpret_cast <Node *> (self_);
 
-    PostThreadMessage (self->guiThreadId, self->guiMessage, 2, X);
-    this->report (raddi::log::level::note, 0x23, X);
+    PostThreadMessage (gui, self->message, 2, X);
+    self->report (raddi::log::level::note, 0x23, X);
 }
 
 bool Node::reconnect ()  noexcept {
@@ -152,6 +164,7 @@ bool Node::reconnect ()  noexcept {
             return this->database->connected ();
         }
     } catch (...) {
+        //  TODO: log
     }
     return false;
 }
