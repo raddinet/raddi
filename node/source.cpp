@@ -29,21 +29,26 @@ SourceState::SourceState (const wchar_t * path, const wchar_t * nonce) {
                 temp [length + 1] = L'\0';
             }
 
-            std::wcscat (temp, L"RADDI.NET.");
-            std::wcscat (temp, nonce);
-            std::wcscat (temp, L"\\");
+            if (CreateDirectory (temp, NULL) || (GetLastError () == ERROR_ALREADY_EXISTS)) {
+                std::wcscat (temp, L"RADDI.NET.");
+                std::wcscat (temp, nonce);
+                std::wcscat (temp, L"\\");
 
-            if (CreateDirectory (temp, NULL)) {
-                this->created = true;
-            } else {
-                if (GetLastError () != ERROR_ALREADY_EXISTS) {
-                    this->report (raddi::log::level::error, 4, path);
-                    return;
+                if (CreateDirectory (temp, NULL)) {
+                    this->created = true;
+                } else {
+                    if (GetLastError () != ERROR_ALREADY_EXISTS) {
+                        this->report (raddi::log::level::error, 4, temp);
+                        return;
+                    }
                 }
+                this->handle = CreateFile (temp, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                           NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_BACKUP_SEMANTICS,
+                                           NULL);
+            } else {
+                this->report (raddi::log::level::error, 4, temp);
+                return;
             }
-            this->handle = CreateFile (temp, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                       NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_BACKUP_SEMANTICS,
-                                       NULL);
         }
     }
     
