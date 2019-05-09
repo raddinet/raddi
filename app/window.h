@@ -3,6 +3,12 @@
 
 #include "appapi.h"
 
+#define WM_APP_INSTANCE_NOTIFY  (WM_APP + 0)
+#define WM_APP_NODE_CONNECTION  (WM_APP + 1)
+#define WM_APP_TITLE_RESOLVED   (WM_APP + 2)
+#define WM_APP_CHANNELS_COUNT   (WM_APP + 3)
+#define WM_APP_IDENTITIES_COUNT (WM_APP + 4)
+
 enum IconSize {
     SmallIconSize = 0,
     StartIconSize,
