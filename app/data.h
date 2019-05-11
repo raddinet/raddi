@@ -26,6 +26,13 @@ public:
     struct {
         Statement query; // id, name
         Statement maxID; // SELECT MAX(id)
+
+        struct {
+            Statement query; // SELECT id, name WHERE list
+        } subs;
+        struct {
+            Statement query; // SELECT sub, eid, name WHERE list
+        } data;
     } lists;
 
     struct {

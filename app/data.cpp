@@ -215,7 +215,7 @@ bool Data::resolve_separation (const wchar_t * filename, bool create_separated_i
         this->execute (L"CREATE TABLE IF NOT EXISTS " + state + L".`resolved`  (`entry` BLOB, `title` TEXT, PRIMARY KEY (`entry`)) WITHOUT ROWID");
 
 
-        this->execute (L"CREATE TABLE IF NOT EXISTS `pinned` (`entry` BLOB PRIMARY KEY) WITHOUT ROWID"); // channels/identities
+        // this->execute (L"CREATE TABLE IF NOT EXISTS `pinned` (`entry` BLOB PRIMARY KEY) WITHOUT ROWID"); // channels/identities??
         this->execute (L"CREATE TABLE IF NOT EXISTS `names` (`entry` BLOB PRIMARY KEY, `name` TEXT) WITHOUT ROWID"); // custom names for channels/identities
 
         this->execute (L"CREATE TABLE IF NOT EXISTS `lists` (`id` INTEGER PRIMARY KEY, `name` TEXT)");
@@ -299,6 +299,8 @@ bool Data::prepare_queries () {
 
         this->lists.query = this->prepare (L"SELECT `id`,`name` FROM `lists`");
         this->lists.maxID = this->prepare (L"SELECT MAX(`id`) FROM `lists`");
+        this->lists.subs.query = this->prepare (L"SELECT `id`,`name` FROM `listsubs` WHERE `list`=?");
+        this->lists.data.query = this->prepare (L"SELECT `sub`,`entry`,`name` FROM `listdata` WHERE `list`=?");
 
         this->history.list = this->prepare (L"SELECT `entry`,`title` FROM `history` ORDER BY `t` DESC");
         this->history.last [0] = this->prepare (L"SELECT `entry`,`title`,`t` FROM `history` ORDER BY `t` DESC LIMIT 1");

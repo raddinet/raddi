@@ -7,16 +7,51 @@ STRINGTABLE {
     1   "RADDI"
     2   "UNCENSORED DISCUSSION"
 
-    0x11    "[Ctrl+`] All Network View"
-    0x12    "[Ctrl+`] Favorite Channels Digest"
-    0x13    "[Ctrl+`] Replies and Notifications"
-    0x14    "[Ctrl+`] Private Messages"
+    // view tabs
+    0x11    "[Ctrl+???] All Network View"
+    0x12    "[Ctrl+???] Favorite Channels Digest"
+    0x13    "[Ctrl+???] Replies and Notifications"
+    0x14    "[Ctrl+???] Private Messages"
     0x1A    "[Ctrl+T] Open New Tab, [SHIFT] to re-open last closed Tab"
     0x1B    "[Ctrl+???] History of last closed Tabs"
-    // 0x12    "[Ctrl+???] List of remaining open Tabs"
-    0x20    ""
-    0x30    "[F4] Hide/Show right pane"
+    0x1C    "[Ctrl+???] List of overflowing Tabs (that don't fit)" 
+    // list tabs
+    0x20    "Channels"
+    0x21    ""
+    0x22    "People"
+    0x23    ""
+    0x24    "TODO: Hint text. ""Bookmark channels/people/threads or posts into this list by ..."" "
+    0x25    "TODO: Improve text: The application is connecting to node software. The list will populate shortly."
+    0x2C    "[Ctrl+???] List of overflowing List (that don't fit)"
+    // feed tabs
+    0x30    "Activity"
+    0x31    ""
+    0x32    "Interests"
+    0x33    ""
+    0x34    "Tweets"
+    0x35    ""
+    0x3A    "[F4] Hide/Show right pane"
+    // identities
     0x40    "Right Click to Manage Identities, [SHIFT+Click] to show hidden identities --- TODO"
+
+    // lists columns
+    0x50    "Name"
+    0x51    "Original name"
+    0x52    "Resolved name"
+    0x53    "Custom name"
+    0x54    "EID"
+    0x55    "Created"
+    // 0x57    "Topics (last ? months)"
+    // 0x58    "Participants (last ? months)"
+    // TODO: menu item to customize range? count voters? how many replies count? count posts? count only posts not removed as spam?
+
+    // new list title dialog
+    0x60    "New List"
+    0x61    "&New List title:"
+    0x62    "" // edit box hint text
+    0x63    "Create"
+
+    
 
     MAIN | EVENT | 0x01 "raddi.net {1}.{2} {3}, {4}"
     MAIN | EVENT | 0x02 "generated uuid {1}"
@@ -31,6 +66,7 @@ STRINGTABLE {
     MAIN | NOTE | 0x20  "initialized, parameter {2}, notifying thread {1}"
     MAIN | NOTE | 0x21  "connected"
     MAIN | NOTE | 0x22  "disconnected"
+    MAIN | NOTE | 0x23  "data {1} change notification"
     MAIN | NOTE | 0x2F  "finished"
 
     MAIN | ERROR | 0x01 "Error attaching database files. Applicataion state may be broken/lost. Identities and decryption keys may not be available. The situation might be temporary."
@@ -63,7 +99,7 @@ STRINGTABLE {
     
 }
 
-1 MENU {
+0x10 MENU {
     POPUP "" { // Single Tab
         MENUITEM "&New Tab\tCtrl+T", 0xC1
         MENUITEM "&Stack New Tab\tCtrl+Y", 0xC3
@@ -72,33 +108,66 @@ STRINGTABLE {
         MENUITEM "&Duplicate\tCtrl+K", 0xC5//, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Close Tab\tCtrl+W", 0xCD
+        // MENUITEM "&Close Stack", 0xCC
     }
-    POPUP "" { // Stack of Tabs
-        // MENUITEM "&New Tab\tCtrl+T", 0xC1
-        MENUITEM SEPARATOR
-        // MENUITEM "&Duplicate\tCtrl+K", 0xC5//, GRAYED
-        // MENUITEM "&Close Tab\tCtrl+W", 0xCE
-        // MENUITEM "&Close Stack\tCtrl+W", 0xCE
-    }
-
 }
 
-2 MENU {
-    POPUP "" { // Lists Right Click Menu
-        MENUITEM "New List", 0xA1
+0x20 MENU { // Lists Tabs Right Click Menu
+    POPUP "" {
+        MENUITEM L"New List", 0xA1
         MENUITEM SEPARATOR
-        MENUITEM "Duplicate", 0xA2
-        MENUITEM "Rename", 0xA3
-        POPUP "Merge to..." {
-            MENUITEM SEPARATOR
+        //MENUITEM L"Duplicate", 0xA2
+        //MENUITEM L"Rename...", 0xA3
+        //POPUP "Merge to" {
+        //    MENUITEM "TODO: List of other Lists", -1
+        //}
+        //MENUITEM SEPARATOR
+        //POPUP "Style" {
+        //    MENUITEM "Text", -1
+        //    MENUITEM "Icons", -1
+        //}
+        //MENUITEM SEPARATOR
+        MENUITEM "&Delete", 0xAD
+    }
+}
+
+/*0x21 MENU { // Lists Header Right Click Menu, TODO: IDs, TODO: dynamically from columns? // TODO: no columns?
+    POPUP "" {
+        MENUITEM "Icon", 1
+        MENUITEM "Name", 2
+        MENUITEM "Original name", 2
+        MENUITEM "Resolved name", 2
+        MENUITEM "Custom name", 2
+        MENUITEM "EID", 2
+        MENUITEM "Date/Time created", 2
+        MENUITEM SEPARATOR
+    }
+}*/
+
+// TODO: mark with \x200C \x200B \x200D
+
+0x22 MENU { // Lists Sub (Group) Menu
+    POPUP "" {
+        MENUITEM "Rename group...", -1
+        POPUP "Move" {
+            MENUITEM "Top", -1
+            MENUITEM "Up", -1
+            MENUITEM "Down", -1
+            MENUITEM "Bottom", -1
         }
         MENUITEM SEPARATOR
-        MENUITEM "Delete", 0xAD
+        MENUITEM "Duplicate", -1
+        POPUP "Merge to" {
+            MENUITEM "TODO: List of other Groups", -1
+        }
+        MENUITEM SEPARATOR
+        // Delete > And move all items to ...
+        MENUITEM "Delete", -1
     }
+}
 
-    POPUP "" // List Menu
-    {
-        // "Pin/Unpin"
+0x23 MENU { // User-created Lists Items Right Click Menu
+    POPUP "" {
         // "Move To" ...Groups
         // "Rename" // F2
         // "Reset name to 'xxx'" // eid or default
@@ -106,6 +175,53 @@ STRINGTABLE {
         // New Group
         //
         MENUITEM SEPARATOR
+        MENUITEM "", -1
+
+                // open (open channel in new view tab, start downloading content) - double click also
+                // open author's channel
+
+                // items: show/hide hidden, hide this, remove (just me, delete from computer)
+                //  mod ops: ... ban, ban author
+
+                // restore resolved name
+
+                // copy 'eid' to clipboard
     }
 }
 
+0x24 MENU { // Channels/Identities Lists Items Right Click Menu
+    POPUP "" {
+        MENUITEM "Open", -1 // DEFAULT
+        // open author's channel for channels
+        MENUITEM "Pin/Unpin", -1
+        MENUITEM "Rename...", -1
+            // POPUP "Moderation" -> "Rename..." ...
+        MENUITEM "Revert name", -1, GRAYED
+        MENUITEM "Copy EID", -1
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh", -1
+
+        // items: show/hide hidden, hide this, remove (just me, delete from computer)
+        //  mod ops: ... ban, ban author
+    }
+}
+
+0x40 MENU { // Identities Drop-down Right Click Menu
+    POPUP "" {
+        MENUITEM "Manage", -1
+    }
+}
+
+
+1 DIALOGEX 0, 0, 187, 57
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+FONT 9, "Segoe UI"
+{
+    CONTROL "", 256, "STATIC", SS_LEFT | WS_CHILD | WS_VISIBLE, 7, 7, 179, 10
+    CONTROL "", 257, "EDIT", ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 17, 172, 12
+    CONTROL "OK", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 36, 50, 14
+    CONTROL "Cancel", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 129, 36, 50, 14
+}
+END

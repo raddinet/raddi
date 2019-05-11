@@ -19,6 +19,30 @@
     <Filter Include="RADDI\Utility">
       <UniqueIdentifier>{f59996e6-45d0-4f43-8d41-bab6f8abcbfd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RADDI\Local">
+      <UniqueIdentifier>{bac94776-94ec-4e99-ad7a-3a4bf3eacfa6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Controls">
+      <UniqueIdentifier>{3152bd4f-36d1-4f5f-bff0-c526cd115930}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dialogs">
+      <UniqueIdentifier>{8f445428-2d5f-4d69-ad7e-7968cd1f6417}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Views">
+      <UniqueIdentifier>{91a6bfbc-5094-4141-b117-0084b6cbe012}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RADDI\Database">
+      <UniqueIdentifier>{80a698a9-062b-4777-bebf-0e8a95988942}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RADDI\Network">
+      <UniqueIdentifier>{8a71e573-4767-45c5-bceb-f16d05c284e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Window">
+      <UniqueIdentifier>{4faf47eb-abac-411b-a669-e702cfbda30e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data">
+      <UniqueIdentifier>{c9c75cd8-8e4c-4f8e-96fe-4e66ac9905d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="app.cpp" />
@@ -46,10 +70,7 @@
     <ClCompile Include="..\lib\SQLite.cpp">
       <Filter>Libraries</Filter>
     </ClCompile>
-    <ClCompile Include="data.cpp" />
-    <ClCompile Include="view.cpp" />
     <ClCompile Include="appapi.cpp" />
-    <ClCompile Include="tabs.cpp" />
     <ClCompile Include="..\core\raddi_iid.cpp">
       <Filter>RADDI\Structures</Filter>
     </ClCompile>
@@ -59,8 +80,81 @@
     <ClCompile Include="..\core\raddi_timestamp.cpp">
       <Filter>RADDI\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="feed.cpp" />
-    <ClCompile Include="list.cpp" />
+    <ClCompile Include="..\core\raddi_command.cpp">
+      <Filter>RADDI\Local</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_instance.cpp">
+      <Filter>RADDI\Local</Filter>
+    </ClCompile>
+    <ClCompile Include="feed.cpp">
+      <Filter>Views</Filter>
+    </ClCompile>
+    <ClCompile Include="list.cpp">
+      <Filter>Views</Filter>
+    </ClCompile>
+    <ClCompile Include="view.cpp">
+      <Filter>Views</Filter>
+    </ClCompile>
+    <ClCompile Include="tabs.cpp">
+      <Filter>Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database.cpp">
+      <Filter>RADDI\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database_peerset.cpp">
+      <Filter>RADDI\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database_shard.cpp">
+      <Filter>RADDI\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_database_table.cpp">
+      <Filter>RADDI\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_address.cpp">
+      <Filter>RADDI\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_content.cpp">
+      <Filter>RADDI\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_entry.cpp">
+      <Filter>RADDI\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_channel.cpp">
+      <Filter>RADDI\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_identity.cpp">
+      <Filter>RADDI\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\raddi_proof.cpp">
+      <Filter>RADDI\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="property.cpp">
+      <Filter>Window</Filter>
+    </ClCompile>
+    <ClCompile Include="window.cpp">
+      <Filter>Window</Filter>
+    </ClCompile>
+    <ClCompile Include="data.cpp">
+      <Filter>Data</Filter>
+    </ClCompile>
+    <ClCompile Include="node.cpp">
+      <Filter>Data</Filter>
+    </ClCompile>
+    <ClCompile Include="resolver.cpp">
+      <Filter>Data</Filter>
+    </ClCompile>
+    <ClCompile Include="editbox.cpp">
+      <Filter>Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="menus.cpp">
+      <Filter>Window</Filter>
+    </ClCompile>
+    <ClCompile Include="window_layout.cpp">
+      <Filter>Window</Filter>
+    </ClCompile>
+    <ClCompile Include="window_font.cpp">
+      <Filter>Window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app-en.rc">
@@ -74,6 +168,9 @@
     </ResourceCompile>
     <ResourceCompile Include="..\common\log-en.rc">
       <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\core\raddi_database.rc">
+      <Filter>RADDI\Database</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
@@ -91,7 +188,18 @@
     <None Include="..\lib\SQLite.tcc">
       <Filter>Libraries</Filter>
     </None>
-    <None Include="errorbox.tcc" />
+    <None Include="errorbox.tcc">
+      <Filter>Dialogs</Filter>
+    </None>
+    <None Include="..\core\raddi_database.tcc">
+      <Filter>RADDI\Database</Filter>
+    </None>
+    <None Include="..\core\raddi_database_shard.tcc">
+      <Filter>RADDI\Database</Filter>
+    </None>
+    <None Include="..\core\raddi_database_table.tcc">
+      <Filter>RADDI\Database</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\img\raddi.ico">
@@ -126,11 +234,7 @@
     <ClInclude Include="..\lib\SQLite.hpp">
       <Filter>Libraries</Filter>
     </ClInclude>
-    <ClInclude Include="data.h" />
-    <ClInclude Include="errorbox.h" />
-    <ClInclude Include="view.h" />
     <ClInclude Include="appapi.h" />
-    <ClInclude Include="tabs.h" />
     <ClInclude Include="..\core\raddi_iid.h">
       <Filter>RADDI\Structures</Filter>
     </ClInclude>
@@ -140,7 +244,86 @@
     <ClInclude Include="..\core\raddi_timestamp.h">
       <Filter>RADDI\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="feed.h" />
-    <ClInclude Include="list.h" />
+    <ClInclude Include="..\core\raddi_command.h">
+      <Filter>RADDI\Local</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_instance.h">
+      <Filter>RADDI\Local</Filter>
+    </ClInclude>
+    <ClInclude Include="feed.h">
+      <Filter>Views</Filter>
+    </ClInclude>
+    <ClInclude Include="list.h">
+      <Filter>Views</Filter>
+    </ClInclude>
+    <ClInclude Include="view.h">
+      <Filter>Views</Filter>
+    </ClInclude>
+    <ClInclude Include="tabs.h">
+      <Filter>Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="errorbox.h">
+      <Filter>Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database.h">
+      <Filter>RADDI\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_peerset.h">
+      <Filter>RADDI\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_row.h">
+      <Filter>RADDI\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_shard.h">
+      <Filter>RADDI\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_table.h">
+      <Filter>RADDI\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_address.h">
+      <Filter>RADDI\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_content.h">
+      <Filter>RADDI\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_entry.h">
+      <Filter>RADDI\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_channel.h">
+      <Filter>RADDI\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_identity.h">
+      <Filter>RADDI\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_proof.h">
+      <Filter>RADDI\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_consensus.h">
+      <Filter>RADDI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_defaults.h">
+      <Filter>RADDI</Filter>
+    </ClInclude>
+    <ClInclude Include="window.h">
+      <Filter>Window</Filter>
+    </ClInclude>
+    <ClInclude Include="property.h">
+      <Filter>Window</Filter>
+    </ClInclude>
+    <ClInclude Include="data.h">
+      <Filter>Data</Filter>
+    </ClInclude>
+    <ClInclude Include="node.h">
+      <Filter>Data</Filter>
+    </ClInclude>
+    <ClInclude Include="resolver.h">
+      <Filter>Data</Filter>
+    </ClInclude>
+    <ClInclude Include="editbox.h">
+      <Filter>Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="menus.h">
+      <Filter>Window</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
