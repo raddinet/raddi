@@ -148,12 +148,14 @@ bool raddi::address::accessible (validation mode) const {
     if (this->valid (mode))
         switch (this->family) {
             case AF_INET:
-                return (this->address4.s_addr & 0x000000FF) != 0x0000007F // 127.0.0.0/8
-                    // private networks and loopback
+                return (this->address4.s_addr & 0x000000FF) != 0x0000007F // 127.0.0.0/8 - loopback
+                    // private networks
                     && (this->address4.s_addr & 0x000000FF) != 0x0000000A // 10.0.0.0/8
                     && (this->address4.s_addr & 0x0000F0FF) != 0x000010AC // 172.16.0.0/12
                     && (this->address4.s_addr & 0x0000FFFF) != 0x0000A8C0 // 192.168.0.0/16
                     && (this->address4.s_addr & 0x0000FFFF) != 0x0000FEA9 // 169.254.0.0/16
+                    // shared address space for mobile carriers (CGN devices)
+                    && (this->address4.s_addr & 0x0000C0FF) != 0x00004064 // 100.64.0.0/10
                     ;
             case AF_INET6:
                 auto w0 = htons (this->address6.s6_words [0]);
