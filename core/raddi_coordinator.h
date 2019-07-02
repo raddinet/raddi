@@ -2,6 +2,7 @@
 #define RADDI_COORDINATOR_H
 
 #include "../node/server.h"
+#include "../node/download.h"
 #include "../common/lock.h"
 #include "../common/log.h"
 
@@ -27,7 +28,8 @@
 namespace raddi {
     class connection;
     class coordinator
-        : log::provider <component::server> {
+        : private log::provider <component::server>
+        , public Download::Callback {
 
         // database
         //  - reference to database instance
@@ -370,6 +372,9 @@ namespace raddi {
         bool move (connection *, level, std::uint16_t = db::peerset::new_record_assessment);
 
         std::size_t select_unused_addresses (level, std::size_t n, std::map <address, level> & addresses) const;
+
+    private:
+        virtual bool downloaded (const std::wstring & url, const char * line) override;
     };
 }
 

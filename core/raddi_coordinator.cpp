@@ -1480,3 +1480,22 @@ void raddi::coordinator::set_discovery_spread () {
         ++i;
     }
 }
+
+bool raddi::coordinator::downloaded (const std::wstring & url, const char * line) {
+    wchar_t ip [48];
+    if (auto n = MultiByteToWideChar (CP_UTF8, 0, line, -1, ip, sizeof ip / sizeof ip [0] - 1)) {
+        if (n >= 9) {
+            ip [n] = L'\0';
+
+            SOCKADDR_INET address;
+            if (StringToAddress (address, ip)) {
+                this->add (raddi::core_nodes, address);
+                this->report (log::level::event, 0x2A, url, ip);
+            } else {
+                this->report (log::level::error, 0x21, url, ip);
+            }
+        }
+    }
+    return true;
+}
+
