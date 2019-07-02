@@ -50,7 +50,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | EVENT | 0x08 "terminating console instance on {1}"
     MAIN | EVENT | 0x09 "system suspend in progress..."
     MAIN | EVENT | 0x0A "system resumed"
-    MAIN | EVENT | 0x20 "bootstrapping from {1}: adding core level node address {2}"
+    
     MAIN | EVENT | 0x21 "entry {1} broadcasted through {2} connections"
 
     MAIN | ERROR | 1    "library {1} missing"
@@ -62,6 +62,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 7    "memory warning, won't honor reservation for {1} connections"
     MAIN | ERROR | 8    "command {1} failed with {2} exception"
     MAIN | ERROR | 9    "entry {1} erase failed, no such entry or database failure"
+    MAIN | ERROR | 10   "failed to initialize system facility, error {ERR}"
     MAIN | ERROR | 0x20 "bootstrap: failed to parse URL {1}, error {ERR}"
     MAIN | ERROR | 0x21 "bootstrap: failed to prepare request to {1}:{2}, error {ERR}"
     MAIN | ERROR | 0x22 "bootstrap: failed to prepare request to {1}:{2}{3}, error {ERR}"
@@ -70,7 +71,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 0x25 "bootstrapping from {1}: unable to retrieve data, state {2}, error {ERR}"
     MAIN | ERROR | 0x26 "bootstrapping from {1}: failed, error {ERR}"
     MAIN | ERROR | 0x27 "bootstrapping from {1}: failed, server status {2}"
-    MAIN | ERROR | 0x28 "bootstrapping from {1}: unable to add core level node address {2}, not recognized"
 
     MAIN | DATA | 8     "command rejected, unknown type {1}"
     MAIN | DATA | 9     "command {1} rejected, not enough data, {2} bytes required"
@@ -156,7 +156,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SERVER | EVENT | 0x27   "{1} reports {2} history, range {3:x}..{4:x} in {5} spans ({6} bytes), total {7} entries; wants everything since {8:x}"
     SERVER | EVENT | 0x28   "remote peer {1} manually unbanned"
     SERVER | EVENT | 0x29   "history report of {1} in range {2:x}..{3:x}+ in {4} spans ({6} bytes), total {5} entries"
-    
+    SERVER | EVENT | 0x2A   "bootstrap from {1}: adding core level node {2}"
+
     // connection
     SERVER | ERROR | 1      "socket {1}:{2}:{3} creation failed, error {ERR}"
     SERVER | ERROR | 2      "socket family {1} binding failed, error {ERR}"
@@ -182,5 +183,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
     // coordinator
     SERVER | ERROR | 0x20   ""
+    SERVER | ERROR | 0x21   "bootstrap from {1}: unable to add core level node address {2}, not recognized"
     SERVER | STOP | 0x20    "killing {1} stuck connections, this may crash..."
 }
