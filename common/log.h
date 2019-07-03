@@ -218,23 +218,29 @@ namespace raddi {
         //  - "\x0018" marks moved-from instance whose destruction is not reported
         //
         template <component c>
-        class provider : internal::provider_name {
+        class provider {
+        public:
+            
+            // identity
+            //  - 
+            //
+            internal::provider_name identity;
+
         public:
             template <std::size_t N>
             provider (const char (&object) [N], const std::wstring & instance = std::wstring ())
-                : provider_name { instance, instance != L"\x0018" ? object : nullptr } {
+                : identity { instance, instance != L"\x0018" ? object : nullptr } {
 
-                if (this->instance != L"\x0018") {
+                if (this->identity.instance != L"\x0018") {
                     this->report (level::note, 0xA1F1);
                 }
             }
             provider () {
                 this->report (level::note, 0xA1F1);
             }
-            provider (provider && from)
-                : internal::provider_name (from) {
-                
-                from.instance = L"\x0018";
+            provider (provider && from) {
+                this->identity = from.identity;
+                from.identity.instance = L"\x0018";
             }
             /*provider & operator = (provider && from) {
                 this->internal::provider_name::operator = (from);
@@ -242,7 +248,7 @@ namespace raddi {
                 return *this;
             }*/
             ~provider () {
-                if (this->instance != L"\x0018") {
+                if (this->identity.instance != L"\x0018") {
                     this->report (level::note, 0xA1F2);
                 }
             }
@@ -281,7 +287,7 @@ namespace raddi {
         template <component c>
         template <typename... Args>
         bool provider <c> ::report (level l, unsigned int id, Args... args) const {
-            return raddi::log::report (c, l, this, id, args...);
+            return raddi::log::report (c, l, &this->identity, id, args...);
         }
 
         // exception
