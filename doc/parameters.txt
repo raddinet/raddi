@@ -56,13 +56,39 @@ Node parameters:
 		- the path may be relative to default storage (name) or absolute (path)
 		- default name is "database"
 	- bootstrap:<URL>
+	- bootstrap:<DNS URI>
 	- bootstrap:off
-		- while starting downloads and parses (plain text files) provided URL(s)
-		  for IP addresses and adds those to database as core-level peer nodes
-		- more than one URL can be provided by repeating the parameter
-		- if none provided, the node will use default URL only if the local core
-		  level peer nodes list is empty
-			- default URL is: https://www.raddi.net/bootstrap.txt
+		- on start, uses either DNS query or file download to retrieve peer IP
+		  addresses, and adds those to database as core-level peer nodes
+		- more than one URL/URI can be provided by repeating the parameter
+		- URL
+			- standard http/https URL, credentials are supported
+			- e.g.: https://www.raddi.net/bootstrap.txt
+			- the file must be plain text ASCII file containing
+			  single IP:port pair on each row
+		- DNS URI
+			- dns:[//authority/]domain[:port][?type=<A|AAAA>]
+			- 'authority' part is ignored unless 'domain' is omitted
+				- if 'domain' is missing, the 'authority' is assumed to
+				  be the intended domain mistakenly prefixed by slashes
+			- 'port' part is non-standard extension to RFC 4501
+				- used to connect to the retrieved IP address
+				- default port (if not specified) is 44303
+			- 'type' determines what DNS record to retrieve
+				- only first is used; other, semi-colon separated,
+				  parameters (such as "class" are ignored)
+				- supported types are:
+					- A - IPv4
+					- AAAA - IPv6
+		- "off"
+			- use "off" to disable default query when core-level
+			  nodes list is empty
+		- if no "bootstrap" parameter is provided, and if the local core-level
+		  peer node list is empty, the node will query these DNS' for peers:
+			- dns:44303.raddi.net:44303?type=AAAA
+			- dns:44303.raddi.net:44303?type=A
+			- dns:443.raddi.net:443?type=AAAA
+			- dns:443.raddi.net:443?type=A
 	- bootstrap-proxy:<name>
 		- if present, bootstrap URL is accessed through proxy
 		- if name is omitted, the default system-configured proxy is used
