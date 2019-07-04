@@ -32,7 +32,7 @@ class Socket {
 public:
     Socket (int family, int type, int protocol);
     Socket (Socket && from) noexcept;
-    Socket & operator = (Socket && from);
+    Socket & operator = (Socket && from) noexcept;
     ~Socket () noexcept;
 
     void disconnect () noexcept;

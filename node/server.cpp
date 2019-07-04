@@ -142,9 +142,9 @@ UdpPoint::Totals UdpPoint::total;
 // Overlapped
 
 void Overlapped::cancel (HANDLE h) noexcept {
-	if (Optional <BOOL, HANDLE, LPOVERLAPPED> (L"KERNEL32", "CancelIoEx", h, this)) {
-		this->Internal = STATUS_ABANDONED_WAIT_0;
-	}
+    if (Optional <BOOL, HANDLE, LPOVERLAPPED> (L"KERNEL32", "CancelIoEx", h, this)) {
+        this->Internal = STATUS_ABANDONED_WAIT_0;
+    }
 }
 
 // Socket
@@ -160,7 +160,7 @@ Socket::Socket (Socket && from) noexcept
 
     from.s = INVALID_SOCKET;
 }
-Socket & Socket::operator = (Socket && from) {
+Socket & Socket::operator = (Socket && from) noexcept {
     this->disconnect ();
     std::swap (this->s, from.s);
     return *this;
