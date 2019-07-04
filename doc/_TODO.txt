@@ -44,11 +44,6 @@ general link comments channel
        - MERGE mod OPs
     - or discussion simply follows (?)
 
-bootstrap:dns://#port.#index.raddi.net - resolve IP through DNS (or swap port and index?)
- - 443.1.raddi.net (on port 443)
- - 44303.1.raddi.net (on port 44303)
- - method: try next 10 if some index succeeds to resolve
-
 outbound data sorting in raddi::connection::send
  - prioritize shorter entries
  - random delay for origin masking (longer for longer messages)
