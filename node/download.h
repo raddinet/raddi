@@ -14,13 +14,14 @@ class Download
     : raddi::log::provider <raddi::component::main> {
 
     HINTERNET internet = NULL;
+    std::size_t pending = 0;
 
 public:
     Download (const wchar_t * proxy, const wchar_t * user_agent);
     ~Download ();
 
     // Callback
-    //  - classes that need to receive downloaded text implement this interface
+    //  - classes, that need to receive downloaded text, implement this interface
     //
     class Callback {
     public:
@@ -36,10 +37,15 @@ public:
     // download
     //  - starts asynchronous download of 'url' file,
     //    to be asynchronously reported to 'callback' class
-    //  - NOTE: the action is destructive on the string provided in 'url' (TODO: fix?)
+    //  - WARNING: the action is destructive on the string provided in 'url'
     //  - returns: true when download successfully started, false otherwise
     //
     bool download (wchar_t * url, Callback * callback);
+
+    // done
+    //  - returns true when all downloads completed
+    //
+    bool done ();
 
 private:
 
@@ -50,17 +56,17 @@ private:
         : raddi::log::provider <raddi::component::main> {
 
         HINTERNET    connection;
+        Download *   download;
         Callback *   callback;
-        std::wstring url;
 
         void HttpHandler (HINTERNET, DWORD, char *, DWORD);
 
     public:
-        Context (HINTERNET connection, Callback * callback, const std::wstring & url)
-            : provider ("download")
+        Context (HINTERNET connection, Download * download, Callback * callback, const std::wstring & url)
+            : provider ("download", url)
             , connection (connection)
-            , callback (callback)
-            , url (url) {};
+            , download (download)
+            , callback (callback) {};
 
         ~Context ();
 

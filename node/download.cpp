@@ -70,8 +70,10 @@ bool Download::download (wchar_t * url, Callback * callback) {
                 }
 
                 if (WinHttpSendRequest (request, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0,
-                                        reinterpret_cast <DWORD_PTR> (new Context (connection, callback,
+                                        reinterpret_cast <DWORD_PTR> (new Context (connection, this, callback,
                                                                                    components.lpszScheme + std::wstring (L"://") + components.lpszHostName)))) {
+                    
+                    InterlockedIncrement (&this->pending);
                     return true;
 
                 } else {
@@ -91,21 +93,25 @@ bool Download::download (wchar_t * url, Callback * callback) {
     return false;
 }
 
+bool Download::done () {
+    return InterlockedCompareExchange (&this->pending, 0, 0) == 0;
+}
+
 void Download::Context::HttpHandler (HINTERNET request, DWORD code, char * data, DWORD size) {
     char buffer [8193];
     switch (code) {
 
         case WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
         case WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION:
-            this->report (raddi::log::level::error, 0x26, this->url);
+            this->report (raddi::log::level::error, 0x26);
             break;
 
-            // successes return early here
+        // successes return early here
         case WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE:
             if (WinHttpReceiveResponse (request, NULL))
                 return;
 
-            this->report (raddi::log::level::error, 0x25, this->url, "start");
+            this->report (raddi::log::level::error, 0x25, "start");
             break;
 
         case WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE:
@@ -117,11 +123,11 @@ void Download::Context::HttpHandler (HINTERNET request, DWORD code, char * data,
                     if (WinHttpQueryDataAvailable (request, NULL))
                         return;
 
-                    this->report (raddi::log::level::error, 0x25, this->url, "query");
+                    this->report (raddi::log::level::error, 0x25, "query");
                 } else
-                    this->report (raddi::log::level::error, 0x27, this->url, status);
+                    this->report (raddi::log::level::error, 0x27, status);
             } else
-                this->report (raddi::log::level::error, 0x25, this->url, "header");
+                this->report (raddi::log::level::error, 0x25, "header");
             break;
 
         // NOTE: I really need to stop writing code like this
@@ -154,7 +160,7 @@ void Download::Context::HttpHandler (HINTERNET request, DWORD code, char * data,
                             }
                             p [length] = '\0';
 
-                            if (!this->callback->downloaded (this->url, p))
+                            if (!this->callback->downloaded (this->identity.instance, p))
                                 goto cancelled;
 
                             p += length;
@@ -166,7 +172,7 @@ void Download::Context::HttpHandler (HINTERNET request, DWORD code, char * data,
                 if (WinHttpReadData (request, buffer, sizeof buffer - 1, NULL))
                     return;
 
-                this->report (raddi::log::level::error, 0x25, this->url, "read");
+                this->report (raddi::log::level::error, 0x25, "read");
             }
     }
 
@@ -177,4 +183,5 @@ cancelled:
 
 Download::Context::~Context () {
     WinHttpCloseHandle (this->connection);
+    InterlockedDecrement (&this->download->pending);
 }
