@@ -126,6 +126,10 @@ Node parameters:
 		  to ensure connected status
 		- default value is 60000, i.e. 60 seconds; zero disables keep-alives
 		- NOTE: non-zero values smaller than 1000 may not work
+	- track-all-channels:<0|1|false|true>
+		- node will store all top level channel entries (threads and meta)
+		  to database so that GUI apps can present meaningful info to the user
+		- default is true
 	- core
 		- affected options:
 			- database-store-everything = 1
@@ -136,6 +140,7 @@ Node parameters:
 			- min-core-connections += 1
 			- network-propagation-participation = false
 			- channels-synchronization-participation = false
+			- track-all-channels = false
 
 Node database behavior parameters:
 	- database-reinsertion-validation:<0|1|false|true>
