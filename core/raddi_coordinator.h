@@ -3,6 +3,7 @@
 
 #include "../node/server.h"
 #include "../node/download.h"
+#include "../node/dns.h"
 #include "../common/lock.h"
 #include "../common/log.h"
 
@@ -29,7 +30,8 @@ namespace raddi {
     class connection;
     class coordinator
         : private log::provider <component::server>
-        , public Download::Callback {
+        , public Download::Callback
+        , public Dns::Recipient {
 
         // database
         //  - reference to database instance
@@ -375,6 +377,7 @@ namespace raddi {
 
     private:
         virtual bool downloaded (const std::wstring & url, const char * line) override;
+        virtual void resolved (const std::wstring &, const SOCKADDR_INET &) override;
     };
 }
 

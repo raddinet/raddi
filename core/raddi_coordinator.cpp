@@ -1499,3 +1499,7 @@ bool raddi::coordinator::downloaded (const std::wstring & url, const char * line
     return true;
 }
 
+void raddi::coordinator::resolved (const std::wstring & domain, const SOCKADDR_INET & address) {
+    this->add (raddi::core_nodes, address);
+    this->report (log::level::event, 0x2A, domain, address);
+}
