@@ -161,17 +161,13 @@ namespace raddi {
             inline
             void capture_overriden_api_error (api_error &) {}
 
-            template <typename T>
-            void capture_overriden_api_error (api_error & e, T) {
-                capture_overriden_api_error (e);
-            }
-            template <typename T, typename... Args>
-            void capture_overriden_api_error (api_error & e, T, Args ...remaining) {
-                capture_overriden_api_error (e, remaining...);
-            }
             template <typename... Args>
             void capture_overriden_api_error (api_error & e, api_error ee, Args ...remaining) {
                 e = ee;
+                capture_overriden_api_error (e, remaining...);
+            }
+            template <typename T, typename... Args>
+            void capture_overriden_api_error (api_error & e, T, Args ...remaining) {
                 capture_overriden_api_error (e, remaining...);
             }
 
