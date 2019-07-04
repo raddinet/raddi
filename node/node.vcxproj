@@ -49,14 +49,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -64,7 +64,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Portable|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
@@ -72,21 +72,21 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -94,7 +94,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -102,7 +102,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Portable|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
@@ -110,7 +110,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Portable|ARM64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
@@ -174,7 +174,7 @@
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
     <TargetExt>.exe</TargetExt>
-    <TargetName>raddi64</TargetName>
+    <TargetName>raddiA64</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableCppCoreCheck>true</EnableCppCoreCheck>
     <EnableExperimentalCppCoreCheck>true</EnableExperimentalCppCoreCheck>
@@ -220,7 +220,7 @@
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
     <TargetExt>.exe</TargetExt>
-    <TargetName>raddi64</TargetName>
+    <TargetName>raddiA64</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableCppCoreCheck>true</EnableCppCoreCheck>
     <EnableExperimentalCppCoreCheck>true</EnableExperimentalCppCoreCheck>
@@ -242,7 +242,7 @@
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
     <TargetExt>.exe</TargetExt>
-    <TargetName>raddi64</TargetName>
+    <TargetName>raddiA64</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableCppCoreCheck>true</EnableCppCoreCheck>
     <EnableExperimentalCppCoreCheck>true</EnableExperimentalCppCoreCheck>
@@ -268,7 +268,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <SetChecksum>false</SetChecksum>
@@ -300,7 +300,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
       <SetChecksum>false</SetChecksum>
@@ -332,7 +332,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
       <SetChecksum>false</SetChecksum>
@@ -371,7 +371,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
@@ -413,7 +413,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
@@ -450,13 +450,14 @@
       <ConformanceMode>true</ConformanceMode>
       <AssemblerOutput>All</AssemblerOutput>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalOptions>/d2FH4 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
@@ -499,7 +500,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
@@ -536,13 +537,14 @@
       <ConformanceMode>true</ConformanceMode>
       <AssemblerOutput>All</AssemblerOutput>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalOptions>/d2FH4 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
@@ -585,7 +587,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
@@ -634,6 +636,7 @@
     <ClCompile Include="..\core\raddi_subscriptions.cpp" />
     <ClCompile Include="..\core\raddi_subscription_set.cpp" />
     <ClCompile Include="..\core\raddi_timestamp.cpp" />
+    <ClCompile Include="dns.cpp" />
     <ClCompile Include="download.cpp" />
     <ClCompile Include="localhosts.cpp" />
     <ClCompile Include="node.cpp" />
@@ -692,6 +695,7 @@
     <ClInclude Include="..\core\raddi_subscription_set.h" />
     <ClInclude Include="..\core\raddi_timestamp.h" />
     <ClInclude Include="..\lib\cuckoocycle.h" />
+    <ClInclude Include="dns.h" />
     <ClInclude Include="download.h" />
     <ClInclude Include="localhosts.h" />
     <ClInclude Include="server.h" />

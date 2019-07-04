@@ -26,6 +26,7 @@
 #include "server.h"
 #include "source.h"
 #include "timers.h"
+#include "dns.h"
 #include "download.h"
 #include "localhosts.h"
 
@@ -75,6 +76,8 @@ namespace {
     raddi::db *          database = nullptr;
     raddi::coordinator * coordinator = nullptr;
     LocalHosts *         localhosts = nullptr; // TODO: consider making member of 'coordinator'
+    Download *           downloader = nullptr;
+    Dns *                dns = nullptr;
 }
 
 int wmain (int argc, wchar_t ** argw) {
@@ -222,9 +225,6 @@ bool raddi::connection::message (const unsigned char * data, std::size_t size) {
         return ::coordinator->process (data, size, this);
 };
 
-void DownloadedCallback (const SOCKADDR_INET & address) {
-    ::coordinator->add (raddi::core_nodes, address);
-}
 bool Source::entry (const raddi::entry * data, std::size_t size) {
     try {
         if (raddi::entry::validate (data, size)) {
@@ -246,6 +246,13 @@ namespace {
         //  - use -1 to allow lower difficulty identities/channels
         //
         int proof_complexity_requirements_adjustment = 0;
+
+        // track_all_channels
+        //  - store top level channel entries to database ('threads' table)
+        //    so that GUI apps can present meaningful info to the user
+        //  - disabled for 'leaf' nodes
+        //
+        bool track_all_channels = true;
 
     } settings;
 }
@@ -524,6 +531,12 @@ namespace {
                 if (!(inserted = coordinator->recent.insert (entry->id)))
                     break;
 
+                // keep track on threads and basic channel traffic details
+                // so that GUI apps can present meaningful info to the user
+                
+                if (settings.track_all_channels)
+                    return true;
+                
                 // ensure data comming from other connections are current and not being a flood of historical playback
                 //  - historic entries must be withing range allowed by temporary (?) extension
                 //  - unsolicited entries must always be within general network propagation range (-10...+3 minutes)
@@ -816,6 +829,7 @@ namespace {
         raddi::coordinator coordinator (database);
 
         if (leaf) {
+            settings.track_all_channels = false;
             coordinator.settings.network_propagation_participation = false;
             coordinator.settings.channels_synchronization_participation = false;
             coordinator.settings.min_core_connections += raddi::defaults::coordinator_additional_leaf_min_core_connections;
@@ -836,6 +850,8 @@ namespace {
         option (argc, argw, L"full-database-downloads", coordinator.settings.full_database_downloads_allowed);
         option (argc, argw, L"full-database-download-limit", coordinator.settings.full_database_download_limit);
 
+        
+        option (argc, argw, L"track-all-channels", settings.track_all_channels);
         option (argc, argw, L"keep-alive", coordinator.settings.keep_alive_period);
 
         // option (argc, argw, L"", coordinator.settings.announcement_sample_size);
@@ -973,12 +989,66 @@ namespace {
             coordinator.discovery (raddi::defaults::coordinator_discovery_port);
         }
 
-        // http client
-        //  - for bootstrap, and possible future features
-        //  - NOTE: 'Download' parses the file for separate line of IP:port pairs
-        //  - TODO: use dns://cn0.raddi.net
 
-        if (WinHttpCheckPlatform ()) {
+        // bootstrap
+        //  - retrieves IP addresses from various sources:
+        //     - DNS - queries DNS for addresses (see syntax in dns.hpp or parameters.txt)
+        //     - HTTP/HTTPS bootstrap files - downloads file, parses IP:port per line
+        //  - TODO: consider adding FTP
+
+        bool boostrap_default = false;
+        std::vector <wchar_t *> bootstraps_dns;
+        std::vector <wchar_t *> bootstraps_http;
+
+        if (options (argc, argw, L"bootstrap", [&bootstraps_dns, &bootstraps_http] (wchar_t * url) {
+            if (std::wcscmp (url, L"off") != 0) {
+
+                if (std::wcsncmp (url, L"dns:", 4) == 0) {
+                    bootstraps_dns.push_back (url);
+                } else
+                if (std::wcsncmp (url, L"http://", 7) == 0) {
+                    bootstraps_http.push_back (url);
+                } else
+                if (std::wcsncmp (url, L"https://", 8) == 0) {
+                    bootstraps_http.push_back (url);
+                } else {
+                    raddi::log::error (raddi::component::main, 0x20,
+                                       url, raddi::log::api_error (ERROR_WINHTTP_UNRECOGNIZED_SCHEME));
+                }
+            }
+        }) == 0) {
+
+            // if known core node list is empty, and no explicit boostraps provided, try fetching default
+            if (coordinator.empty (raddi::core_nodes)) {
+                boostrap_default = true;
+            }
+        }
+
+        if (boostrap_default || !bootstraps_dns.empty ()) {
+            try {
+                dns = new Dns;
+                if (boostrap_default) {
+                    dns->resolve (&coordinator, Dns::Type::A, L"443.raddi.net", 443);
+                    dns->resolve (&coordinator, Dns::Type::A, L"44303.raddi.net", raddi::defaults::coordinator_listening_port);
+
+                    if (IsWindowsVistaOrGreater ()) {
+                        dns->resolve (&coordinator, Dns::Type::AAAA, L"443.raddi.net", 443);
+                        dns->resolve (&coordinator, Dns::Type::AAAA, L"44303.raddi.net", raddi::defaults::coordinator_listening_port);
+                    }
+                }
+                for (auto record : bootstraps_dns) {
+                    dns->resolve (&coordinator, record, raddi::defaults::coordinator_listening_port);
+                }
+            } catch (const std::bad_alloc &) {
+                // TODO: raddi::log::error (5, i, 0, x.what ());?
+            }
+
+            bootstraps_dns.clear ();
+            bootstraps_dns.shrink_to_fit ();
+        }
+
+        if (!bootstraps_http.empty ()) {
+
             std::wstring proxy_ua_string;
             proxy_ua_string.reserve (9);
             proxy_ua_string += L"RADDI/";
@@ -986,31 +1056,20 @@ namespace {
             proxy_ua_string += L'.';
             proxy_ua_string += std::to_wstring (LOWORD (version->dwProductVersionMS));
 
-            if (InitializeDownload (option (argc, argw, L"bootstrap-proxy"),
-                                    option (argc, argw, L"bootstrap-user-agent", proxy_ua_string.c_str ()))) {
-
-                if (options (argc, argw, L"bootstrap", [] (wchar_t * url) {
-                    if (std::wcscmp (url, L"off") != 0) {
-                        Download (url);
-                    }
-                }) == 0) {
-
-                    // no known core node? then download list from preconfigured URL
-                    if (coordinator.empty (raddi::core_nodes)) {
-                        wchar_t url [sizeof raddi::defaults::bootstrap_url / sizeof raddi::defaults::bootstrap_url [0]];
-                        std::wcscpy (url, raddi::defaults::bootstrap_url);
-
-                        // XP does not support modern SSL, remove 'S' from HTTPS, if HTTPS
-                        if (!IsWindowsVistaOrGreater ()) {
-                            if (url [4] == L's') {
-                                std::wmemmove (&url [4], &url [5],
-                                               sizeof raddi::defaults::bootstrap_url / sizeof raddi::defaults::bootstrap_url [0] - 5);
-                            }
-                        }
-                        Download (url);
-                    }
+            try {
+                downloader = new Download (option (argc, argw, L"bootstrap-proxy"),
+                                           option (argc, argw, L"bootstrap-user-agent", proxy_ua_string.c_str ()));
+                for (auto url : bootstraps_http) {
+                    downloader->download (url, &coordinator);
                 }
+            } catch (const std::bad_alloc &) {
+                // TODO: raddi::log::error (5, i, 0, x.what ());?
+            } catch (...) {
+                // probably failed to initialize WinInet, already reported
             }
+
+            bootstraps_http.clear ();
+            bootstraps_http.shrink_to_fit ();
         }
 
         // request time resynchronization
@@ -1181,6 +1240,13 @@ namespace {
                         }
                     }
 
+                    if (downloader) {
+                        if (downloader->done ()) {
+                            delete downloader;
+                            downloader = nullptr;
+                        }
+                    }
+
                     // update status entries
                     //  - TODO: entries processed, accepted, rejected, transmitted (per entry & per transmission)
                     //  - TODO: list of connections
@@ -1220,8 +1286,13 @@ namespace {
 
     void terminate () {
         SetEvent (terminating);
-        TerminateDownload ();
         coordinator->terminate ();
+        
+        delete dns;
+        dns = nullptr;
+
+        delete downloader;
+        downloader = nullptr;
 
         std::size_t n = workers;
         for (std::size_t i = 0; i != n; ++i) {
