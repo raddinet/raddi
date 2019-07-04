@@ -28,9 +28,6 @@ namespace raddi {
         static constexpr std::size_t connection_keep_alive_timeout = 60000; // ms
 
 
-        static const wchar_t bootstrap_url [] = L"https://www.raddi.net/bootstrap.txt"; // HTTP
-
-
         static const wchar_t data_subdir [] = L"\\RADDI.net\\";
         static const wchar_t log_subdir [] = L"\\RADDI.net\\log\\";
         static const wchar_t app_subdir [] = L"app\\";
