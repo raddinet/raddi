@@ -91,7 +91,7 @@ bool Dns::resolve (Recipient * recipient, wchar_t * uri, unsigned short port) {
     if (auto colon = std::wcschr (uri, L':')) {
         *colon = L'\0';
         if (auto uriport = std::wcstoul (colon + 1, nullptr, 10)) {
-            if (uriport < 65536) {
+            if ((uriport != 0) && (uriport < 65536)) {
                 port = (unsigned short) uriport;
             } else {
                 this->report (raddi::log::level::error, 0x29, original, colon + 1, port);
@@ -101,8 +101,11 @@ bool Dns::resolve (Recipient * recipient, wchar_t * uri, unsigned short port) {
         }
     }
 
-    this->resolve (recipient, type, uri, port);
-    return true;
+    if (uri [0]) {
+        this->resolve (recipient, type, uri, port);
+        return true;
+    } else
+        return false;
 }
 
 void Dns::resolve (Recipient * recipient, Type type, const wchar_t * domain, unsigned short port) {
