@@ -32,7 +32,7 @@ namespace raddi {
 
         void discord ();
         void out_of_memory ();
-        bool head (const raddi::protocol::keyset * peer);
+        bool head (const raddi::protocol::initial * peer);
         bool message (const unsigned char * entry, std::size_t size);
 
         union {

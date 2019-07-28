@@ -31,31 +31,35 @@ raddi::protocol::xchacha20poly1305::~xchacha20poly1305 () {
     sodium_memzero (static_cast <keyset *> (this), sizeof (keyset));
 }
 
-void raddi::protocol::proposal::propose (raddi::protocol::keyset * head) {
+void raddi::protocol::initial::flags::pair::encode (std::uint32_t value) {
+    randombytes_buf (&this->a, sizeof this->a);
+    this->b = this->a ^ value;
+}
+
+void raddi::protocol::proposal::propose (initial * head) {
     randombytes_buf (this->inbound_key, sizeof this->inbound_key);
     randombytes_buf (this->outbound_key, sizeof this->outbound_key);
     randombytes_buf (this->inbound_nonce, sizeof this->inbound_nonce);
     randombytes_buf (this->outbound_nonce, sizeof this->outbound_nonce);
     
-    if ((aes256gcm_mode != aes256gcm_mode::disabled) && crypto_aead_aes256gcm_is_available ()) {
-        this->outbound_nonce [7] |= 0x01;
-    } else {
-        this->outbound_nonce [7] &= ~0x01;
-    }
+    crypto_scalarmult_base (head->keys.inbound_key, this->inbound_key);
+    crypto_scalarmult_base (head->keys.outbound_key, this->outbound_key);
 
-    crypto_scalarmult_base (head->inbound_key, this->inbound_key);
-    crypto_scalarmult_base (head->outbound_key, this->outbound_key);
+    std::memcpy (head->keys.inbound_nonce, this->inbound_nonce, sizeof this->inbound_nonce);
+    std::memcpy (head->keys.outbound_nonce, this->outbound_nonce, sizeof this->outbound_nonce);
 
-    std::memcpy (head->inbound_nonce, this->inbound_nonce, sizeof this->inbound_nonce);
-    std::memcpy (head->outbound_nonce, this->outbound_nonce, sizeof this->outbound_nonce);
+    auto aes = (aes256gcm_mode != aes256gcm_mode::disabled) && crypto_aead_aes256gcm_is_available ();
+
+    head->flags.hard.encode (0);
+    head->flags.soft.encode (aes ? 0x0000'0001 : 0x0000'0000);
 }
 
-raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::protocol::keyset * peer) {
+raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::protocol::initial * peer) {
     unsigned char rcvscalarmul [crypto_scalarmult_BYTES];
     unsigned char trmscalarmul [crypto_scalarmult_BYTES];
 
-    crypto_scalarmult (rcvscalarmul, this->inbound_key, peer->outbound_key);
-    crypto_scalarmult (trmscalarmul, this->outbound_key, peer->inbound_key);
+    crypto_scalarmult (rcvscalarmul, this->inbound_key, peer->keys.outbound_key);
+    crypto_scalarmult (trmscalarmul, this->outbound_key, peer->keys.inbound_key);
     crypto_generichash (this->inbound_key, sizeof this->inbound_key, rcvscalarmul, sizeof rcvscalarmul,
                         reinterpret_cast <const unsigned char *> (raddi::protocol::magic), sizeof raddi::protocol::magic);
     crypto_generichash (this->outbound_key, sizeof this->outbound_key, trmscalarmul, sizeof trmscalarmul,
@@ -64,11 +68,14 @@ raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::pr
     sodium_memzero (rcvscalarmul, sizeof rcvscalarmul);
     sodium_memzero (trmscalarmul, sizeof trmscalarmul);
     
-    if ((aes256gcm_mode != aes256gcm_mode::disabled) && crypto_aead_aes256gcm_is_available () && (peer->outbound_nonce [7] & 0x01)) {
-        return new aes256gcm (this, peer);
+    if (peer->flags.hard.decode () != 0) // TODO: report unsupported protocol flags
+        return nullptr;
+
+    if ((aes256gcm_mode != aes256gcm_mode::disabled) && crypto_aead_aes256gcm_is_available () && (peer->flags.soft.decode () & 0x0000'0001)) {
+        return new aes256gcm (this, &peer->keys);
     } else {
         if (aes256gcm_mode != aes256gcm_mode::forced) {
-            return new xchacha20poly1305 (this, peer);
+            return new xchacha20poly1305 (this, &peer->keys);
         } else
             return nullptr;
     }

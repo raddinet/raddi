@@ -74,8 +74,8 @@ bool raddi::connection::connected () {
             buffer [prologue - 2] = this->peer.port / 256;
             buffer [prologue - 1] = this->peer.port % 256;
         }
-        this->proposal->propose (reinterpret_cast <raddi::protocol::keyset *> (buffer + prologue));
-        return this->transmit (buffer, sizeof (raddi::protocol::keyset) + prologue);
+        this->proposal->propose (reinterpret_cast <raddi::protocol::initial *> (buffer + prologue));
+        return this->transmit (buffer, sizeof (raddi::protocol::initial) + prologue);
     } else
         return false;
 }
@@ -259,7 +259,7 @@ bool raddi::connection::inbound (const unsigned char * data, std::size_t & n) {
         }
 
         if (n >= sizeof (raddi::protocol::keyset) + prologue) {
-            if (this->head (reinterpret_cast <const raddi::protocol::keyset *> (data + prologue))) {
+            if (this->head (reinterpret_cast <const raddi::protocol::initial *> (data + prologue))) {
                 this->secured = true;
                 n = sizeof (raddi::protocol::keyset) + prologue;
             } else {

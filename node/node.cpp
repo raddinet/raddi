@@ -185,8 +185,8 @@ void raddi::connection::disconnected () {
 
     SetEvent (::disconnected);
 }
-bool raddi::connection::head (const raddi::protocol::keyset * peer) {
-    if (::localhosts->contains (this->peer) || ::coordinator->reflecting (peer)) {
+bool raddi::connection::head (const raddi::protocol::initial * peer) {
+    if (::localhosts->contains (this->peer) || ::coordinator->reflecting (&peer->keys)) {
         this->report (raddi::log::level::note, 3);
         return false;
     }

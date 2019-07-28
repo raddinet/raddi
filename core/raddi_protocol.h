@@ -29,7 +29,6 @@ namespace raddi {
         
         // keyset
         //  - stores aligned inbound/outbound key/nonce pairs
-        //  - sent as communication header, first data block exchanged, proposal that carries one part of D-H negotiation
         //
         struct CRYPTO_ALIGN (16) keyset {
 
@@ -44,6 +43,28 @@ namespace raddi {
             //
             std::uint8_t inbound_nonce [std::max (crypto_aead_xchacha20poly1305_ietf_NPUBBYTES, crypto_aead_aes256gcm_NPUBBYTES)];
             std::uint8_t outbound_nonce [std::max (crypto_aead_xchacha20poly1305_ietf_NPUBBYTES, crypto_aead_aes256gcm_NPUBBYTES)];
+        };
+
+        // initial
+        //  - sent as communication header, first data block exchanged, proposal that carries one part of D-H negotiation
+        //
+        struct initial {
+            keyset keys;
+
+            // flags
+            //  - 'soft' flags are options that can be refused or ignored
+            //  - 'hard' flags are breaking changes; unknown set hard flag means disconnect
+            //
+            struct flags {
+                struct pair {
+                    std::uint32_t a;
+                    std::uint32_t b;
+
+                    std::uint32_t decode () const { return this->a ^ this->b; }
+                    void          encode (std::uint32_t value); // non-deterministic
+                } soft
+                , hard;
+            } flags;
         };
 
         // encryption
@@ -80,12 +101,12 @@ namespace raddi {
             // propose
             //  - randomizes the proposal and generates communication 'head'
             // 
-            void         propose (keyset * head);
+            void         propose (initial * head);
 
             // accept
             //  - finishes D-H and generates encryption object according to peer's proposal
             //
-            encryption * accept (const keyset * head);
+            encryption * accept (const initial * head);
 
             // name
             //  - returns name of encryption scheme being proposed

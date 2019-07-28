@@ -32,6 +32,7 @@ namespace raddi {
 
             // initial -> raddi::protocol::magic
             //  - first packet exchanged to quickly verify encryption works
+            //  - NOTE: this is different thing from initial protocol frame
             //  - TODO: append IP/port how I see the peer connection?
             //
             initial = 0x00,
