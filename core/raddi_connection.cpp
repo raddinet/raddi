@@ -50,7 +50,7 @@ bool raddi::connection::connected () {
     } else {
         prologue = 0;
     }
-    if (auto buffer = this->prepare (sizeof (raddi::protocol::keyset) + prologue)) {
+    if (auto buffer = this->prepare (sizeof (raddi::protocol::initial) + prologue)) {
         if (prologue) {
             buffer [0] = 0x05; // SOCKS5
             buffer [1] = 0x01; //  - only 1 method of auth supported
@@ -258,10 +258,10 @@ bool raddi::connection::inbound (const unsigned char * data, std::size_t & n) {
                 this->report (log::level::note, 4, socks5proxy);
         }
 
-        if (n >= sizeof (raddi::protocol::keyset) + prologue) {
+        if (n >= sizeof (raddi::protocol::initial) + prologue) {
             if (this->head (reinterpret_cast <const raddi::protocol::initial *> (data + prologue))) {
                 this->secured = true;
-                n = sizeof (raddi::protocol::keyset) + prologue;
+                n = sizeof (raddi::protocol::initial) + prologue;
             } else {
                 this->discord ();
                 return false;
@@ -271,7 +271,7 @@ bool raddi::connection::inbound (const unsigned char * data, std::size_t & n) {
                 // peer is overloaded, disconnect and try later
                 return false;
             } else {
-                n = sizeof (raddi::protocol::keyset) + prologue;
+                n = sizeof (raddi::protocol::initial) + prologue;
             }
     }
     return true;

@@ -7,6 +7,8 @@
 #include <cstring>
 #include <bitset>
 
+#pragma warning (disable:6250) // VirtualFree, decommit without release
+
 namespace {
     LPFN_ACCEPTEX ptrAcceptEx = NULL;
     LPFN_GETACCEPTEXSOCKADDRS ptrGetAcceptExSockAddrs = NULL;
@@ -303,6 +305,10 @@ unsigned char * Transmitter::prepare (std::size_t size) {
 bool Transmitter::transmit (const unsigned char * data, std::size_t size) {
     try {
         if (data == this->pending.data ()) {
+            if (size > this->pending.size ()) {
+                this->report (raddi::log::level::stop, 0xF0, size, this->pending.size ());
+            }
+
             this->pending.resize (size);
             if (this->send (this->pending)) {
                 return true;
@@ -314,6 +320,11 @@ bool Transmitter::transmit (const unsigned char * data, std::size_t size) {
             }
         } else {
             const auto offset = data - this->awaiting.data ();
+
+            if (offset + size > this->awaiting.size ()) {
+                this->report (raddi::log::level::stop, 0xF0, size, this->awaiting.size () - offset);
+            }
+
             this->awaiting.resize (offset + size);
             this->counters.delayed += size;
             return true;

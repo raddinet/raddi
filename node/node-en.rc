@@ -189,4 +189,5 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SERVER | ERROR | 0x20   ""
     SERVER | ERROR | 0x21   "bootstrap from {1}: unable to add core level node address {2}, not recognized"
     SERVER | STOP | 0x20    "killing {1} stuck connections, this may crash..."
+    SERVER | STOP | 0xF0    "bug: {1} bytes to transmit, prepared only {2}"
 }
