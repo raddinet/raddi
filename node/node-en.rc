@@ -9,12 +9,26 @@
 STRINGTABLE
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 {
+    // console handler codes
     0x00010 "Ctrl+C"
     0x00011 "Ctrl+Break"
     0x00012 "console close"
     0x00015 "user log off"
     0x00016 "system shutdown"
 
+    // socks5t proxy error codes
+    0x00020 "" // success
+    0x00021 "general failure"
+    0x00022 "not allowed"
+    0x00023 "network unreachable"
+    0x00024 "host unreachable"
+    0x00025 "refused"
+    0x00026 "" // standard timeout
+    0x00027 "not supported"
+    0x00028 "address type not supported"
+    0x00029 "unknown"
+
+    // service handler requests
     0x00101 "stop"
     0x00102 "pause"
     0x00103 "continue"

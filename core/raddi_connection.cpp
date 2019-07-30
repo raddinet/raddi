@@ -233,21 +233,9 @@ bool raddi::connection::inbound (const unsigned char * data, std::size_t & n) {
 
             if (!valid) {
                 if ((n > 3) && (data [0] == 0x05 && data [1] == 0x00 && data [2] == 0x05)) {
-                    // TODO: move to node-en.rc
-                    static const char * const failures [] = {
-                        "", // success
-                        "general failure",
-                        "not allowed",
-                        "network unreachable",
-                        "host unreachable",
-                        "refused",
-                        "", // standard timeout
-                        "not supported",
-                        "address type not supported",
-                        "unknown",
-                    };
                     if (data [3] != 6) {
-                        this->report (log::level::error, 16, (unsigned int) data [3], failures [(data [3] < 9) ? data [3] : 9]);
+                        this->report (log::level::error, 16, (unsigned int) data [3],
+                                      log::rsrc_string (0x00020 + ((data [3] < 9) ? data [3] : 9)));
                     }
                 } else {
                     this->report (log::level::error, 15);
