@@ -218,7 +218,7 @@ namespace raddi {
         public:
             
             // identity
-            //  - 
+            //  - provides object an human-readable identity for (mainly) logging purposes
             //
             internal::provider_name identity;
 
