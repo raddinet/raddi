@@ -36,19 +36,21 @@ SQLite::BadBlobAssignmentException::BadBlobAssignmentException (std::size_t retr
     , required (required) {}
 
 SQLite::Statement::Statement ()
-    : stmt (nullptr) {}
+    : stmt (nullptr)
+    , bi (0)
+    , row (0) {}
 
 SQLite::Statement::Statement (sqlite3_stmt * stmt)
     : stmt (stmt)
     , bi (0)
     , row (0) {}
 
-SQLite::Statement::Statement (SQLite::Statement && s)
+SQLite::Statement::Statement (SQLite::Statement && s) noexcept
     : stmt (s.stmt)
     , bi (s.bi)
     , row (s.row) { s.stmt = nullptr; }
 
-SQLite::Statement & SQLite::Statement::operator = (SQLite::Statement && s) {
+SQLite::Statement & SQLite::Statement::operator = (SQLite::Statement && s) noexcept {
     std::swap (this->stmt, s.stmt);
     std::swap (this->bi, s.bi);
     std::swap (this->row, s.row);
@@ -127,13 +129,16 @@ template <> std::size_t SQLite::Statement::get <std::size_t> (int column) const 
 }
 
 template <> std::wstring SQLite::Statement::get <std::wstring> (int column) const {
+    return std::wstring (this->get <std::wstring_view> (column));
+}
+template <> std::wstring_view SQLite::Statement::get <std::wstring_view> (int column) const {
     if (auto ptr = sqlite3_column_text16 (this->stmt, column)) {
         auto size = sqlite3_column_bytes16 (this->stmt, column) / 2;
         auto data = static_cast <const wchar_t *> (ptr);
-        
-        return std::wstring (data, data + size);
+
+        return std::wstring_view (data, size);
     } else
-        return std::wstring ();
+        return std::wstring_view ();
 }
 
 void SQLite::Statement::unbind () {

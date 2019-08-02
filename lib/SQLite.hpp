@@ -67,8 +67,8 @@ public:
         Statement (sqlite3_stmt *);
     public:
         Statement ();
-        Statement (Statement &&);
-        Statement & operator = (Statement &&);
+        Statement (Statement &&) noexcept;
+        Statement & operator = (Statement &&) noexcept;
         ~Statement ();
 
         // empty
