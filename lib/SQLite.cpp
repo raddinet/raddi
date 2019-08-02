@@ -128,9 +128,6 @@ template <> std::size_t SQLite::Statement::get <std::size_t> (int column) const 
         return (std::size_t) this->get <long long> (column);
 }
 
-template <> std::wstring SQLite::Statement::get <std::wstring> (int column) const {
-    return std::wstring (this->get <std::wstring_view> (column));
-}
 template <> std::wstring_view SQLite::Statement::get <std::wstring_view> (int column) const {
     if (auto ptr = sqlite3_column_text16 (this->stmt, column)) {
         auto size = sqlite3_column_bytes16 (this->stmt, column) / 2;
@@ -139,6 +136,9 @@ template <> std::wstring_view SQLite::Statement::get <std::wstring_view> (int co
         return std::wstring_view (data, size);
     } else
         return std::wstring_view ();
+}
+template <> std::wstring SQLite::Statement::get <std::wstring> (int column) const {
+    return std::wstring (this->get <std::wstring_view> (column));
 }
 
 void SQLite::Statement::unbind () {
