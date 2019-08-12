@@ -36,6 +36,7 @@
 #include "../core/raddi_command.h"
 #include "../core/raddi_request.h"
 #include "../core/raddi_noticed.h"
+#include "../core/raddi_content.h"
 #include "../core/raddi_consensus.h"
 #include "../core/raddi_instance.h"
 
@@ -70,7 +71,7 @@ namespace {
     
     void terminate ();
     bool embrace (raddi::connection * source, const raddi::entry * entry, std::size_t size, std::size_t nesting = 0);
-    bool assess_proof_requirements (const void * entry, std::size_t size, bool & disconnect);
+    bool assess_proof_requirements (const raddi::entry * entry, const raddi::proof * proof, bool & disconnect);
 
     std::size_t          workers = 0;
     raddi::db *          database = nullptr;
@@ -213,9 +214,12 @@ bool raddi::connection::message (const unsigned char * data, std::size_t size) {
     if (size >= sizeof (raddi::entry) + raddi::proof::min_size) {
         if (raddi::entry::validate (data, size)) {
 
+            const auto entry = reinterpret_cast <const raddi::entry *> (data);
+            const auto proof = entry->proof (size);
+
             bool disconnect;
-            if (assess_proof_requirements (data, size, disconnect)) {
-                return embrace (this, reinterpret_cast <const raddi::entry *> (data), size);
+            if (assess_proof_requirements (entry, proof, disconnect)) {
+                return embrace (this, entry, size);
             } else
                 return disconnect;
 
@@ -445,9 +449,7 @@ namespace {
     //  - checks if proof parameters match minimum required parameters for that entry type,
     //    optionally adjusted by user through a command-line parameter
     //
-    bool assess_proof_requirements (const void * data, std::size_t size, bool & disconnect) {
-        const auto entry = reinterpret_cast <const raddi::entry *> (data);
-        const auto proof = entry->proof (size);
+    bool assess_proof_requirements (const raddi::entry * entry, const raddi::proof * proof, bool & disconnect) {
 
         // validate complexity requirements for proof-of-work
         //  - applies adjustment
@@ -469,6 +471,67 @@ namespace {
             return true;
     }
 
+    // assess_extra_size_requirements
+    //  - checks if entry content size is within consensus-mandated bounds
+    //
+    bool assess_extra_size_requirements (const raddi::entry * entry, std::size_t content_size, raddi::db::assessed_level level) {
+        
+        std::size_t max_content_size = raddi::entry::max_content_size;
+        switch (level) {
+
+            case raddi::db::assessed_level::thread:
+                if (raddi::content::is_plain_line (entry->content (), content_size)) {
+                    max_content_size = raddi::consensus::max_thread_name_size;
+                } else {
+                    max_content_size = raddi::consensus::max_channel_control_size;
+                }
+                break;
+
+            default:
+                return true;
+        }
+
+        if (content_size > max_content_size) {
+            coordinator->refused.insert (entry->id);
+            raddi::log::data (raddi::component::database, 0x1C, entry->id, content_size, max_content_size);
+            return false;
+        } else
+            return true;
+    }
+
+    // assess_extra_proof_requirements
+    //  - checks if proof parameters match minimum required parameters for that entry assessment level (thread, top level comment, nested, etc.)
+    //
+    bool assess_extra_proof_requirements (const raddi::entry * entry, const raddi::proof * proof, raddi::db::assessed_level level, bool & disconnect) {
+
+        unsigned int requirement = 0;
+        switch (level) {
+
+            case raddi::db::assessed_level::thread:
+                requirement = raddi::consensus::min_thread_pow_complexity;
+                break;
+
+            // not explicitly checked entries are allowed throught; already checked in 'assess_proof_requirements'
+
+            default:
+                return true;
+        }
+
+        if ((proof->complexity + proof->complexity_bias)
+                < (requirement + settings.proof_complexity_requirements_adjustment)) {
+
+            coordinator->refused.insert (entry->id);
+            raddi::log::data (raddi::component::database, 0x17, entry->id, proof->complexity + proof->complexity_bias,
+                              requirement + settings.proof_complexity_requirements_adjustment,
+                              requirement, settings.proof_complexity_requirements_adjustment);
+
+            // see 'assess_proof_requirements'
+            disconnect = (settings.proof_complexity_requirements_adjustment == 0);
+            return false;
+        } else
+            return true;
+    }
+
     // TODO: move to 'raddi::node::insert' where 'node' will contain database, coordinator, glue functions and options loading
     //  - and only Win32 stuff will remain in node.cpp
 
@@ -478,7 +541,8 @@ namespace {
         bool inserted = false;
 
         raddi::db::root top;
-        switch (database->assess (entry, size, &top)) {
+        raddi::db::assessed_level level;
+        switch (database->assess (entry, size, &top, &level)) {
 
             case raddi::db::rejected:
                 if (source != nullptr) {
@@ -530,6 +594,24 @@ namespace {
 
                 if (!(inserted = coordinator->recent.insert (entry->id)))
                     break;
+
+                // additional check against consensus size/proof for non-announcement entries
+
+                std::size_t proof_size = 0;
+                if (auto proof = entry->proof (size, &proof_size)) {
+
+                    if (!assess_extra_size_requirements (entry, size - proof_size - sizeof (raddi::entry), level)) {
+                        break;
+                    }
+
+                    bool disconnect;
+                    if (!assess_extra_proof_requirements (entry, proof, level, disconnect)) {
+                        if (disconnect)
+                            return false;
+                        else
+                            break;
+                    }
+                }
 
                 // keep track on threads and basic channel traffic details
                 // so that GUI apps can present meaningful info to the user

@@ -98,7 +98,7 @@ raddi::db::statistics raddi::db::stats () const {
     return s;
 }
 
-raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, root * top) {
+raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, root * top, assessed_level * level) {
     const auto entry = static_cast <const raddi::entry *> (data);
     const auto type = entry->is_announcement ();
 
@@ -143,6 +143,7 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
 
             // sanitize, even if 'top' is ignored further in proper insertion (?row.classify)
             std::memset (top, 0, sizeof *top);
+            *level = assessed_level::top;
             return raddi::db::required;
 
         case raddi::entry::not_an_announcement:
@@ -156,6 +157,7 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
                 // parent is normal channel or identity channel: entry is a thread, either in a normal channel or in an identity channel
                 top->thread = entry->id;
                 top->channel = entry->parent;
+                *level = assessed_level::thread;
                 return raddi::db::classify;
 
             } else
@@ -164,6 +166,7 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
                 // parent is thread: entry is a top level comment within a thread (or vote on the thread)
                 top->channel = tr.parent;
                 top->thread = entry->parent;
+                *level = assessed_level::reply;
                 return raddi::db::classify;
 
             } else
@@ -171,6 +174,7 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
 
                 // parent is normal entry: nested comment, vote or stuff
                 *top = r.top ();
+                *level = assessed_level::nested;
                 return raddi::db::classify;
             } else
                 return raddi::db::detached;

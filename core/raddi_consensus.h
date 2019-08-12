@@ -19,13 +19,17 @@ namespace raddi {
 
         static constexpr std::uint32_t max_identity_name_size = 53; // in bytes, currently limited to 53
         static constexpr std::uint32_t max_channel_name_size = 85; // in bytes, currently limited to 85
+        static constexpr std::uint32_t max_channel_control_size = 87; // in bytes
+        static constexpr std::uint32_t max_thread_name_size = 340; // in bytes
 
         // announement/entry complexity/time requirements
 
         static constexpr std::uint32_t min_entry_pow_time = 500;
         static constexpr std::uint32_t min_entry_pow_complexity = 26;
+        static constexpr std::uint32_t min_thread_pow_time = 1000;
+        static constexpr std::uint32_t min_thread_pow_complexity = 27;
         static constexpr std::uint32_t min_announcement_pow_time = 1500;
-        static constexpr std::uint32_t min_announcement_pow_complexity = 27;
+        static constexpr std::uint32_t min_announcement_pow_complexity = 28;
     }
 }
 

@@ -64,7 +64,7 @@ bool raddi::entry::validate (const void * header, std::size_t length) {
 
             content_size -= sizeof (raddi::channel) - sizeof (raddi::entry);
             if (content_size > raddi::consensus::max_channel_name_size) {
-                return raddi::log::data (raddi::component::database, 0x1D, e->id, content_size, raddi::consensus::max_channel_name_size);
+                return raddi::log::data (raddi::component::database, 0x1C, e->id, content_size, raddi::consensus::max_channel_name_size);
             }
             return true;
 

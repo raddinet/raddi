@@ -142,6 +142,13 @@ namespace raddi {
         //
         static analysis analyze (const std::uint8_t * content, std::size_t length);
 
+        // is_plain_line
+        //  - simple helper function which determines whether content is simple line of text
+        //  - any control character, formatting, token, stamp, etc. will cause it to return false
+        //  - returns length of the line (before NUL character, if any)
+        //
+        static std::size_t is_plain_line (const std::uint8_t * content, std::size_t length);
+
     public:
         struct result {
             summary summary;

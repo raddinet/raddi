@@ -42,8 +42,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     DATABASE | DATA | 0x19  "rejected entry {1}, malformed, channel announcement size {2} too short, {3} bytes required"
     DATABASE | DATA | 0x1A  "rejected entry {1}, empty"
     DATABASE | DATA | 0x1B  "rejected entry {1}, {2} bytes, missing proof of work"
-    DATABASE | DATA | 0x1C  "rejected entry {1}, identity announcement name length {2} exceeds consensus maximum of {3} bytes"
-    DATABASE | DATA | 0x1D  "rejected entry {1}, channel announcement name length {2} exceeds consensus maximum of {3} bytes"
+    DATABASE | DATA | 0x1C  "rejected entry {1}, announcement name length {2} exceeds consensus maximum of {3} bytes"
+    DATABASE | DATA | 0x1D  "rejected entry {1}, content size {2} exceeds consensus maximum of {3} bytes"
     DATABASE | DATA | 0x1E  "rejected entry {1}, {2} bytes, invalid signature"
     DATABASE | DATA | 0x1F  "rejected entry {1}, {2} bytes, invalid proof of work"
 

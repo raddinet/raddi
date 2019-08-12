@@ -166,9 +166,10 @@ namespace raddi {
         //
         void optimize (bool strong = false);
 
-        // assess/assessment
+        // assess/assessment/assessed_table
         //  - verifies proof and signature entry against identity in database
         //  - root is not provided for 'rejected' and 'detached' results
+        //  - assessed_level is valid only for 'classify' assessment
         //
         enum assessment {
             rejected = 0, // invalid, don't insert to the database
@@ -176,7 +177,14 @@ namespace raddi {
             classify = 2, // valid, insert at your discretion
             required = 3, // required, insert if possible
         };
-        assessment assess (const void * data, std::size_t size, root *);
+        enum class assessed_level {
+            top = 0,
+            thread, // entry is thread (or channel metadata), parent is normal channel or identity channel
+            reply, // entry is a top level comment within a thread (or vote on the thread), parent is thread
+            nested, // everything else
+
+        };
+        assessment assess (const void * data, std::size_t size, root *, assessed_level *);
 
         // insert
         //  - inserts entry with its root information into appropriate table in the database

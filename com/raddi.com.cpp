@@ -539,7 +539,7 @@ bool database_verification ();
 
 bool new_identity ();
 bool new_channel ();
-bool reply (const wchar_t * opname, const wchar_t * to);
+bool reply (const wchar_t * opname, const wchar_t * to, bool thread = false);
 
 bool list_identities ();
 bool list_channels ();
@@ -668,13 +668,13 @@ bool go () {
         if (!std::wcscmp (parameter, L"thread")) {
             if (auto to = option (argc, argw, L"channel")) {
                 // TODO: verify that 'to' is a channel
-                return reply (L"new:thread", to);
+                return reply (L"new:thread", to, true);
             }
         }
     }
 
     if (auto parameter = option (argc, argw, L"reply")) {
-        return reply (L"reply", parameter);
+        return reply (L"reply", parameter, false);
     }
 
     if (auto parameter = option (argc, argw, L"get")) {
@@ -870,7 +870,8 @@ bool erase_command (const wchar_t * what) {
 template <typename T>
 std::size_t sign_and_validate (const wchar_t * step, T & entry, std::size_t size,
                                const std::uint8_t (&seed) [crypto_sign_ed25519_SEEDBYTES],
-                               const std::uint8_t (&pk) [crypto_sign_ed25519_PUBLICKEYBYTES]) {
+                               const std::uint8_t (&pk) [crypto_sign_ed25519_PUBLICKEYBYTES],
+                               raddi::proof::requirements rq) {
     
     std::uint8_t sk [crypto_sign_ed25519_SECRETKEYBYTES];
     std::memcpy (sk, seed, crypto_sign_ed25519_SEEDBYTES);
@@ -878,7 +879,7 @@ std::size_t sign_and_validate (const wchar_t * step, T & entry, std::size_t size
 
     try {
         if (auto a = entry.sign (sizeof entry + size, sk,
-                                 complexity (entry.default_requirements ()), &quit)) {
+                                 complexity (rq), &quit)) {
             size += a;
             if (entry.validate (&entry, sizeof entry + size)) {
                 if (entry.verify (sizeof entry + size, pk)) {
@@ -938,7 +939,7 @@ bool new_identity () {
         if (announcement.create (private_key)) {
 
             if (auto size = sign_and_validate <raddi::identity> (L"new:identity", announcement, description_size,
-                                                                 private_key, announcement.public_key)) {
+                                                                 private_key, announcement.public_key, announcement.default_requirements ())) {
                 if (send (instance, announcement, sizeof (raddi::identity) + size)) {
 
                     wchar_t string [26];
@@ -997,7 +998,7 @@ bool new_channel () {
             while (!quit) {
                 if (announcement.create (id)) {
                     if (auto size = sign_and_validate <raddi::channel> (L"new:channel", announcement, description_size,
-                                                                        key, parent.public_key)) {
+                                                                        key, parent.public_key, announcement.default_requirements ())) {
                         if (send (instance, announcement, sizeof (raddi::channel) + size)) {
 
                             wchar_t string [35];
@@ -1015,7 +1016,7 @@ bool new_channel () {
     return false;
 }
 
-bool reply (const wchar_t * opname, const wchar_t * to) {
+bool reply (const wchar_t * opname, const wchar_t * to, bool thread) {
     raddi::instance instance (option (argc, argw, L"instance"));
     if (instance.status != ERROR_SUCCESS)
         return raddi::log::data (0x91);
@@ -1053,12 +1054,25 @@ bool reply (const wchar_t * opname, const wchar_t * to) {
                 return raddi::log::error (0x1B, message.id.serialize ());
 
             auto description_size = gather (message.description, sizeof message.description);
+            raddi::proof::requirements rq;
+
+            if (thread) {
+                // 'threads' which are channel metadata are strictly limited in size
+                // TODO: if description contains plain-text then 'max_thread_name_size' otherwise smaller
+
+                rq.time = raddi::consensus::min_thread_pow_time;
+                rq.complexity = raddi::consensus::min_thread_pow_complexity;
+            } else {
+                rq.time = raddi::consensus::min_entry_pow_time;
+                rq.complexity = raddi::consensus::min_entry_pow_complexity;
+            }
 
             while (!quit) {
                 message.id.timestamp = raddi::now ();
                 message.id.identity = id;
                  
-                if (auto size = sign_and_validate <raddi::entry> (opname, message, description_size, key, identity.public_key)) {
+                if (auto size = sign_and_validate <raddi::entry> (opname, message, description_size,
+                                                                  key, identity.public_key, rq)) {
                     if (send (instance, message, sizeof (raddi::entry) + size)) {
 
                         wchar_t string [35];

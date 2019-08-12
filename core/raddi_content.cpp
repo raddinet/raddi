@@ -565,6 +565,18 @@ raddi::content::summary raddi::content::analysis::summarize (summary summary) co
     return summary;
 }
 
+std::size_t raddi::content::is_plain_line (const std::uint8_t * content, std::size_t length) {
+    for (std::size_t i = 0; i != length; ++i) {
+        if (content [i] == 0x00) {
+            return i;
+        }
+        if ((content [i] <= 0x1F) || (content [i] == 0x7F) || (content [i] >= 0xF8)) {
+            return 0;
+        }
+    }
+    return length;
+}
+
 raddi::content::result raddi::content::parse (const std::uint8_t * data, std::size_t size) {
     return this->parse (content::analyze (data, size));
 }
