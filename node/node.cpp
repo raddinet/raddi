@@ -41,6 +41,7 @@
 #include "../core/raddi_instance.h"
 
 #pragma warning (disable:28112) // interlocked warnings
+#pragma warning (disable:6262) // stack usage warning
 
 namespace {
     SERVICE_STATUS_HANDLE handle = NULL;
@@ -596,20 +597,21 @@ namespace {
                     break;
 
                 // additional check against consensus size/proof for non-announcement entries
+                {
+                    std::size_t proof_size = 0;
+                    if (auto proof = entry->proof (size, &proof_size)) {
 
-                std::size_t proof_size = 0;
-                if (auto proof = entry->proof (size, &proof_size)) {
-
-                    if (!assess_extra_size_requirements (entry, size - proof_size - sizeof (raddi::entry), level)) {
-                        break;
-                    }
-
-                    bool disconnect;
-                    if (!assess_extra_proof_requirements (entry, proof, level, disconnect)) {
-                        if (disconnect)
-                            return false;
-                        else
+                        if (!assess_extra_size_requirements (entry, size - proof_size - sizeof (raddi::entry), level)) {
                             break;
+                        }
+
+                        bool disconnect;
+                        if (!assess_extra_proof_requirements (entry, proof, level, disconnect)) {
+                            if (disconnect)
+                                return false;
+                            else
+                                break;
+                        }
                     }
                 }
 
