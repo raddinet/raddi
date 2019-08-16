@@ -137,16 +137,19 @@ Leading bytes:
 	0x10: DLE, SIDEBAND DATA SET/EDIT
 		- valid only if first byte in entry and if appears only once
 		- valid only if direct descendant of the announcement of the identity or
-		  channel it affects
-			- client app should apply change to thread or identity name (or
-			  any other sideband data) only when made by it's author
+		  channel it affects (the 'thread' level)
+			- client app should apply change to identity name (or any other
+			  identity sideband data) only when made by it's author
 			- client app should apply changes to channel title or sidebar (or
-			  any other sideband data) only when made by a moderator which
-			  the uses is subscribed to
+			  any other sideband data), or thread title, only when made by a
+			  moderator which the user is subscribed to
+		- entries at the 'thread' level are limited in size by consensus, thus
+		  to assign substantial data with the channel, the user should post small
+		  entry with only sideband token, and content as descending entries
 		- TOKEN
 		- predefined sideband ID codes:
 			- 0x01: title
-				- change identity/channel/thread name/title
+				- direct change to identity/channel/thread name/title
 			- 0x02: header - reserved, unused
 			- 0x03: footer - reserved, unused
 			- 0x04: sidebar - set/change identity/channel sidebar text
