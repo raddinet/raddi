@@ -1057,8 +1057,16 @@ bool reply (const wchar_t * opname, const wchar_t * to, bool thread) {
             raddi::proof::requirements rq;
 
             if (thread) {
-                // 'threads' which are channel metadata are strictly limited in size
-                // TODO: if description contains plain-text then 'max_thread_name_size' otherwise smaller
+                if (raddi::content::is_plain_line (message.description, description_size)) {
+                    if (description_size > raddi::consensus::max_thread_name_size) {
+                        return raddi::log::error (0x1D, description_size, raddi::consensus::max_thread_name_size);
+                    }
+                } else {
+                    // 'threads' which are channel metadata are strictly limited in size
+                    if (description_size > raddi::consensus::max_channel_control_size) {
+                        return raddi::log::error (0x1D, description_size, raddi::consensus::max_channel_control_size);
+                    }
+                }
 
                 rq.time = raddi::consensus::min_thread_pow_time;
                 rq.complexity = raddi::consensus::min_thread_pow_complexity;
