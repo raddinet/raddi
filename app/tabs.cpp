@@ -12,6 +12,8 @@
 #include <vector>
 #include <map>
 
+#pragma warning (disable:26454) // -1u warnings
+
 namespace {
     LRESULT CALLBACK Procedure (HWND, UINT, WPARAM, LPARAM);
 
@@ -35,10 +37,10 @@ namespace {
     };
 
     struct StackState {
-		struct TabRef {
-			std::intptr_t   id;
-			RECT		    tag = { 0,0,0,0 };
-		};
+        struct TabRef {
+            std::intptr_t   id;
+            RECT            tag = { 0,0,0,0 };
+        };
 
         std::vector <TabRef> tabs;
         std::intptr_t   top; // ID of top tab
@@ -54,7 +56,7 @@ namespace {
 
     struct TabControlState : TabControlInterface {
         HWND hWnd;
-        HFONT font;
+        HFONT font = NULL;
         ThemeHandle theme;
         ThemeHandle window;
 
@@ -62,23 +64,23 @@ namespace {
         std::size_t current_stack = -1;
         std::size_t first_overflow_stack = -1;
 
-		struct Hot {
-			std::size_t   stack = -1; // index
-			std::intptr_t tab = 0; // tab ID
+        struct Hot {
+            std::size_t   stack = -1; // index
+            std::intptr_t tab = 0; // tab ID
 
-			bool tag = false;
-			bool close = false;
-			bool down = false;
+            bool tag = false;
+            bool close = false;
+            bool down = false;
 
-			bool operator != (const Hot & other) const {
-				return this->stack != other.stack
-					|| this->tab != other.tab
-					|| this->tag != other.tag
-					|| this->close != other.close
-					|| this->down != other.down
-					;
-			}
-		} hot;
+            bool operator != (const Hot & other) const {
+                return this->stack != other.stack
+                    || this->tab != other.tab
+                    || this->tag != other.tag
+                    || this->close != other.close
+                    || this->down != other.down
+                    ;
+            }
+        } hot;
 
         short wheel_delta = 0;
         
@@ -91,6 +93,7 @@ namespace {
         }
         void update () override;
         void stack (std::intptr_t which, std::intptr_t into, bool after) override;
+        bool move_stack (std::intptr_t which, int index) override;
         bool request (std::intptr_t tab) override;
         bool request_stack (std::size_t index) override;
         HWND addbutton (std::intptr_t id, const wchar_t * text, UINT hint, bool right) override;
@@ -157,15 +160,6 @@ TabControlInterface * CreateTabControl (HINSTANCE hInstance, HWND hParent, UINT 
 }
 
 namespace {
-    std::wstring GetWindowString (HWND hWnd) {
-        std::wstring s;
-        if (auto length = GetWindowTextLength (hWnd)) {
-            s.resize (length + 1);
-            s.resize (GetWindowText (hWnd, &s [0], length + 1));
-        }
-        return s;
-    }
-
     bool OnlySymbolicButtons () {
         // TODO: configurable?
         BOOL composited = FALSE;
@@ -264,6 +258,14 @@ namespace {
                     state (hWnd)->click (message, { (short) LOWORD (lParam), (short) HIWORD (lParam) });
                     break; // continue to default processing in order to get WM_CONTEXTMENU
 
+                case WM_CONTEXTMENU:
+                    if ((HWND) wParam != hWnd) {
+                        // don't let DefWindowProc change wParam to hWnd, forward intact instead
+                        SendMessage (GetParent (hWnd), message, wParam, lParam);
+                        return 0;
+                    } else
+                        break;
+
                 case WM_KEYDOWN:
                     return state (hWnd)->key (wParam, lParam);
                 case WM_MOUSEHWHEEL:
@@ -348,6 +350,9 @@ namespace {
                                         if (nmDraw->uItemState & CDIS_SELECTED) {
                                             options.color = self->buttons.down;
                                         }
+                                        if (nmDraw->uItemState & CDIS_DISABLED) {
+                                            options.color = 0x7F7F7F; // TODO: proper color
+                                        }
 
                                         if (IsWindows8OrGreater ()) {
                                             // options.shadow.size = 1 * self->dpi / 96;
@@ -375,8 +380,7 @@ namespace {
             return DefWindowProc (hWnd, message, wParam, lParam);
 
         } catch (const std::bad_alloc &) {
-            NMHDR nm = { hWnd, (UINT) GetDlgCtrlID (hWnd), (UINT) NM_OUTOFMEMORY };
-            return SendMessage (GetParent (hWnd), WM_NOTIFY, nm.idFrom, (LPARAM) &nm);
+            return ReportOutOfMemory (hWnd);
 
         } catch (const std::out_of_range &) {
             return 0;
@@ -432,6 +436,36 @@ StackState * TabControlState::get_stack_at (const POINT & pt, std::size_t * ii) 
         }
     }
     return nullptr;
+}
+
+bool TabControlState::move_stack (std::intptr_t which, int index) {
+    if (auto from = this->get_tab_stack (which)) {
+        auto from_index = from - &this->stacks [0];
+
+        if (index < 0) {
+            if (-index > (int) this->stacks.size ()) {
+                index = 0;
+            } else {
+                index = (int) this->stacks.size () + index - 1;
+            }
+        }
+        if (index > (int) this->stacks.size ()) {
+            index = (int) this->stacks.size ();
+        }
+        if (index != from_index) {
+            this->stacks.insert (this->stacks.begin () + index, 1, *from);
+
+            if (index < from_index) {
+                ++from_index;
+            }
+            if (index < this->current_stack) {
+                ++this->current_stack;
+            }
+            this->stacks.erase (this->stacks.begin () + from_index);
+        }
+        return true;
+    } else
+        return false;
 }
 
 void TabControlState::stack (std::intptr_t which, std::intptr_t with, bool after) {
@@ -524,8 +558,7 @@ void TabControlState::update_stacks_state () {
     for (const auto & tab : this->tabs) {
         const auto id = tab.first;
         if (this->get_tab_stack (id) == nullptr) {
-            this->stacks.push_back (StackState ());
-			this->stacks.back ().tabs.push_back ({ id });
+            this->stacks.push_back (StackState ()); this->stacks.back ().tabs.push_back ({ id });
             this->stacks.back ().top = id;
 
             if (this->hToolTipControl) {
@@ -703,8 +736,8 @@ void TabControlState::update_visual_representation () {
             }
 
             stack.r.right += xextent;
-			fullwidth += stack.r.right;
-		}
+            fullwidth += stack.r.right;
+        }
         if (this->minimum.cy == 0) {
             RECT r = { 0,0,0,0 };
             this->minimum.cy = DrawTextEx (hDC, const_cast <LPTSTR> (L"y"), 1, &r, DT_CALCRECT | DT_SINGLELINE, NULL);
@@ -781,22 +814,22 @@ void TabControlState::update_visual_representation () {
             this->tabs [stack.top].ellipsis = (stack.text_width > (stack.rContent.right - stack.rContent.left));
             this->width = stack.r.right;
 
-			for (std::size_t i = 0, n = stack.tabs.size (); i != n; ++i) {
-				stack.tabs [i].tag.top = stack.r.top;
-				stack.tabs [i].tag.bottom = stack.r.top + 5 * dpi / 96;
-				stack.tabs [i].tag.left = stack.r.left + (1 * dpi / 96) + (LONG (i) + 0) * (stack.r.right - stack.r.left - (2 * dpi / 96)) / long (n);
-				stack.tabs [i].tag.right = stack.r.left + (1 * dpi / 96) + (LONG (i) + 1) * (stack.r.right - stack.r.left - (2 * dpi / 96)) / long (n);
+            for (std::size_t i = 0, n = stack.tabs.size (); i != n; ++i) {
+                stack.tabs [i].tag.top = stack.r.top;
+                stack.tabs [i].tag.bottom = stack.r.top + 5 * dpi / 96;
+                stack.tabs [i].tag.left = stack.r.left + (1 * dpi / 96) + (LONG (i) + 0) * (stack.r.right - stack.r.left - (2 * dpi / 96)) / long (n);
+                stack.tabs [i].tag.right = stack.r.left + (1 * dpi / 96) + (LONG (i) + 1) * (stack.r.right - stack.r.left - (2 * dpi / 96)) / long (n);
 
-				if (stack.top == stack.tabs [i].id) { // current tab in stack
-					stack.tabs [i].tag.bottom = stack.tabs [i].tag.top;
-				}
+                if (stack.top == stack.tabs [i].id) { // current tab in stack
+                    stack.tabs [i].tag.bottom = stack.tabs [i].tag.top;
+                }
                 if (this->width > (size.cx - buttons)) {
                     if (this->overflow.empty ()) {
                         this->first_overflow_stack = &stack - &this->stacks [0]; // index
                     }
                     this->overflow.push_back (stack.tabs [i].id);
                 }
-			}
+            }
 
             if (this->width > (size.cx - buttons)) {
                 this->width = (size.cx - buttons);
@@ -841,10 +874,10 @@ void TabControlState::update_visual_representation () {
                 this->stacks [this->current_stack + 1].r.left += 2 * dpi / 96;
             }
 
-			for (std::size_t i = 0; i != stack->tabs.size (); ++i) {
-				stack->tabs [i].tag.bottom -= stack->tabs [i].tag.top;
-				stack->tabs [i].tag.top = 0;
-			}
+            for (std::size_t i = 0; i != stack->tabs.size (); ++i) {
+                stack->tabs [i].tag.bottom -= stack->tabs [i].tag.top;
+                stack->tabs [i].tag.top = 0;
+            }
         }
 
         if (hPreviousFont) {
@@ -896,6 +929,9 @@ void TabControlState::update_visual_representation () {
     }
 
     this->minimum.cy += 10 * dpi / 96 + 1;
+
+    NMHDR nm = { hWnd, (UINT_PTR) GetDlgCtrlID (hWnd), TCN_UPDATED };
+    SendMessage (GetParent (hWnd), WM_NOTIFY, nm.idFrom, (LPARAM) &nm);
 }
 
 UINT TabControlState::hittest (POINT pt) {
@@ -1064,12 +1100,12 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
             // stack
 
             for (const auto & tabref : stack.tabs) {
-				auto r = tabref.tag;
+                auto r = tabref.tag;
                 if (r.bottom != r.top) {
                     r.left += 1 * dpi / 96;
                     r.right -= 1 * dpi / 96;
                     r.bottom -= 1 * dpi / 96;
-                    
+
                     if (!this->theme) {
                         r.top += 1;
                         if (i != this->current_stack) {
@@ -1077,20 +1113,20 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
                         }
                     }
 
-					if (this->hot.tag && (tabref.id == this->hot.tab)) {
-						if (this->hot.down) {
-							FillRect (hDC, &r, (HBRUSH) GetStockObject (BLACK_BRUSH));
-						} else {
-							FillRect (hDC, &r, GetSysColorBrush (COLOR_HOTLIGHT));
-						}
-					} else {
+                    if (this->hot.tag && (tabref.id == this->hot.tab)) {
+                        if (this->hot.down) {
+                            FillRect (hDC, &r, ( HBRUSH) GetStockObject (BLACK_BRUSH));
+                        } else {
+                            FillRect (hDC, &r, GetSysColorBrush (COLOR_HOTLIGHT));
+                        }
+                    } else {
                         if (auto badge = this->tabs [tabref.id].badge) {
                             SetDCBrushColor (hDC, 0x6060C0);
-                            FillRect (hDC, &r, (HBRUSH) GetStockObject (DC_BRUSH));
+                            FillRect (hDC, &r, ( HBRUSH) GetStockObject (DC_BRUSH));
                         } else {
                             FillRect (hDC, &r, GetSysColorBrush (COLOR_3DSHADOW));
                         }
-					}
+                    }
                 }
             }
 
@@ -1304,7 +1340,7 @@ UINT TabControlState::mouse (POINT pt) {
         }
     }
 
-	if (this->hot != new_hot) {
+    if (this->hot != new_hot) {
         if (new_hot.stack < this->stacks.size ()) {
             InvalidateRect (hWnd, &this->stacks [new_hot.stack].r, FALSE);
         }
@@ -1341,7 +1377,7 @@ bool TabControlState::next (USHORT flags = MakeKbFlags ()) {
 
             for (auto i = 0u; i != n; ++i) {
                 if (stack.top == stack.tabs [i].id) {
-                    return this->switch_to_stack_tab_unchecked (this->current_stack, stack.tabs [i + 1].id);
+                    return this->switch_to_stack_tab_unchecked (this->current_stack, stack.tabs [std::size_t (i) + 1].id);
                 }
             }
         }

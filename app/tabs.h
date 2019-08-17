@@ -13,6 +13,8 @@ struct TabControlInterface;
 ATOM InitializeTabControl (HINSTANCE);
 TabControlInterface * CreateTabControl (HINSTANCE, HWND, UINT style, UINT id = 0);
 
+#define TCN_UPDATED 1
+
 // TODO: drag&drop with stacking, when enabled
 // TODO: add support for animated icon (loading)
 
@@ -25,7 +27,7 @@ struct Tab {
     unsigned int    badge = 0;    // 0 = not rendered
     std::uint8_t    progress = 0; // 0 = off, 1 = 0%, 255 = 100%
     bool            close = true;
-	bool			fit = false; // fit width to text
+    bool            fit = false; // fit width to text
     
     // computed:
     bool            ellipsis = false;
@@ -39,11 +41,11 @@ extern TabControlVisualStyle LightTabControlVisualStyle;
 struct TabControlInterface {
     HWND                    hWnd = NULL;
     std::map <std::intptr_t, Tab> tabs; // IDs are application-defined
-    std::uint16_t			dpi;
-    std::uint16_t			min_tab_width = 0;
-    std::uint16_t			max_tab_width = 0;
-	bool					stacking = false; // allow user to stack tabs
-	bool					badges = false; // add padding for tab badges
+    std::uint16_t           dpi = 96;
+    std::uint16_t           min_tab_width = 0;
+    std::uint16_t           max_tab_width = 0;
+    bool                    stacking = false; // allow user to stack tabs
+    bool                    badges = false; // add padding for tab badges
     TabControlVisualStyle * style = nullptr; // NULL - native
     struct {
         COLORREF            color = 0xFFFFFF;
@@ -67,6 +69,7 @@ public:
     virtual void update () = 0; // call update when 'tabs' change
     virtual bool request (std::intptr_t tab) = 0; // returns false if no such tab exists
     virtual bool request_stack (std::size_t index) = 0;
+    virtual bool move_stack (std::intptr_t tab, int index) = 0;
     virtual void stack (std::intptr_t which, std::intptr_t onto, bool after) = 0; // move 'which' tab into stack of 'onto' either right after or as last tab
     virtual HWND addbutton (std::intptr_t id, const wchar_t * text, UINT hint = 0, bool right = false) = 0;
     virtual RECT outline (std::intptr_t tab) = 0;
