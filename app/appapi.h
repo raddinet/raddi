@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <uxtheme.h>
 #include <string_view>
+#include <string>
 
 #include "../common/platform.h"
 
@@ -18,6 +19,13 @@ RECT FixWindowCoordinates (int x, int y, int w, int h);
 bool IsLastWindow (HWND hWnd);
 bool IsColorDark (COLORREF color);
 bool IsWindowClass (HWND hWnd, std::wstring_view name);
+
+LRESULT ReportOutOfMemory (HWND hControl);
+LRESULT ReportOutOfMemory (HWND hParent, UINT control);
+LRESULT ReportOutOfMemory (HWND hParent, HWND hControl, UINT idControl);
+
+std::wstring GetWindowString (HWND hWnd);
+std::wstring GetDlgItemString (HWND hWnd, UINT id);
 
 struct DrawCompositedTextOptions {
     HTHEME  theme = NULL;

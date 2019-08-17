@@ -140,7 +140,7 @@ bool IsWindowClass (HWND hWnd, std::wstring_view name) {
     if (auto n = GetClassName (hWnd, classname, 257)) {
         if (n == name.length ()) {
 
-            if (CompareString (LOCALE_INVARIANT, NORM_IGNORECASE, classname, n, name.data (), name.length ()) == CSTR_EQUAL)
+            if (CompareString (LOCALE_INVARIANT, NORM_IGNORECASE, classname, n, name.data (), (int) name.length ()) == CSTR_EQUAL)
                 return true;
         }
     }
@@ -151,6 +151,34 @@ bool IsLastWindow (HWND hWnd) {
     auto atom = GetClassLongPtr (hWnd, GCW_ATOM);
     return FindWindowEx (NULL, hWnd, (LPCTSTR) atom, NULL) == NULL
         && FindWindowEx (NULL, NULL, (LPCTSTR) atom, NULL) == hWnd;
+}
+
+std::wstring GetWindowString (HWND hWnd) {
+    std::wstring s;
+    if (hWnd) {
+        if (auto length = GetWindowTextLength (hWnd)) {
+            s.resize (length);
+            GetWindowText (hWnd, &s [0], length + 1);
+        }
+    }
+    return s;
+}
+
+std::wstring GetDlgItemString (HWND hWnd, UINT id) {
+    return GetWindowString (GetDlgItem (hWnd, id));
+}
+
+LRESULT ReportOutOfMemory (HWND hParent, HWND hControl, UINT idControl) {
+    // TODO: create global app custom extension (NMOUTOFMEMORY) to pass where actually this happened
+    NMHDR nm = { hControl, (UINT) idControl, (UINT) NM_OUTOFMEMORY };
+    return SendMessage (hParent, WM_NOTIFY, idControl, (LPARAM) &nm);
+}
+
+LRESULT ReportOutOfMemory (HWND hParent, UINT control) {
+    return ReportOutOfMemory (hParent, control ? GetDlgItem (hParent, control) : NULL, control);
+}
+LRESULT ReportOutOfMemory (HWND hControl) {
+    return ReportOutOfMemory (GetParent (hControl), hControl, GetDlgCtrlID (hControl));
 }
 
 HICON LoadBestIcon (HMODULE hModule, LPCWSTR resource, SIZE size) {
@@ -227,7 +255,7 @@ HRESULT DrawCompositedText (HDC hDC, std::wstring_view string, DWORD format, REC
         //                         options->shadow.size + std::max (std::abs (options->shadow.offset.x),
         //                                                          std::abs (options->shadow.offset.y)) + 1);
 
-        HRESULT result = -1;
+        HRESULT result = E_FAIL;
         if (HDC hMemoryDC = CreateCompatibleDC (hDC)) {
             BITMAPINFO info;
             std::memset (&info, 0, sizeof info);
@@ -338,7 +366,7 @@ HRESULT DrawCompositedText (HDC hDC, std::wstring_view string, DWORD format, REC
                 }
 
                 dtt.crText = options->color;
-                result = ptrDrawThemeTextEx (options->theme, hMemoryDC, 0, 0, string.data (), string.length (), format & ~DT_CALCRECT, &bounds, &dtt);
+                result = ptrDrawThemeTextEx (options->theme, hMemoryDC, 0, 0, string.data (), (int) string.length (), format & ~DT_CALCRECT, &bounds, &dtt);
 
                 if (result == S_OK) {
                     BitBlt (hDC, r.left - padding, r.top - padding,
@@ -357,13 +385,13 @@ HRESULT DrawCompositedText (HDC hDC, std::wstring_view string, DWORD format, REC
             DeleteDC (hMemoryDC);
         }
 
-        if (result != -1)
+        if (SUCCEEDED (result))
             return result;
         else
             return GetLastError ();
     } else {
         format &= ~DT_MODIFYSTRING;
-        if (DrawTextEx (hDC, const_cast <LPWSTR> (string.data ()), string.length (), &r, format, NULL)) {
+        if (DrawTextEx (hDC, const_cast <LPWSTR> (string.data ()), (int) string.length (), &r, format, NULL)) {
             return S_OK;
         } else
             return GetLastError ();
@@ -512,11 +540,15 @@ void Design::update () {
                     this->colorization.active = 0x000000;
                 }
             }
-            if (RegQueryValueEx (hKey, L"AccentColorInactive", NULL, NULL, reinterpret_cast <LPBYTE> (&this->colorization.inactive), &size) != ERROR_SUCCESS) {
-                if (this->light) {
-                    this->colorization.inactive = 0xFFFFFF;
-                } else {
-                    this->colorization.inactive = 0x2B2B2B; // TODO: retrieve from theme, now hardcoded to match Win10 1809
+
+            if (this->light) {
+                this->colorization.inactive = 0xFFFFFF;
+            } else {
+                this->colorization.inactive = 0x2B2B2B; // TODO: retrieve from theme, now hardcoded to match Win10 1809
+            }
+            if (RegQueryValueEx (hKey, L"AccentColorInactive", NULL, NULL, reinterpret_cast <LPBYTE> (&value), &size) == ERROR_SUCCESS) {
+                if (this->prevalence) {
+                    this->colorization.inactive = value;
                 }
             }
             RegCloseKey (hKey);
