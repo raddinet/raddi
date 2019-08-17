@@ -1,5 +1,6 @@
 TODO
 ====
+
 (go through all reddit comments on raddi for ideas I've already forgot)
 
 threads are inserted duplicated (race condition?)
@@ -15,6 +16,11 @@ retired connections sometimes stick around instead of deleted (and service gets 
 core/core sync does not always work, core node will not recognize other core node
 
 fix continuous re-sharing no longer available node addresses
+
+frustration module (MITM protection)
+ - TODO: implement only after reaching certain traffic
+ - wait up to X seconds for at least a few bytes of an entry before we send our (part)
+    - etc.
 
 after connection sync reports are incorrect
  - when reporting history, we probably add all from 0...X to first range of X+1...Y
@@ -125,6 +131,7 @@ ARM/ARM64 manifests don't need supportedOS older than (10 for ARM64, 8 for ARM)
 rework System (GetProcAddress) so that builds for Windows 10 link statically
 
 rewrite log as noted in log.cpp or somewhere there in comment
+rewrite log to use {fmt}
 
 SETTINGS GUIDE: settings for most privacy concerned users, first run (proxy, tor, listeners, xor-mask)
 SETTINGS GUIDE: running multiple nodes on single machine
