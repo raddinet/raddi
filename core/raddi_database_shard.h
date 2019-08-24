@@ -12,12 +12,19 @@ class raddi::db::shard
     : log::provider <component::database> {
 
     friend class table <Key>;
+    mutable ::lock  lock;
 
     std::uint32_t   base; // base timestamp (lowest) of this shard
     std::uint32_t   accessed; // timestamp of last access
     file            index;
     file            content;
-    mutable ::lock  lock;
+
+    // deleted
+    //  - cached number of deleted entries
+    //  - updated only when shard is actually opened (or erased from)
+    //     - this affects .size()
+    //
+    std::uint32_t   deleted;
 
     // cache
     //  - a primary index to the shard's data and positional information
@@ -70,7 +77,7 @@ public:
     bool get (const db::table <Key> *, const decltype (Key::id) & entry, Key * = nullptr);
 
     // get
-    //  - finds 'entry' in this shard, reconstruct entry for transmission
+    //  - finds 'entry' in this shard, reconstructs it for transmission
     //  - what - determines which parts of entry are actually gathered
     //  - buffer - (sizeof (raddi::entry) + raddi::entry::max_content_size) bytes of space needed
     //  - length - receives actual size of the complete entry
@@ -79,9 +86,20 @@ public:
     //
     bool get (const db::table <Key> *, const decltype (Key::id) & entry, read what, void * buffer, std::size_t * length, std::size_t demand = 0u);
 
+    // get
+    //  - returns 'index'-th entry in this shard, reconstructs it for transmission
+    //  - what - determines which parts of entry are actually gathered
+    //  - buffer - (sizeof (raddi::entry) + raddi::entry::max_content_size) bytes of space needed
+    //  - length - receives actual size of the complete entry
+    //  - demand - if nonzero, only 'demand' bytes of 'content' is written into 'buffer'
+    //  - returns true if index is valid, false otherwise
+    //
+    bool get (const db::table <Key> *, std::size_t index, read what, void * buffer, std::size_t * length, std::size_t demand = 0u);
+
     // size
     //  - returns number of rows in the shard
     //  - reliable only for 'writer' as the actual size may change immediately after the call
+    //  - substracts .deleted counter which is updated only when the shard is actually opened
     //
     std::size_t size (const db::table <Key> *) const;
 

@@ -34,8 +34,9 @@ public:
 
     // reader_change_notification_callback
     //  - if set, called by Monitor::process after the changes in the files have been processed
+    //  - shard/upper - hint which range has changed
     //
-    void (*reader_change_notification_callback) (void *) = nullptr;
+    void (*reader_change_notification_callback) (void *, std::uint32_t shard, std::uint32_t upper) = nullptr;
 
 public:
     table (const std::wstring & name, const raddi::db & db)
@@ -99,6 +100,19 @@ public:
     bool get (const decltype (Key::id) & entry, read what, void * buffer, std::size_t * length = nullptr, std::size_t demand = 0u) const;
     bool get (const decltype (Key::id) & entry, void * buffer, std::size_t * length = nullptr, std::size_t demand = 0u) const {
         return this->get (entry, read::everything, buffer, length, demand);
+    }
+
+    // get
+    //  - finds 'index'-th entry in this table, reconstructs it for transmission
+    //  - what - determines which parts of entry are actually gathered
+    //  - buffer - (sizeof (raddi::entry) + raddi::entry::max_content_size) bytes of space needed
+    //  - length - receives actual size of the complete entry
+    //  - demand - if nonzero, only 'demand' number bytes of 'content' is written into 'buffer'
+    //  - returns true if such entry exists, false otherwise
+    //
+    bool get (std::uint64_t index, read what, void * buffer, std::size_t * length = nullptr, std::size_t demand = 0u) const;
+    bool get (std::uint64_t index, void * buffer, std::size_t * length = nullptr, std::size_t demand = 0u) const {
+        return this->get (index, read::everything, buffer, length, demand);
     }
 
     // top
@@ -177,6 +191,9 @@ public:
             n += shard.size (this);
         }
         return n;
+    }
+    std::size_t size () const { // alias to keep naming orthogonal with shards
+        return this->count ();
     }
 
     // TODO: queries that will be needed later

@@ -100,6 +100,25 @@ bool raddi::db::table <Key>::get (const decltype (Key::id) & entry, read what,
 }
 
 template <typename Key>
+bool raddi::db::table <Key>::get (std::uint64_t index, read what,
+                                  void * buffer, std::size_t * length, std::size_t demand) const {
+    immutability guard (this->lock);
+    for (auto & shard : this->shards) {
+        auto ss = shard.size (this);
+
+        if (index >= ss) {
+            index -= ss;
+        } else {
+            if (this->need_shard_to_advance (&shard)) {
+                shard.advance (this);
+            }
+            return shard.get (this, index, what, buffer, length, demand);
+        }
+    }
+    return false;
+}
+
+template <typename Key>
 bool raddi::db::table <Key>::top (Key * row) const {
     immutability guard (this->lock);
 
@@ -317,7 +336,8 @@ bool raddi::db::table <Key>::process (const std::wstring & filename) {
 
     }
     if (this->reader_change_notification_callback) {
-        this->reader_change_notification_callback (this->notification_callback_context);
+        // TODO: report range of changes: shard, and upper bound (next shard - 1 or now())
+        this->reader_change_notification_callback (this->notification_callback_context, 0, 0);
     }
     return true;
 }

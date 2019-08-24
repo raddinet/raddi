@@ -14,7 +14,8 @@ template <typename Key>
 raddi::db::shard <Key>::shard (std::uint32_t base, const raddi::db::table <Key> * parent)
     : provider ("shard", parent ? parent->db.shard_instance_name (base, parent->name) : L"\x0018") // u0018 is moved-from or temporary object
     , base (base)
-    , accessed (raddi::now ()) {
+    , accessed (raddi::now ())
+    , deleted (0) {
 }
 
 template <typename Key>
@@ -24,7 +25,8 @@ raddi::db::shard <Key>::shard (raddi::db::shard <Key> && other)
     , accessed (raddi::now ())
     , index (std::move (other.index))
     , content (std::move (other.content))
-    , cache (std::move (other.cache)) {}
+    , cache (std::move (other.cache))
+    , deleted (other.deleted) {}
 
 template <typename Key>
 raddi::db::shard <Key> & raddi::db::shard <Key>::operator = (raddi::db::shard <Key> && other) {
@@ -37,6 +39,7 @@ raddi::db::shard <Key> & raddi::db::shard <Key>::operator = (raddi::db::shard <K
     this->index = std::move (other.index);
     this->content = std::move (other.content);
     this->cache.swap (other.cache);
+    this->deleted = other.deleted;
     return *this;
 }
 
@@ -93,7 +96,7 @@ std::size_t raddi::db::shard <Key>::size (const db::table <Key> * table) const {
                 return static_cast <std::size_t> (-1);
             }
 #endif
-            return (std::size_t) n;
+            return (std::size_t) n - this->deleted;
         } else {
             this->report (log::level::error, 11, this->path (table), file::mode::open, file::share::full);
             return 0;
@@ -200,18 +203,25 @@ bool raddi::db::shard <Key>::unsynchronized_advance (const db::table <Key> * tab
 
                 if (this->index.read (&this->cache [0], n * sizeof (Key))) {
                     std::sort (this->cache.begin (), this->cache.end ());
-                    this->cache.erase (this->cache.begin (),
-                                       std::find_if_not (this->cache.begin (), this->cache.end (),
-                                                         [] (auto & x) { return x.id.erased (); }));
+
+                    // erased keys got moved to front
+                    auto first_valid = std::find_if_not (this->cache.begin (), this->cache.end (),
+                                                         [](auto & x) { return x.id.erased (); });
+
+                    this->deleted = (std::uint32_t) std::distance (this->cache.begin (), first_valid);
+                    this->cache.erase (this->cache.begin (), first_valid);
                 }
             } else {
                 this->cache.reserve (n);
+                this->deleted = 0;
 
                 Key row;
                 std::memset (&row, 0, sizeof row);
 
                 while (this->index.read (row)) {
-                    if (!row.id.erased ()) {
+                    if (row.id.erased ()) {
+                        ++this->deleted;
+                    } else {
                         this->unsynchronized_insert_to_cache (row);
                     }
                 }
@@ -378,6 +388,24 @@ bool raddi::db::shard <Key>::get (const db::table <Key> * table,
                                   const decltype (Key::id) & e, read what, void * buffer, std::size_t * length, std::size_t demand) {
     immutability guard (this->lock);
     return this->unsynchronized_get (table, e, nullptr, what, buffer, length, demand);
+}
+
+template <typename Key>
+bool raddi::db::shard <Key>::get (const db::table <Key> * table,
+                                  std::size_t index, read what, void * buffer, std::size_t * length, std::size_t demand) {
+    immutability guard (this->lock);
+
+    if (index < this->cache.size ()) {
+        auto ii = this->cache.begin () + index;
+
+        if (size) {
+            *size = (std::size_t) ii->data.length + sizeof (raddi::entry);
+        }
+
+        this->accessed = raddi::now ();
+        return this->unsynchronized_read (table, ii, what, buffer, demand);
+    } else
+        return false;
 }
 
 template <typename Key>
