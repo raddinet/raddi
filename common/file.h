@@ -7,9 +7,11 @@
 // file
 //  - simple filesystem file abstraction for future porting
 //  - at this point mostly to simplify destruction
+//  - even on 64-bit Windows HANDLE size is 32-bit
+//     - using int32 in attempt to save 8 bytes per shard, as there will be a lot of them
 //
 class file {
-    HANDLE handle;
+    std::int32_t handle = 0;
 
 public:
     enum class access : DWORD {
@@ -36,14 +38,14 @@ public:
     };
 
 public:
-    file () : handle (INVALID_HANDLE_VALUE) {};
+    file () = default;
     file (file && other) noexcept : handle (other.handle) {
-        other.handle = INVALID_HANDLE_VALUE;
+        other.handle = 0;
     }
     file & operator = (file && other) noexcept {
         this->close ();
         this->handle = other.handle;
-        other.handle = INVALID_HANDLE_VALUE;
+        other.handle = 0;
         return *this;
     }
     ~file ();
@@ -76,7 +78,7 @@ public:
     //  - release the file handle
     //
     void close () noexcept;
-    bool closed () const noexcept { return this->handle == INVALID_HANDLE_VALUE; }
+    bool closed () const noexcept { return !this->handle; }
     void flush () const noexcept;
 
     // seek/tail/tell
@@ -143,6 +145,10 @@ public:
 
 private:
     std::uintmax_t seek_ (std::uintmax_t offset, int) const noexcept;
+
+    operator HANDLE () const noexcept {
+        return reinterpret_cast <HANDLE> (static_cast <std::intptr_t> (this->handle));
+    }
 };
 
 // translate

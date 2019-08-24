@@ -10,7 +10,7 @@ bool file::open (const wchar_t * path, mode m, access a, share s, buffer bufferi
                            NULL, (DWORD) m, (DWORD) buffering, NULL);
     if (h != INVALID_HANDLE_VALUE) {
         this->close ();
-        this->handle = h;
+        this->handle = (std::int32_t) (std::intptr_t) h;
         return true;
     } else
         return false;
@@ -19,20 +19,20 @@ bool file::open (const wchar_t * path, mode m, access a, share s, buffer bufferi
 bool file::compress () noexcept {
     DWORD result = 0u;
     USHORT type = COMPRESSION_FORMAT_DEFAULT;
-    return DeviceIoControl (this->handle, FSCTL_SET_COMPRESSION,
+    return DeviceIoControl (*this, FSCTL_SET_COMPRESSION,
                             &type, sizeof type, NULL, 0u, &result, NULL);
 }
 
 void file::close () noexcept {
-    if (this->handle != INVALID_HANDLE_VALUE) {
-        CloseHandle (this->handle);
-        this->handle = INVALID_HANDLE_VALUE;
+    if (this->handle) {
+        CloseHandle (*this);
+        this->handle = 0;
     }
 }
 
 void file::flush () const noexcept {
     if (!this->closed ()) {
-        FlushFileBuffers (this->handle);
+        FlushFileBuffers (*this);
     }
 }
 
@@ -41,7 +41,7 @@ std::uintmax_t file::seek_ (std::uintmax_t offset, int whence) const noexcept {
     LARGE_INTEGER result;
 
     target.QuadPart = offset;
-    if (SetFilePointerEx (this->handle, target, &result, whence))
+    if (SetFilePointerEx (*this, target, &result, whence))
         return (std::uintmax_t) result.QuadPart;
     else
         return (std::uintmax_t) -1;
@@ -59,7 +59,7 @@ std::uintmax_t file::tell () const noexcept {
 
 std::uintmax_t file::size () const noexcept {
     LARGE_INTEGER result;
-    if (GetFileSizeEx (this->handle, &result))
+    if (GetFileSizeEx (*this, &result))
         return (std::uintmax_t) result.QuadPart;
     else
         return (std::uintmax_t) -1;
@@ -67,13 +67,13 @@ std::uintmax_t file::size () const noexcept {
 
 bool file::resize (std::uintmax_t length) noexcept {
     return this->seek (length) != (std::uintmax_t) -1
-        && SetEndOfFile (this->handle);
+        && SetEndOfFile (*this);
 }
 
 bool file::write (const void * data, std::size_t size) noexcept {
     DWORD written;
     return size <= MAXDWORD
-        && WriteFile (this->handle, data, (DWORD) size, &written, NULL)
+        && WriteFile (*this, data, (DWORD) size, &written, NULL)
         && written == size;
 }
 
@@ -82,13 +82,13 @@ bool file::read (void * data, std::size_t size) noexcept {
 
     DWORD red;
     while (size > chunk) {
-        if (ReadFile (this->handle, data, chunk, &red, NULL) && (red == chunk)) {
+        if (ReadFile (*this, data, chunk, &red, NULL) && (red == chunk)) {
             size -= chunk;
             data = reinterpret_cast <char *> (data) + chunk;
         } else
             return false;
     }
-    return ReadFile (this->handle, data, (DWORD) size, &red, NULL)
+    return ReadFile (*this, data, (DWORD) size, &red, NULL)
         && red == size;
 }
 
@@ -103,7 +103,7 @@ bool file::read (std::uintmax_t offset, void * data, std::size_t size) noexcept 
     o.OffsetHigh = offset >> 32;
 
     while (size > chunk) {
-        if (ReadFile (this->handle, data, chunk, &red, &o) && (red == chunk)) {
+        if (ReadFile (*this, data, chunk, &red, &o) && (red == chunk)) {
             size -= chunk;
             data = reinterpret_cast <char *> (data) + chunk;
 
@@ -114,7 +114,7 @@ bool file::read (std::uintmax_t offset, void * data, std::size_t size) noexcept 
         } else
             return false;
     }
-    return ReadFile (this->handle, data, (DWORD) size, &red, &o)
+    return ReadFile (*this, data, (DWORD) size, &red, &o)
         && red == size;
 }
 
@@ -125,7 +125,7 @@ bool file::zero (std::uintmax_t offset, std::uintmax_t length) noexcept {
     zero.FileOffset.QuadPart = offset;
     zero.BeyondFinalZero.QuadPart = offset + length;
 
-    return DeviceIoControl (this->handle, FSCTL_SET_ZERO_DATA, &zero, (DWORD) sizeof zero, NULL, 0, &n, NULL);
+    return DeviceIoControl (*this, FSCTL_SET_ZERO_DATA, &zero, (DWORD) sizeof zero, NULL, 0, &n, NULL);
 }
 
 bool file::unlink (const std::wstring & path) {
