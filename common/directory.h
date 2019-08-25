@@ -45,6 +45,11 @@ public:
     //
     static create_result create (const wchar_t * path) noexcept;
 
+    // create_full_path
+    //  - attempts to recursively create all components in 'path'
+    //
+    static directory::create_result create_full_path (const wchar_t * path) noexcept;
+
 };
 
 #endif
