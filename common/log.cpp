@@ -14,7 +14,7 @@
 #include <cstdio>
 #include <cwctype>
 
-wchar_t raddi::log::path [768];
+std::wstring raddi::log::path;
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 #ifdef NDEBUG
@@ -80,27 +80,31 @@ namespace {
     file logfile;
     HANDLE output = GetStdHandle (STD_OUTPUT_HANDLE);
 
-    void create (const wchar_t * path) {
+    bool create (const wchar_t * path) {
         SetLastError (0);
         if (logfile.open (path, file::mode::always, file::access::write, file::share::full)) {
             if (logfile.created ()) {
                 logfile.compress ();
                 if (!logfile.write ("\xEF\xBB\xBF", 3)) {
                     logfile.close ();
+                    return false;
                 }
             } else {
                 logfile.tail ();
             }
-        }
+            return true;
+        } else
+            return false;
     }
 
-    void create (wchar_t * path, const wchar_t * subdir, const wchar_t * filename) {
+    bool create (std::wstring & path, const wchar_t * subdir, const wchar_t * filename) {
         if (subdir) {
-            std::wcsncat (path, subdir, 255);
-            directory::create (path);
+            if (directory::create_full_path ((path + subdir).c_str ())) {
+                path += subdir;
+            }
         }
-        std::wcsncat (path, filename, 255);
-        create (path);
+        path += filename;
+        return create (path.c_str ());
     }
 
     static inline HMODULE GetCurrentModuleHandle () {
@@ -126,9 +130,11 @@ bool raddi::log::initialize (const wchar_t * option, const wchar_t * subdir, con
     
     SetLastError (0);
     if ((option != nullptr) && (option = std::wcschr (option, L':'))) {
-        path [0] = L'\0';
-        if (GetFullPathName (option + 1, sizeof path / sizeof path [0], path, NULL)) {
-            create (path);
+
+        path.resize (32768);
+        if (auto n = GetFullPathName (option + 1, 32768, &path [0], NULL)) {
+            path.resize (n);
+            create (&path [0]);
         }
         if (logfile.closed ()) {
             user_path_error = api_error ();
@@ -138,8 +144,9 @@ bool raddi::log::initialize (const wchar_t * option, const wchar_t * subdir, con
 
     // same as (local) database
     if (logfile.closed ()) {
-        path [0] = L'\0';
-        if (SHGetFolderPath (NULL, service ? CSIDL_COMMON_APPDATA : CSIDL_LOCAL_APPDATA, NULL, 0, path) == S_OK) {
+        path.resize (MAX_PATH);
+        if (SHGetFolderPath (NULL, service ? CSIDL_COMMON_APPDATA : CSIDL_LOCAL_APPDATA, NULL, 0, &path [0]) == S_OK) {
+            path.resize (std::wcslen (&path [0]));
             create (path, subdir, filename);
         }
     }
@@ -149,9 +156,11 @@ bool raddi::log::initialize (const wchar_t * option, const wchar_t * subdir, con
         shell_folder_error = api_error ();
         shell_folder = path;
 
-        if (GetModuleFileName (NULL, path, sizeof path / sizeof path [0])) {
-            if (auto * end = std::wcsrchr (path, L'\\')) {
-                *(end + 1) = L'\0';
+        path.resize (MAX_PATH); // theoretically 32768 but EXEs on Windows won't start in paths longer than MAX_PATH
+        if (GetModuleFileName (NULL, &path [0], MAX_PATH)) {
+            auto end = path.find_last_of (L'\\');
+            if (end != std::wstring::npos) {
+                path.resize (end + 1);
             }
             create (path, subdir, filename);
         }

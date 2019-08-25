@@ -73,7 +73,7 @@ namespace raddi {
         // path
         //  - whenever 'initialize' succeeds then 'path' contains full path to the log file
         //
-        extern wchar_t path [768];
+        extern std::wstring path;
 
         // api_error
         //  - adds type information to GetLastError
