@@ -130,6 +130,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SERVER | NOTE | 7       "sending {1} request, {2} + {3} bytes of data"
     SERVER | NOTE | 8       "peer {4} requests {1} with {2} + {3} bytes of data"
     SERVER | NOTE | 9       "peer {4} announces {1} address {5}"
+    SERVER | NOTE | 10      "configuratation disallows conforming to received soft flags: {1:X}"
     // coordinator
     SERVER | NOTE | 0x20    "peer, known, listens on port {1}"
     SERVER | NOTE | 0x21    "peer, new, listens on {1}, will try to connect and confirm this later"
@@ -198,6 +199,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     // SOCKS5t proxy
     SERVER | ERROR | 15     "invalid proxy response"
     SERVER | ERROR | 16     "connection through proxy failed, code {1}: {2}"
+    // connection (again)
+    SERVER | ERROR | 17     "connection aborted, incompatible hard flags: {1:X}"
 
     // coordinator
     SERVER | ERROR | 0x20   ""

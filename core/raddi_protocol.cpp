@@ -68,7 +68,7 @@ raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::pr
     sodium_memzero (rcvscalarmul, sizeof rcvscalarmul);
     sodium_memzero (trmscalarmul, sizeof trmscalarmul);
     
-    if (peer->flags.hard.decode () != 0) // TODO: report unsupported protocol flags
+    if (peer->flags.hard.decode () != 0)
         return nullptr;
 
     if ((aes256gcm_mode != aes256gcm_mode::disabled) && crypto_aead_aes256gcm_is_available () && (peer->flags.soft.decode () & 0x0000'0001)) {

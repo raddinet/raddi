@@ -208,8 +208,16 @@ bool raddi::connection::head (const raddi::protocol::initial * peer) {
         // this may also call 'send' thus we need to have the 'encryption' above already set
         ::coordinator->established (this);
         return true;
-    } else
+    } else {
+        auto hardflags = peer->flags.hard.decode ();
+        if (hardflags != 0) {
+            this->report (raddi::log::level::error, 17, hardflags);
+            return false;
+        }
+
+        this->report (raddi::log::level::note, 10, peer->flags.soft.decode ());
         return false;
+    }
 }
 bool raddi::connection::message (const unsigned char * data, std::size_t size) {
     if (size >= sizeof (raddi::entry) + raddi::proof::min_size) {
