@@ -1988,7 +1988,7 @@ bool benchmark () {
         try {
             auto t0 = raddi::microtimestamp ();
             if (auto n = raddi::proof::generate (hash, buffer, sizeof buffer, { complexity, 0 }, &quit)) {
-                printf ("found... %.1fs\n", (raddi::microtimestamp () - t0) / 1000000.0);
+                printf ("found... %.2fs\n", (raddi::microtimestamp () - t0) / 1000000.0);
                 for (auto i = 0u; i != n; ++i) {
                     if (buffer [i] != expected [complexity - raddi::proof::min_complexity] [i]) {
                         printf ("unexpected validation failure\n");
