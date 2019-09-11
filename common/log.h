@@ -104,17 +104,19 @@ namespace raddi {
         inline std::wstring translate (long long argument, const std::wstring & format) {
             return std::to_wstring (argument);
         }
-        inline std::wstring translate (unsigned long long argument, const std::wstring & format) {
+        inline std::wstring translate (unsigned long long argument, const std::wstring & format, int hexwidth = 16) {
             wchar_t buffer [64];
-            if (format == L"x") std::swprintf (buffer, sizeof buffer / sizeof buffer [0], L"%llx", argument); else
-            if (format == L"X") std::swprintf (buffer, sizeof buffer / sizeof buffer [0], L"%llX", argument); else
-            std::swprintf (buffer, sizeof buffer / sizeof buffer [0], L"%llu", argument);
+
+                 if (format == L"x") std::swprintf (buffer, sizeof buffer / sizeof buffer [0], L"%0*llx", hexwidth, argument);
+            else if (format == L"X") std::swprintf (buffer, sizeof buffer / sizeof buffer [0], L"%0*llX", hexwidth, argument);
+            else std::swprintf (buffer, sizeof buffer / sizeof buffer [0], L"%llu", argument);
+
             return buffer;
         }
         inline std::wstring translate (long argument, const std::wstring & format) { return translate ((long long) argument, format); }
-        inline std::wstring translate (unsigned long argument, const std::wstring & format) { return translate ((unsigned long long) argument, format); }
+        inline std::wstring translate (unsigned long argument, const std::wstring & format) { return translate ((unsigned long long) argument, format, 8); }
         inline std::wstring translate (int argument, const std::wstring & format) { return translate ((long long) argument, format); }
-        inline std::wstring translate (unsigned int argument, const std::wstring & format) { return translate ((unsigned long long) argument, format); }
+        inline std::wstring translate (unsigned int argument, const std::wstring & format) { return translate ((unsigned long long) argument, format, 8); }
 
         inline std::wstring translate (const std::wstring & argument, const std::wstring &) { return argument; }
         inline std::wstring translate (const wchar_t * argument, const std::wstring &) { return argument ? argument : L"<null>"; }
