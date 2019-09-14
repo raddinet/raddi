@@ -392,7 +392,7 @@ bool raddi::db::shard <Key>::get (const db::table <Key> * table,
 
 template <typename Key>
 bool raddi::db::shard <Key>::get (const db::table <Key> * table,
-                                  std::size_t index, read what, void * buffer, std::size_t * length, std::size_t demand) {
+                                  std::size_t index, read what, void * buffer, std::size_t * size, std::size_t demand) {
     immutability guard (this->lock);
 
     if (index < this->cache.size ()) {
