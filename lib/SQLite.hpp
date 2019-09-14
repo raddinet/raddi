@@ -36,6 +36,10 @@ public:
         const Statement & statement;
         InStatementException (std::string_view op, const Statement & statement);
     };
+    struct EmptyResultException : Exception {
+        const Statement & statement;
+        EmptyResultException (const Statement & statement);
+    };
     struct PrepareException : Exception {
         const std::wstring query;
         PrepareException (std::wstring_view query, sqlite3 * db);
@@ -169,7 +173,7 @@ public:
                 this->reset ();
                 return value;
             } else
-                throw SQLite::InStatementException ("no data", *this);
+                throw SQLite::EmptyResultException (*this);
         }
     private:
         void bind () {}
