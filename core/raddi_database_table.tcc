@@ -112,7 +112,7 @@ bool raddi::db::table <Key>::get (std::uint64_t index, read what,
             if (this->need_shard_to_advance (&shard)) {
                 shard.advance (this);
             }
-            return shard.get (this, index, what, buffer, length, demand);
+            return shard.get (this, (std::size_t) index, what, buffer, length, demand);
         }
     }
     return false;

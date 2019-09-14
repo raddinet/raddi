@@ -184,15 +184,15 @@ public:
                              [] (const Key &, const auto & detail) { return false; },
                              [] (const Key &, const auto & detail, std::uint8_t *) {});
     }
-    std::size_t count () const {
-        std::size_t n = 0;
+    std::uint64_t count () const {
+        std::uint64_t n = 0;
         immutability guard (this->lock);
         for (auto & shard : this->shards) {
             n += shard.size (this);
         }
         return n;
     }
-    std::size_t size () const { // alias to keep naming orthogonal with shards
+    std::uint64_t size () const { // alias to keep naming orthogonal with shards
         return this->count ();
     }
 
