@@ -56,6 +56,7 @@ int CALLBACK wWinMain (HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
     //     - warn if very old?
     //  - if overwriting running executable, shut it down
     //     - stop service or stop background task (tray?)
+    //  - add firewall exception: https://support.microsoft.com/en-us/help/947709/how-to-use-the-netsh-advfirewall-firewall-context-instead-of-the-netsh
 
     //  - decompress to selected location
     //     - DO NOT OVERWRITE LOCAL raddi.db IF EXISTS (actually app itself should deploy/create the default one)
