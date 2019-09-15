@@ -28,7 +28,10 @@ SQLite::InStatementException::InStatementException (std::string_view op, const S
     : Exception (op, sqlite3_db_handle (statement.stmt), sqlite3_sql (statement.stmt))
     , statement (statement) {};
 SQLite::EmptyResultException::EmptyResultException (const Statement & statement)
-    : Exception ("no data", sqlite3_db_handle (statement.stmt), sqlite3_sql (statement.stmt))
+    : InStatementException ("no data", statement)
+    , statement (statement) {};
+SQLite::NullResultException::NullResultException (const Statement & statement)
+    : InStatementException ("null", statement)
     , statement (statement) {};
 SQLite::PrepareException::PrepareException (std::wstring_view query, sqlite3 * db)
     : Exception ("prepare", db)

@@ -36,9 +36,13 @@ public:
         const Statement & statement;
         InStatementException (std::string_view op, const Statement & statement);
     };
-    struct EmptyResultException : Exception {
+    struct EmptyResultException : InStatementException {
         const Statement & statement;
         EmptyResultException (const Statement & statement);
+    };
+    struct NullResultException : InStatementException {
+        const Statement & statement;
+        NullResultException (const Statement & statement);
     };
     struct PrepareException : Exception {
         const std::wstring query;
@@ -169,9 +173,14 @@ public:
         R query (Args... args) {
             this->bind (args...);
             if (this->next ()) {
-                auto value = this->get <R> (0);
-                this->reset ();
-                return value;
+                if (!this->null (0)) {
+                    auto value = this->get <R> (0);
+                    this->reset ();
+                    return value;
+                } else {
+                    this->reset ();
+                    throw SQLite::NullResultException (*this);
+                }
             } else
                 throw SQLite::EmptyResultException (*this);
         }
