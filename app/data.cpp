@@ -1,6 +1,5 @@
 #include "data.h"
-#include "errorbox.h"
-
+#include "../common/errorbox.h"
 #include "../common/options.h"
 #include "../common/directory.h"
 #include "../core/raddi_defaults.h"
@@ -73,16 +72,16 @@ bool Data::locate_and_open () {
 
         // finally try standard user local app data
         //  - whilst this is fourth attempt, this path is expected to be the most common
+        //  - TODO: CSIDL_APPDATA ??? (Roaming profiles)
 
         wchar_t path [2 * MAX_PATH];
         if (SHGetFolderPath (NULL, CSIDL_LOCAL_APPDATA, NULL, 0, path) == S_OK) {
 
             std::wcscat (path, raddi::defaults::data_subdir);
-            directory::create (path);
             std::wcscat (path, raddi::defaults::app_subdir);
-            directory::create (path);
-            std::wcscat (path, file);
+            directory::create_full_path (path);
 
+            std::wcscat (path, file);
             return this->open_data_file (path, true);
         } else
             return this->open_data_file (exepath);
@@ -219,8 +218,8 @@ bool Data::resolve_separation (const wchar_t * filename, bool create_separated_i
         this->execute (L"CREATE TABLE IF NOT EXISTS `names` (`entry` BLOB PRIMARY KEY, `name` TEXT) WITHOUT ROWID"); // custom names for channels/identities
 
         this->execute (L"CREATE TABLE IF NOT EXISTS `lists` (`id` INTEGER PRIMARY KEY, `name` TEXT)");
-        this->execute (L"CREATE TABLE IF NOT EXISTS `listsubs` (`list` INT, `id` INT, `name` TEXT)");
-        this->execute (L"CREATE TABLE IF NOT EXISTS `listdata` (`list` INT, `sub` INT, `entry` BLOB, `name` TEXT, PRIMARY KEY (`list`,`sub`,`entry`)) WITHOUT ROWID"); // name can be NULL, then see 'resolved'
+        this->execute (L"CREATE TABLE IF NOT EXISTS `groups` (`id` INTEGER PRIMARY KEY, `list` INT, `name` TEXT)");
+        this->execute (L"CREATE TABLE IF NOT EXISTS `listed` (`id` INTEGER PRIMARY KEY, `group` INT, `entry` BLOB, `name` TEXT)");
 
         // table to remember behavior (checkboxes in dialogs)
         this->execute (L"CREATE TABLE IF NOT EXISTS `remember` (`dialog` TEXT PRIMARY KEY, `action` INT) WITHOUT ROWID");
@@ -298,9 +297,35 @@ bool Data::prepare_queries () {
         // this->tabs.clear = this->prepare (L"DELETE FROM `tabs` WHERE `window`=?");
 
         this->lists.query = this->prepare (L"SELECT `id`,`name` FROM `lists`");
-        this->lists.maxID = this->prepare (L"SELECT MAX(`id`) FROM `lists`");
-        this->lists.subs.query = this->prepare (L"SELECT `id`,`name` FROM `listsubs` WHERE `list`=?");
-        this->lists.data.query = this->prepare (L"SELECT `sub`,`entry`,`name` FROM `listdata` WHERE `list`=?");
+        this->lists.insert = this->prepare (L"REPLACE INTO `lists`(`id`,`name`) VALUES (?,?)");
+        this->lists.rename = this->prepare (L"UPDATE `lists` SET `name`=? WHERE `id`=?");
+        this->lists.remove [0] = this->prepare (L"DELETE FROM `listed` WHERE `group` IN (SELECT `id` FROM `groups` WHERE `list`=?)");
+        this->lists.remove [1] = this->prepare (L"DELETE FROM `groups` WHERE `list`=?");
+        this->lists.remove [2] = this->prepare (L"DELETE FROM `lists` WHERE `id`=?");
+        
+        this->lists.groups.insert = this->prepare (L"INSERT INTO `groups` (`id`,`list`,`name`) VALUES (?,?,?)");
+        this->lists.groups.query = this->prepare (L"SELECT `id`,`list`,`name` FROM `groups` ORDER BY `id` ASC");
+        this->lists.groups.move = this->prepare (L"UPDATE `groups` SET `list`=? WHERE `id`=?");
+        this->lists.groups.rename = this->prepare (L"UPDATE `groups` SET `name`=? WHERE `id`=?");
+        this->lists.groups.remove [0] = this->prepare (L"DELETE FROM `groups` WHERE `id`=?");
+        this->lists.groups.remove [1] = this->prepare (L"DELETE FROM `listed` WHERE `group`=?");
+        this->lists.groups.cleanup = this->prepare (L"DELETE FROM `groups` WHERE `list`=? AND `id` NOT IN (SELECT DISTINCT `group` FROM `listed`)");
+        this->lists.groups.maxID = this->prepare (L"SELECT MAX(`id`) FROM `groups`");
+
+        this->lists.data.insert = this->prepare (L"INSERT INTO `listed` (`id`,`group`,`entry`) VALUES ((SELECT MAX(`id`)+1 FROM `listed`),?,?)");
+        this->lists.data.query = this->prepare (L"SELECT `id`,`group`,`entry` FROM `listed`");
+        this->lists.data.get = this->prepare (L"SELECT `entry` FROM `listed` WHERE `id`=?");
+        this->lists.data.move = this->prepare (L"UPDATE `listed` SET `group`=? WHERE `id`=?");
+        this->lists.data.maxID = this->prepare (L"SELECT MAX(`id`) FROM `listed`");
+        this->lists.data.remove = this->prepare (L"DELETE FROM `listed` WHERE `id`=?");
+
+        this->names.is = this->prepare (L"SELECT COUNT(*) FROM `names` WHERE `entry`=?");
+        this->names.get = this->prepare (L"SELECT `name` FROM `names` WHERE `entry`=?");
+        this->names.set = this->prepare (L"REPLACE INTO `names` (`entry`,`name`) VALUES (?,?)");
+        this->names.remove = this->prepare (L"DELETE FROM `names` WHERE `entry`=?");
+        this->names.getByListedId = this->prepare (L"SELECT `name` FROM `names` WHERE `entry`=(SELECT `entry` FROM `listed` WHERE `id`=?)");
+        this->names.setByListedId = this->prepare (L"REPLACE INTO `names` (`entry`,`name`) VALUES ((SELECT `entry` FROM `listed` WHERE `id`=?),?)");
+        this->names.removeByListedId = this->prepare (L"DELETE FROM `names` WHERE `entry`=(SELECT `entry` FROM `listed` WHERE `id`=?)");
 
         this->history.list = this->prepare (L"SELECT `entry`,`title` FROM `history` ORDER BY `t` DESC");
         this->history.last [0] = this->prepare (L"SELECT `entry`,`title`,`t` FROM `history` ORDER BY `t` DESC LIMIT 1");

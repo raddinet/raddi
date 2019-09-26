@@ -1,2 +1,2 @@
 #include "view.h"
-#include "appapi.h"
+#include "../common/appapi.h"

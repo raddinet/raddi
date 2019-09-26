@@ -43,6 +43,12 @@
     <Filter Include="Data">
       <UniqueIdentifier>{c9c75cd8-8e4c-4f8e-96fe-4e66ac9905d1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Controls\Helpers">
+      <UniqueIdentifier>{ecd73c45-fa24-4820-972c-ef981564c21a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\GUI">
+      <UniqueIdentifier>{fca03bcb-75a3-445d-b8d1-f3ac52707f78}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="app.cpp" />
@@ -70,7 +76,6 @@
     <ClCompile Include="..\lib\SQLite.cpp">
       <Filter>Libraries</Filter>
     </ClCompile>
-    <ClCompile Include="appapi.cpp" />
     <ClCompile Include="..\core\raddi_iid.cpp">
       <Filter>RADDI\Structures</Filter>
     </ClCompile>
@@ -87,9 +92,6 @@
       <Filter>RADDI\Local</Filter>
     </ClCompile>
     <ClCompile Include="feed.cpp">
-      <Filter>Views</Filter>
-    </ClCompile>
-    <ClCompile Include="list.cpp">
       <Filter>Views</Filter>
     </ClCompile>
     <ClCompile Include="view.cpp">
@@ -137,9 +139,6 @@
     <ClCompile Include="data.cpp">
       <Filter>Data</Filter>
     </ClCompile>
-    <ClCompile Include="node.cpp">
-      <Filter>Data</Filter>
-    </ClCompile>
     <ClCompile Include="resolver.cpp">
       <Filter>Data</Filter>
     </ClCompile>
@@ -152,8 +151,29 @@
     <ClCompile Include="window_layout.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="window_font.cpp">
+    <ClCompile Include="prompts.cpp">
+      <Filter>Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="searchbox.cpp">
+      <Filter>Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="listview_helpers.cpp">
+      <Filter>Controls\Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\node.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\appapi.cpp">
+      <Filter>Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\window_environment.cpp">
       <Filter>Window</Filter>
+    </ClCompile>
+    <ClCompile Include="lists.cpp">
+      <Filter>Views</Filter>
+    </ClCompile>
+    <ClCompile Include="channels.cpp">
+      <Filter>Views</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -188,9 +208,6 @@
     <None Include="..\lib\SQLite.tcc">
       <Filter>Libraries</Filter>
     </None>
-    <None Include="errorbox.tcc">
-      <Filter>Dialogs</Filter>
-    </None>
     <None Include="..\core\raddi_database.tcc">
       <Filter>RADDI\Database</Filter>
     </None>
@@ -199,6 +216,9 @@
     </None>
     <None Include="..\core\raddi_database_table.tcc">
       <Filter>RADDI\Database</Filter>
+    </None>
+    <None Include="..\common\errorbox.tcc">
+      <Filter>Common\GUI</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -234,7 +254,6 @@
     <ClInclude Include="..\lib\SQLite.hpp">
       <Filter>Libraries</Filter>
     </ClInclude>
-    <ClInclude Include="appapi.h" />
     <ClInclude Include="..\core\raddi_iid.h">
       <Filter>RADDI\Structures</Filter>
     </ClInclude>
@@ -253,17 +272,11 @@
     <ClInclude Include="feed.h">
       <Filter>Views</Filter>
     </ClInclude>
-    <ClInclude Include="list.h">
-      <Filter>Views</Filter>
-    </ClInclude>
     <ClInclude Include="view.h">
       <Filter>Views</Filter>
     </ClInclude>
     <ClInclude Include="tabs.h">
       <Filter>Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="errorbox.h">
-      <Filter>Dialogs</Filter>
     </ClInclude>
     <ClInclude Include="..\core\raddi_database.h">
       <Filter>RADDI\Database</Filter>
@@ -313,9 +326,6 @@
     <ClInclude Include="data.h">
       <Filter>Data</Filter>
     </ClInclude>
-    <ClInclude Include="node.h">
-      <Filter>Data</Filter>
-    </ClInclude>
     <ClInclude Include="resolver.h">
       <Filter>Data</Filter>
     </ClInclude>
@@ -324,6 +334,33 @@
     </ClInclude>
     <ClInclude Include="menus.h">
       <Filter>Window</Filter>
+    </ClInclude>
+    <ClInclude Include="prompts.h">
+      <Filter>Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="searchbox.h">
+      <Filter>Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="listview_helpers.h">
+      <Filter>Controls\Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\node.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\appapi.h">
+      <Filter>Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\errorbox.h">
+      <Filter>Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\window_environment.h">
+      <Filter>Window</Filter>
+    </ClInclude>
+    <ClInclude Include="lists.h">
+      <Filter>Views</Filter>
+    </ClInclude>
+    <ClInclude Include="channels.h">
+      <Filter>Views</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

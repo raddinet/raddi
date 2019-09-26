@@ -237,7 +237,7 @@
       <LargeAddressAware>true</LargeAddressAware>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SetChecksum>true</SetChecksum>
-      <AdditionalOptions>/STUB:..\tools\stub.exe %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/STUB:..\tools\stub.exe  /EMITPOGOPHASEINFO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
@@ -282,7 +282,7 @@
       <LargeAddressAware>true</LargeAddressAware>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SetChecksum>true</SetChecksum>
-      <AdditionalOptions>/STUB:..\tools\stub.exe %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/STUB:..\tools\stub.exe /EMITPOGOPHASEINFO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=arm64 targetfilename=$(TargetFileName)</Command>
@@ -326,7 +326,7 @@
       <LargeAddressAware>true</LargeAddressAware>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SetChecksum>true</SetChecksum>
-      <AdditionalOptions>/STUB:..\tools\stub.exe %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/STUB:..\tools\stub.exe /EMITPOGOPHASEINFO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
@@ -370,7 +370,7 @@
       <LargeAddressAware>true</LargeAddressAware>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SetChecksum>true</SetChecksum>
-      <AdditionalOptions>/STUB:..\tools\stub.exe %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/STUB:..\tools\stub.exe /EMITPOGOPHASEINFO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=arm64 targetfilename=$(TargetFileName)</Command>
@@ -503,7 +503,7 @@
       <LargeAddressAware>true</LargeAddressAware>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SetChecksum>true</SetChecksum>
-      <AdditionalOptions>/STUB:..\tools\stub.exe %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/STUB:..\tools\stub.exe  /EMITPOGOPHASEINFO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
@@ -546,19 +546,22 @@
       <LargeAddressAware>true</LargeAddressAware>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SetChecksum>true</SetChecksum>
-      <AdditionalOptions>/STUB:..\tools\stub.exe %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/STUB:..\tools\stub.exe /EMITPOGOPHASEINFO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\appapi.cpp" />
     <ClCompile Include="..\common\directory.cpp" />
     <ClCompile Include="..\common\file.cpp" />
     <ClCompile Include="..\common\lock.cpp" />
     <ClCompile Include="..\common\log.cpp" />
+    <ClCompile Include="..\common\node.cpp" />
     <ClCompile Include="..\common\platform.cpp" />
     <ClCompile Include="..\common\uuid.cpp" />
+    <ClCompile Include="..\common\window_environment.cpp" />
     <ClCompile Include="..\core\raddi_address.cpp" />
     <ClCompile Include="..\core\raddi_channel.cpp" />
     <ClCompile Include="..\core\raddi_command.cpp" />
@@ -581,19 +584,20 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="app.cpp" />
-    <ClCompile Include="appapi.cpp" />
+    <ClCompile Include="channels.cpp" />
     <ClCompile Include="editbox.cpp" />
+    <ClCompile Include="listview_helpers.cpp" />
     <ClCompile Include="menus.cpp" />
-    <ClCompile Include="node.cpp" />
     <ClCompile Include="data.cpp" />
     <ClCompile Include="feed.cpp" />
-    <ClCompile Include="list.cpp" />
+    <ClCompile Include="lists.cpp" />
+    <ClCompile Include="prompts.cpp" />
     <ClCompile Include="property.cpp" />
     <ClCompile Include="resolver.cpp" />
+    <ClCompile Include="searchbox.cpp" />
     <ClCompile Include="tabs.cpp" />
     <ClCompile Include="view.cpp" />
     <ClCompile Include="window.cpp" />
-    <ClCompile Include="window_font.cpp" />
     <ClCompile Include="window_layout.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -607,25 +611,29 @@
     <Manifest Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\common\errorbox.tcc" />
     <None Include="..\core\raddi_database.tcc" />
     <None Include="..\core\raddi_database_shard.tcc" />
     <None Include="..\core\raddi_database_table.tcc" />
     <None Include="..\lib\cuckoocycle.tcc" />
     <None Include="..\lib\SQLite.tcc" />
     <None Include="app.info" />
-    <None Include="errorbox.tcc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\img\raddi.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\common\appapi.h" />
     <ClInclude Include="..\common\directory.h" />
+    <ClInclude Include="..\common\errorbox.h" />
     <ClInclude Include="..\common\file.h" />
     <ClInclude Include="..\common\lock.h" />
     <ClInclude Include="..\common\log.h" />
+    <ClInclude Include="..\common\node.h" />
     <ClInclude Include="..\common\options.h" />
     <ClInclude Include="..\common\platform.h" />
     <ClInclude Include="..\common\uuid.h" />
+    <ClInclude Include="..\common\window_environment.h" />
     <ClInclude Include="..\core\raddi_address.h" />
     <ClInclude Include="..\core\raddi_channel.h" />
     <ClInclude Include="..\core\raddi_command.h" />
@@ -646,16 +654,17 @@
     <ClInclude Include="..\core\raddi_timestamp.h" />
     <ClInclude Include="..\lib\cuckoocycle.h" />
     <ClInclude Include="..\lib\SQLite.hpp" />
-    <ClInclude Include="appapi.h" />
+    <ClInclude Include="channels.h" />
     <ClInclude Include="editbox.h" />
+    <ClInclude Include="listview_helpers.h" />
     <ClInclude Include="menus.h" />
-    <ClInclude Include="node.h" />
     <ClInclude Include="data.h" />
-    <ClInclude Include="errorbox.h" />
     <ClInclude Include="feed.h" />
-    <ClInclude Include="list.h" />
+    <ClInclude Include="lists.h" />
+    <ClInclude Include="prompts.h" />
     <ClInclude Include="property.h" />
     <ClInclude Include="resolver.h" />
+    <ClInclude Include="searchbox.h" />
     <ClInclude Include="tabs.h" />
     <ClInclude Include="view.h" />
     <ClInclude Include="window.h" />

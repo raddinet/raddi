@@ -476,8 +476,8 @@ void Design::update () {
 
     if (ptrGetImmersiveUserColorSetPreference) {
         this->colorset = ptrGetImmersiveUserColorSetPreference (FALSE, FALSE);
-        /*
-        for (auto i = 0; auto name = ptrGetImmersiveColorNamedTypeByIndex (i); ++i) {
+        
+        /*for (auto i = 0; auto name = ptrGetImmersiveColorNamedTypeByIndex (i); ++i) {
 
             auto type = ptrGetImmersiveColorTypeFromName ((L"Immersive" + std::wstring (*name)).c_str ());
             auto color = ptrGetImmersiveColorFromColorSetEx (this->colorset, type, false, 0);
@@ -486,7 +486,7 @@ void Design::update () {
             _snwprintf (szcolor, 9, L"%08X", color);
 
             raddi::log::event (0xA1F0, i, *name, type, szcolor);
-        }*/
+        }// */
     }
 
     HIGHCONTRAST hc;

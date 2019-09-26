@@ -15,22 +15,23 @@
 #include "menus.h"
 #include "feed.h"
 #include "data.h"
-#include "errorbox.h"
+#include "../common/errorbox.h"
 #include "editbox.h"
-#include "node.h"
+#include "listview_helpers.h"
+#include "../common/node.h"
 #include "resolver.h"
+#include "prompts.h"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 extern "C" const IID IID_IImageList;
 
 extern Design design;
 extern Cursors cursor;
+extern Resolver resolver;
 
 namespace {
     LRESULT CALLBACK DisableWheelSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);
     LRESULT CALLBACK AlphaSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);
-
-    void FinishCommandInAllWindows (WPARAM command, LPARAM parameter);
 }
 
 LPCTSTR Window::Initialize (HINSTANCE hInstance) {
@@ -42,8 +43,9 @@ LPCTSTR Window::Initialize (HINSTANCE hInstance) {
     return (LPCTSTR) (std::intptr_t) RegisterClassEx (&wndclass);
 }
 
-Window::Window (HWND hWnd, WPARAM wParam, LPARAM lParam, CREATESTRUCT * cs)
-    : WindowPublic (hWnd)
+Window::Window (HWND hWnd, CREATESTRUCT * cs)
+    : WindowEnvironment (hWnd)
+    , hWnd (hWnd)
     , id ((LPARAM) cs->lpCreateParams)
     , dividers {
         { id, 0x201, long (256 * dpi / 96) }, // left
@@ -56,12 +58,6 @@ Window::Window (HWND hWnd, WPARAM wParam, LPARAM lParam, CREATESTRUCT * cs)
     this->tabs.views = nullptr;
     this->tabs.lists = nullptr;
     this->tabs.feeds = nullptr;
-
-    std::memset (this->metrics, 0, sizeof this->metrics);
-
-    SetWindowLongPtr (hWnd, GWLP_USERDATA, (LONG_PTR) this);
-    SetWindowLongPtr (hWnd, GWLP_WNDPROC, (LONG_PTR) & Window::Procedure);
-    this->Dispatch (WM_NCCREATE, wParam, lParam);
 }
 
 LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
@@ -104,42 +100,7 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
 
         case WM_CLOSE:
             if (!IsLastWindow (hWnd)) {
-
-                int action = IDYES;
-                if (ptrTaskDialogIndirect) {
-                    TASKDIALOG_BUTTON dlgCloseWindowButtons [] = {
-                        { IDYES, L"Stash\nReopen from menu and whatever" },
-                        { IDNO, L"Close\nAll tabs and window begone" },
-                    };
-
-                    TASKDIALOGCONFIG dlgCloseWindow;
-                    std::memset (&dlgCloseWindow, 0, sizeof dlgCloseWindow);
-
-                    dlgCloseWindow.cbSize = sizeof dlgCloseWindow;
-                    dlgCloseWindow.hwndParent = hWnd;
-                    dlgCloseWindow.hInstance = reinterpret_cast <HMODULE> (&__ImageBase);
-                    dlgCloseWindow.dwFlags = TDF_USE_COMMAND_LINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
-                    dlgCloseWindow.dwCommonButtons = TDCBF_CANCEL_BUTTON;
-                    dlgCloseWindow.pszWindowTitle = L"close window TBD TBD TBD TBD TBD TBD ";
-                    dlgCloseWindow.pszMainIcon = TD_WARNING_ICON;
-                    dlgCloseWindow.pszContent = L"text text text text text text text";
-                    dlgCloseWindow.cButtons = sizeof dlgCloseWindowButtons / sizeof dlgCloseWindowButtons [0];
-                    dlgCloseWindow.pButtons = dlgCloseWindowButtons;
-                    dlgCloseWindow.nDefaultButton = IDYES;
-                    dlgCloseWindow.pszVerificationText = L"TBD: Remember (revert in settings)";
-
-                    BOOL remember = FALSE;
-                    if (ptrTaskDialogIndirect (&dlgCloseWindow, &action, NULL, &remember) != S_OK) {
-                        // error?
-                    }
-                    if (remember) {
-                        // save
-                    }
-                } else {
-                    action = MessageBox (hWnd, L"TBD: Stash???", L"Close Window", MB_YESNOCANCEL | MB_ICONQUESTION);
-                }
-
-                switch (action) {
+                switch (CloseWindowPrompt (hWnd)) {
                     case IDCANCEL: // keep open
                         return 0;
                     case IDYES: // stash is noop
@@ -193,7 +154,7 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
             break;
         case WM_APP_GUI_THEME_CHANGE:
             this->OnVisualEnvironmentChange ();
-            InvalidateRect (hWnd, NULL, FALSE);
+            InvalidateRect (hWnd, NULL, TRUE);
             break;
 
         case WM_CTLCOLORSTATIC:
@@ -245,41 +206,67 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
             break;
 
         case WM_APP_FINISH_COMMAND:
-            return this->OnFinishCommand (wParam, lParam);
-
-        case WM_APP_NODE_CONNECTION:
+            return this->OnFinishCommand (lParam);
+        case WM_APP_TITLE_RESOLVED:
+            return this->OnAppEidResolved (wParam);
+        case WM_APP_NODE_STATE:
             return OnNodeConnectionUpdate (wParam, lParam);
-        case WM_APP_CHANNELS_COUNT:
+        /*case WM_APP_CHANNELS_COUNT:
             return this->lists.channels->Update (wParam, lParam);
         case WM_APP_IDENTITIES_COUNT:
-            return this->lists.identities->Update (wParam);
+            return this->lists.identities->Update (wParam);*/
     }
-    return DefaultProcedure (hWnd, message, wParam, lParam);
+    return DefaultProcedure (this->hWnd, message, wParam, lParam);
 }
 
-LRESULT Window::OnNodeConnectionUpdate (WPARAM information, LPARAM parameter) {
-    switch (information) {
-        case 0: // connection state change
-            // set statusbar info icons
-            if (parameter) {
-            }
+LRESULT Window::OnNodeConnectionUpdate (WPARAM status, LPARAM parameter) {
+    // TODO: update statusbar icons etc
+    switch (status) {
+        case 0: // disconnected
             break;
+        case 1: // connected
+            break;
+    }
+
+    this->lists.identities->Update ();
+    this->lists.channels->Update ();
+    return 0;
+}
+
+LRESULT Window::OnAppEidResolved (UINT child) {
+
+    // TODO: forward to Views
+
+    switch (child) {
+        case ID::LIST_IDENTITIES:
+            // this->lists.identities->Resolved (?)
+            InvalidateRect (this->lists.identities->hWnd, NULL, FALSE);
+            break;
+        case ID::LIST_CHANNELS:
+            // this->lists.channels->Resolved (?)
+            InvalidateRect (this->lists.channels->hWnd, NULL, FALSE);
+            break;
+    }
+    if ((child >= ID::LIST_BASE) && (child <= ID::LIST_LAST)) {
+        // Lists::OnResolve (...)???
+        InvalidateRect (GetDlgItem (this->hWnd, child), NULL, FALSE);
     }
     return 0;
 }
 
 std::intptr_t Window::CreateTab (const raddi::eid & entry, const std::wstring & text, std::intptr_t id) {
+    bool reposition = false;
     if (id == 0) {
         id = this->tabs.views->tabs.crbegin ()->first + 1;
         if (id < 1) {
             id = 1;
         }
-        // TODO: schedule repositioning
+        reposition = true;
     }
 
     try {
         wchar_t szTmp [16];
-        _snwprintf (szTmp, 16, L"[%zu] ", id);
+        szTmp [std::swprintf (szTmp, 15, L"[%zu] ", id)] = 0;
 
         this->tabs.views->tabs [id].text = szTmp + text;
         this->tabs.views->tabs [id].icon = NULL; // TODO: loading animating ICO and EID in title
@@ -290,6 +277,10 @@ std::intptr_t Window::CreateTab (const raddi::eid & entry, const std::wstring & 
                                                                 (HINSTANCE) GetWindowLongPtr (this->hWnd, GWLP_HINSTANCE), NULL);
         // View::Create (...)
         // this->tabs.views->tabs [id].progress = 1; // TODO: enqueue threadpool item to load the
+        
+        if (reposition) {
+            this->Reposition ();
+        }
         return id;
     } catch (const std::bad_alloc &) {
         return 0;
@@ -309,6 +300,34 @@ void Window::CloseTab (std::intptr_t id) {
             DestroyWindow (hCtrl);
         }
         this->tabs.views->tabs.erase (id);
+        this->tabs.views->update ();
+    }
+}
+
+void Window::CloseTabStack (std::intptr_t id) {
+    if ((id > 0) && this->tabs.views->tabs.count (id)) {
+        auto index = this->tabs.views->tabs [id].stack_index;
+
+        auto i = this->tabs.views->tabs.begin ();
+        auto e = this->tabs.views->tabs.end ();
+
+        while (i != e) {
+            auto id = i->first;
+            auto & tab = i->second;
+
+            if (tab.stack_index == index) {
+                database.tabs.close [0] (this->id, id, tab.text);
+                database.tabs.close [1] (this->id, id);
+
+                if (tab.content) {
+                    DestroyWindow (tab.content);
+                }
+
+                i = this->tabs.views->tabs.erase (i);
+            } else {
+                ++i;
+            }
+        }
         this->tabs.views->update ();
     }
 }
@@ -343,22 +362,22 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
 
         tc->tabs [-4].text = L"\xE128"; // "\x2081\x2082"; // NET
         tc->tabs [-4].tip = LoadString (0x11);
-        tc->tabs [-4].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"NET",
+        tc->tabs [-4].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"Network overview (something like /r/all?)",
                                                 WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, NULL,
                                                 cs->hInstance, NULL);
         tc->tabs [-3].text = L"\xE1CF"; // FAVorites
         tc->tabs [-3].tip = LoadString (0x12);
-        tc->tabs [-3].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"FAV",
+        tc->tabs [-3].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"Favorites",
                                                 WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, NULL,
                                                 cs->hInstance, NULL);
         tc->tabs [-2].text = L"\xE142"; // "\x2085\x2086"; // NOTification
         tc->tabs [-2].tip = LoadString (0x13);
-        tc->tabs [-2].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"NOT",
+        tc->tabs [-2].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"Notifications (TODO: Posted to identity channel)",
                                                 WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, NULL,
                                                 cs->hInstance, NULL);
         tc->tabs [-1].text = L"\xE205"; // "\x2089\x208A";// PRIvate messages
         tc->tabs [-1].tip = LoadString (0x14);
-        tc->tabs [-1].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"PRIV MSG",
+        tc->tabs [-1].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"Private messages",
                                                 WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, NULL,
                                                 cs->hInstance, NULL);
         for (auto & tab : tc->tabs) {
@@ -402,14 +421,8 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
         tc->addbutton (ID::LIST_OVERFLOW_BUTTON, IsWindows10OrGreater () ? L"|||" : L"|||", 0x2C, true); // TODO: What on XP? TODO: keyboard shortcut?
 
         try {
-            while (database.lists.query.next ()) {
-                auto id = database.lists.query.get <std::size_t> (0);
-                auto & tab = tc->tabs [id];
-
-                tab.text = database.lists.query.get <std::wstring> (1);
-                tab.content = List::Create (this, ID::LIST_FIRST, id);
-
-                tc->update ();
+            if (!Lists::Load (this, tc)) {
+                // ErrorBox (hWnd, raddi::log::level::error, 0x04, x.what ());
             }
         } catch (const SQLite::Exception & x) {
             ErrorBox (hWnd, raddi::log::level::error, 0x04, x.what ());
@@ -418,23 +431,25 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
         // TODO: optionally use images for these two also? people is obvious, channels perhaps grid of quads "app" icon
 
         try {
-            this->lists.channels = new ListOfChannels (this, ID::LIST_CHANNELS);
+            this->lists.channels = new ListOfChannels (this, ID::LIST_CHANNELS, Node::table::channels);
 
             tc->tabs [-7].content = this->lists.channels->hWnd;
             tc->tabs [-7].text = LoadString (0x20);
             tc->tabs [-7].tip = LoadString (0x21);
             tc->update ();
         } catch (const std::bad_alloc &) {
+            return -1;
         }
 
         try {
-            this->lists.identities = new ListOfIdentities (this, ID::LIST_IDENTITIES);
+            this->lists.identities = new ListOfChannels (this, ID::LIST_IDENTITIES, Node::table::identities);
 
             tc->tabs [-3].content = this->lists.identities->hWnd;
             tc->tabs [-3].text = LoadString (0x22);
             tc->tabs [-3].tip = LoadString (0x23);
             tc->update ();
         } catch (const std::bad_alloc &) {
+            return -1;
         }
 
         if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
@@ -545,6 +560,11 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
 }
 
 LRESULT Window::OnDestroy () {
+    resolver.clear (this->hWnd);
+
+    delete this->lists.identities;
+    delete this->lists.channels;
+
     for (auto icon : this->icons) {
         DestroyIcon (icon);
     }
@@ -554,13 +574,26 @@ LRESULT Window::OnDestroy () {
     return 0;
 }
 
-LRESULT Window::OnCommand (UINT notification, UINT id, HWND control) {
+namespace {
+    // common finish command parameters
+    //  - GUI is single threaded and synchronous thus this can be global
+    //
+    struct {
+        std::intptr_t list = 0;
+        std::intptr_t group = 0;
+        std::intptr_t source = 0;
+        std::vector <int> items;
+        std::wstring  text;
+    } finish;
+}
+
+LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
     if ((control != NULL) && IsWindowClass (control, L"BUTTON")) {
         SetWindowLongPtr (control, GWL_STYLE, GetWindowLongPtr (control, GWL_STYLE) & ~BS_DEFPUSHBUTTON);
         SetFocus (NULL); // TODO: set focus somewhere ...active view?
     }
         
-    switch (id) {
+    switch (command) {
 
         // New Window
         case 0xC0: // Ctrl+N
@@ -634,7 +667,6 @@ LRESULT Window::OnCommand (UINT notification, UINT id, HWND control) {
             }
             break;
         case 0xC5: // Tab context menu
-            // TODO: if menu open from keyboard, use 'current'
             if (this->tabs.views->contextual > 0) {
                 if (auto tabID = this->CreateTab (raddi::eid (), this->tabs.views->tabs [this->tabs.views->contextual].text)) {
                     this->tabs.views->request (tabID);
@@ -643,7 +675,9 @@ LRESULT Window::OnCommand (UINT notification, UINT id, HWND control) {
             break;
 
         // Close Tab
-        case 0xCC: // Close Whole Stack?
+        case 0xCC: // Close Whole Stack, content menu
+            // TODO: prompt!!!
+            this->CloseTabStack (this->tabs.views->contextual);
             break;
         case 0xCD: // Tab context menu
             this->CloseTab (this->tabs.views->contextual);
@@ -654,80 +688,252 @@ LRESULT Window::OnCommand (UINT notification, UINT id, HWND control) {
 
         // Quit App
         case 0xCF: // CTRL+Q
-            PostMessage (NULL, WM_COMMAND, id, 0);
+            PostMessage (NULL, WM_COMMAND, command, 0);
             break;
 
 
         // New List
-        case 0xA1: {
-            EditDialogBoxParameters newListBox;
+        case 0xA1:
+            if (this->FindFirstAvailableListId ()) {
 
-            newListBox.idTitle = 0x60;
-            newListBox.idSubTitle = 0x61;
-            newListBox.idEditHint = 0x62;
-            newListBox.idButtonText = 0x63;
+                finish.text.clear ();
+                if (EditDialogBox (hWnd, 0x60,
+                                   GetDlgItem (hWnd, ID::TABS_LISTS), { metrics [SM_CXICON], metrics [SM_CYICON] },
+                                   &finish.text)) {
 
-            // get Tab coords to ptReference
+                    if (auto new_list_id = this->FindFirstAvailableListId ()) {
+                        finish.list = new_list_id;
+                        finish.group = database.lists.groups.maxID.query <int> () + 1;
 
-            if (EditDialogBox (hWnd, &newListBox)) {
-                // TODO: get new list ID
+                        database.lists.insert (new_list_id, finish.text);
+                        database.lists.groups.insert (finish.group, finish.list, LoadString (0x70));
 
-                // TODO: save to DB
-
-                // TODO: tell other windows to display new List
-                // FinishCommandInAllWindows (id, new_list_id);
+                        FinishCommandInAllWindows (command);
+                    } else {
+                        MessageBox (hWnd, LoadString (0x64).c_str (), NULL, MB_ICONERROR);
+                    }
+                }
+            } else {
+                MessageBox (hWnd, LoadString (0x64).c_str (), NULL, MB_ICONERROR);
             }
-        } break;
+            break;
+
+        // Rename List
+        case 0xA3:
+            if (this->tabs.lists->contextual > 0) {
+
+                finish.list = this->tabs.lists->contextual;
+                finish.text = this->tabs.lists->tabs [this->tabs.lists->contextual].text;
+
+                if (EditDialogBox (hWnd, 0x65,
+                                   GetDlgItem (hWnd, ID::TABS_LISTS), { metrics [SM_CXICON], metrics [SM_CYICON] },
+                                   &finish.text)) {
+
+                    database.lists.rename (finish.text, finish.list);
+                    FinishCommandInAllWindows (command);
+                }
+            }
+            break;
 
         // Delete List
         case 0xAD:
             if (this->tabs.lists->contextual > 0) {
-                int action = IDOK;
-                if (ptrTaskDialogIndirect) {
-                    TASKDIALOG_BUTTON dlgDeleteListButtons [] = {
-                        { IDOK, L"Delete" },
-                    };
+                if (DeleteListPrompt (hWnd, this->tabs.lists->tabs [this->tabs.lists->contextual].text)) {
 
-                    TASKDIALOGCONFIG dlgDeleteList;
-                    std::memset (&dlgDeleteList, 0, sizeof dlgDeleteList);
-
-                    dlgDeleteList.cbSize = sizeof dlgDeleteList;
-                    dlgDeleteList.hwndParent = hWnd;
-                    dlgDeleteList.hInstance = reinterpret_cast <HMODULE> (&__ImageBase);
-                    dlgDeleteList.dwFlags = TDF_POSITION_RELATIVE_TO_WINDOW;
-                    dlgDeleteList.dwCommonButtons = TDCBF_CANCEL_BUTTON;
-                    dlgDeleteList.pszWindowTitle = L"Delete List TBD ";
-                    dlgDeleteList.pszMainIcon = TD_WARNING_ICON;
-                    dlgDeleteList.pszContent = L"text text text text text text text";
-                    dlgDeleteList.cButtons = sizeof dlgDeleteListButtons / sizeof dlgDeleteListButtons [0];
-                    dlgDeleteList.pButtons = dlgDeleteListButtons;
-                    dlgDeleteList.nDefaultButton = IDOK;
-                    // dlgDeleteList.pszVerificationText = L"TBD: Don't ask again (revert in settings)";
-
-                    BOOL remember = FALSE;
-                    if (ptrTaskDialogIndirect (&dlgDeleteList, &action, NULL, &remember) != S_OK) {
-                        // error?
-                    }
-                    if (remember) {
-                        // save
-                    }
-                } else {
-                    action = MessageBox (hWnd, L"TBD: List '%s' will be deleted and all inside???", L"Delete List", MB_OKCANCEL | MB_ICONWARNING);
-                }
-
-                if (action == IDOK) {
                     // delete from DB
+                    for (auto & query : database.lists.remove) {
+                        query (this->tabs.lists->contextual);
+                    }
                         
                     // notify all windows
-                    FinishCommandInAllWindows (id, this->tabs.lists->contextual);
+                    finish.list = this->tabs.lists->contextual;
+                    FinishCommandInAllWindows (command);
                 }
             }
+            break;
+
+        // Add new List Item manually
+        case 0xB0: {
+            MessageBeep (0);
+
+        } break;
+
+        // New List Group & move selected items into it
+        case 0xB1: {
+            auto hList = this->tabs.lists->tabs [this->tabs.lists->current].content;
+
+            if (EditDialogBox (hWnd, 0x72,
+                               GetDlgItem (hWnd, ID::TABS_LISTS), { metrics [SM_CXICON], metrics [SM_CYICON] },
+                               &finish.text)) {
+
+                finish.list = this->tabs.lists->current;
+                finish.group = database.lists.groups.maxID.query <int> () + 1;
+
+                database.lists.groups.insert (finish.group, finish.list, finish.text);
+
+                finish.items.clear ();
+                finish.items.reserve (ListView_GetSelectedCount (hList));
+
+                auto item = -1;
+                while ((item = ListView_GetNextItem (hList, item, LVNI_SELECTED)) != -1) {
+                    finish.items.push_back (item);
+                    database.lists.data.move (finish.group, ListView_GetItemParam (hList, item));
+                }
+
+                database.lists.groups.cleanup (finish.list);
+                FinishCommandInAllWindows (command);
+            }
+            SetFocus (hList);
+        } break;
+
+        // Rename List Group
+        case 0xB3: {
+            RECT r;
+            auto hList = this->tabs.lists->tabs [this->tabs.lists->current].content;
+
+            if (finish.group = ListView_GetFocusedGroupId (hList, &finish.text, &r)) {
+                MapWindowPoints (hList, NULL, reinterpret_cast <POINT *> (&r), 2);
+
+                if (EditDialogBox (hWnd, 0x75,
+                                   NULL, { r.left + metrics [SM_CXICON], r.bottom + metrics [SM_CYICON] },
+                                   &finish.text)) {
+
+                    finish.list = this->tabs.lists->current;
+                    database.lists.groups.rename (finish.text, finish.group);
+
+                    FinishCommandInAllWindows (command);
+                }
+                SetFocus (hList);
+            }
+        } break;
+
+        // List Item Restore Name
+        case 0xB5: {
+            auto hList = this->tabs.lists->tabs [this->tabs.lists->current].content;
+            auto item = -1;
+            while ((item = ListView_GetNextItem (hList, item, LVNI_SELECTED)) != -1) {
+                database.names.removeByListedId (ListView_GetItemParam (hList, item));
+            }
+            FinishCommandInAllWindows (FinishCommand::RefreshList);
+        } break;
+            
+        // Channels List Restore Name
+        case 0xB6: {
+            auto hList = this->tabs.lists->tabs [this->tabs.lists->current].content;
+            auto item = -1;
+            while ((item = ListView_GetNextItem (hList, item, LVNI_SELECTED)) != -1) {
+                raddi::eid id;
+                // TODO: all operations like this move to ListOfChannels class
+                if (hList == this->lists.channels->hWnd) {
+                    if (this->lists.channels->GetItemEid (item, &id)) {
+                        database.names.remove (SQLite::Blob (id));
+                    }
+                }
+                if (hList == this->lists.identities->hWnd) {
+                    if (this->lists.identities->GetItemEid (item, &id)) {
+                        database.names.remove (SQLite::Blob (id));
+                    }
+                }
+            }
+            FinishCommandInAllWindows (FinishCommand::RefreshList);
+        } break;
+
+        // Delete List Group
+        case 0xBD:
+            if (this->tabs.lists->current > 0) {
+                const auto & tab = this->tabs.lists->tabs [this->tabs.lists->current];
+
+                std::wstring group;
+                if (auto groupID = ListView_GetFocusedGroupId (tab.content, &group)) {
+
+                    if (DeleteListGroupPrompt (hWnd, tab.text, group)) {
+
+                        // delete from DB
+                        for (auto & query : database.lists.groups.remove) {
+                            query (groupID);
+                        }
+                            
+                        // notify all windows
+                        finish.list = this->tabs.lists->current;
+                        finish.group = groupID;
+                        FinishCommandInAllWindows (command);
+                    }
+                }
+            }
+            break;
+
+        // Delete List Item(s)
+        case 0xBE: {
+            auto hList = this->tabs.lists->tabs [this->tabs.lists->current].content;
+
+            finish.list = this->tabs.lists->current;
+            finish.items.clear ();
+            finish.items.reserve (ListView_GetSelectedCount (hList));
+
+            auto item = -1;
+            while ((item = ListView_GetNextItem (hList, item, LVNI_SELECTED)) != -1) {
+                finish.items.insert (finish.items.begin (), item);
+            }
+
+            if (DeleteListItemsPrompt (hWnd, finish.items.size ())) {
+                for (auto item : finish.items) {
+                    database.lists.data.remove (ListView_GetItemParam (hList, item));
+                }
+                database.lists.groups.cleanup (finish.list);
+                FinishCommandInAllWindows (command);
+            }
+        } break;
+
+
+
+        // Refresh channels/identities lists
+        case 0xDF:
+            this->lists.channels->Update ();
+            this->lists.identities->Update ();
             break;
 
 
         case ID::HISTORY_BUTTON:
             // TODO: drop down menu
             MessageBeep (0);
+            break;
+        case ID::OVERFLOW_BUTTON:
+            // TODO: enum this->tabs.views->overflow
+            MessageBeep (0);
+            break;
+        case ID::LIST_OVERFLOW_BUTTON:
+            // TODO: enum this->tabs.lists->overflow
+            MessageBeep (0);
+            break;
+
+        // Rename (F2) Contextual
+        case 0xF2:
+            if (auto hFocus = GetFocus ()) {
+                switch (auto id = GetDlgCtrlID (hFocus)) {
+
+                    default:
+                        if (id >= ID::LIST_BASE && id <= ID::LIST_LAST) {
+
+                            if (IsWindowsVistaOrGreater () && ListView_GetFocusedGroup (hFocus) != -1) {
+                                this->OnCommand (0, 0xB3, hFocus);
+                            } else {
+                                auto item = ListView_GetNextItem (hFocus, -1, LVNI_FOCUSED);
+                                if (item != -1) {
+                                    ListView_EditLabel (hFocus, item);
+                                }
+                            }
+                        }
+                        break;
+
+                    case ID::LIST_CHANNELS:
+                    case ID::LIST_IDENTITIES:
+                        auto item = ListView_GetNextItem (hFocus, -1, LVNI_FOCUSED);
+                        if (item != -1) {
+                            ListView_EditLabel (hFocus, item);
+                        }
+                        break;
+                }
+            }
             break;
 
         // Show/Hide Right Pane (F4)
@@ -745,9 +951,7 @@ LRESULT Window::OnCommand (UINT notification, UINT id, HWND control) {
             if (ptrDwmExtendFrameIntoClientArea) {
                 ptrDwmExtendFrameIntoClientArea (hWnd, this->GetDwmMargins ());
             }
-            RedrawWindow (hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
-            SetWindowPos (hWnd, NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-            InvalidateRect (hWnd, NULL, TRUE);
+            this->Reposition ();
             break;
 
         case ID::IDENTITIES:
@@ -756,7 +960,281 @@ LRESULT Window::OnCommand (UINT notification, UINT id, HWND control) {
             }
             break;
     }
+
+    // content menu command, user selected List, meaning depends...
+    if (command >= ID::LIST_BASE && command <= ID::LIST_LAST) {
+        auto hList = this->tabs.lists->tabs [this->tabs.lists->current].content;
+        switch (Menu::LastTracked) {
+
+            // move focused group into selected list
+            case Menu::ListGroup:
+
+                finish.source = this->tabs.lists->current;
+                finish.group = ListView_GetFocusedGroupId (hList, &finish.text);
+                finish.list = this->GetUserListIdFromIndex (command - ID::LIST_BASE);
+
+                database.lists.groups.move (finish.list, finish.group);
+                FinishCommandInAllWindows (command);
+                break;
+        }
+    }
+
+    // content menu command, user selected group within some list, meaning depends...
+    if (command >= ID::LIST_SUBMENU_BASE && command <= ID::LIST_SUBMENU_LAST) {
+
+        // always targetting specific group in a specific list
+        auto hList = this->tabs.lists->tabs [this->tabs.lists->current].content;
+        if (ResolveListsSubMenuItem (command, &finish.list, &finish.group)) {
+            
+            // if insertion to new list was requested
+
+            if (finish.list == -1) { 
+                if (this->FindFirstAvailableListId ()) {
+
+                    finish.text.clear ();
+                    if (EditDialogBox (hWnd, 0x60,
+                                       GetDlgItem (hWnd, ID::TABS_LISTS), { metrics [SM_CXICON], metrics [SM_CYICON] },
+                                       &finish.text)) {
+
+                        if (auto new_list_id = this->FindFirstAvailableListId ()) {
+                            finish.list = new_list_id;
+                            finish.group = database.lists.groups.maxID.query <int> () + 1;
+
+                            database.lists.insert (new_list_id, finish.text);
+                            database.lists.groups.insert (finish.group, finish.list, LoadString (0x70));
+
+                            FinishCommandInAllWindows (0xA1);
+                        } else {
+                            MessageBox (hWnd, LoadString (0x64).c_str (), NULL, MB_ICONERROR);
+                            return 0;
+                        }
+                    } else
+                        return 0; // cancelled
+                } else {
+                    MessageBox (hWnd, LoadString (0x64).c_str (), NULL, MB_ICONERROR);
+                    return 0;
+                }
+            }
+
+            // request to create new group
+
+            if (finish.group == -1) {
+                finish.text.clear ();
+                if (EditDialogBox (hWnd, 0x72,
+                                   GetDlgItem (hWnd, ID::TABS_LISTS), { metrics [SM_CXICON], metrics [SM_CYICON] },
+                                   &finish.text)) {
+                    finish.group = database.lists.groups.maxID.query <int> () + 1;
+
+                    database.lists.groups.insert (finish.group, finish.list, finish.text);
+                    FinishCommandInAllWindows (0xB1);
+                } else
+                    return 0;
+            }
+
+            // finally the action
+
+            auto item = -1;
+            switch (Menu::LastTracked) {
+
+                case Menu::ListItem:
+                case Menu::ListChannels:
+
+                    finish.source = this->tabs.lists->current;
+                    finish.items.clear ();
+                    finish.items.reserve (ListView_GetSelectedCount (hList));
+
+                    switch (Menu::LastTracked) {
+                        case Menu::ListItem: // move all selected items into other list/group
+                            while ((item = ListView_GetNextItem (hList, item, LVNI_SELECTED)) != -1) {
+                                finish.items.insert (finish.items.begin (), item); // push front, so we can easily erase
+                                database.lists.data.move (finish.group, ListView_GetItemParam (hList, item));
+                            }
+
+                            database.lists.groups.cleanup (finish.source);
+                            break;
+
+                        case Menu::ListChannels: // adding item from list of identities/channels
+                            while ((item = ListView_GetNextItem (hList, item, LVNI_SELECTED)) != -1) {
+                                raddi::eid eid;
+                                if (hList == this->lists.channels->hWnd) {
+                                    this->lists.channels->GetItemEid (item, &eid);
+                                }
+                                if (hList == this->lists.identities->hWnd) {
+                                    this->lists.identities->GetItemEid (item, &eid);
+                                }
+
+                                database.lists.data.insert (finish.group, SQLite::Blob (eid));
+                                finish.items.insert (finish.items.end (), (int) database.last_insert_rowid ());
+                            }
+
+                            // TODO: also request node to add this to subscriptions!
+                            // TODO: converse with deletion
+                            break;
+                    }
+                    FinishCommandInAllWindows (command);
+                    break;
+            }
+        }
+    }
+
     return 0;
+}
+
+LRESULT Window::OnFinishCommand (LPARAM command) {
+    switch (command) {
+        // New List
+        case 0xA1:
+            if (finish.list) {
+                if (auto hList = Lists::Create (this, this->tabs.lists, finish.list, finish.text)) {
+                    Lists::CreateGroup (hList, finish.group, LoadString (0x70));
+
+                    this->tabs.lists->update ();
+                    this->tabs.lists->move_stack (finish.list, (int) finish.list - 1);
+                    this->tabs.lists->request (finish.list);
+
+                    if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
+                        SetWindowSubclass (hList, AlphaSubclassProcedure, 0, 0);
+                        // SetWindowSubclass (ListView_GetHeader (hList), AlphaSubclassProcedure, 0, 0);
+                    }
+                    this->Reposition ();
+                    this->OnVisualEnvironmentChange ();
+                } else {
+                    // TODO: report error
+                }
+            }
+            break;
+
+        // Rename List
+        case 0xA3:
+            this->tabs.lists->tabs [finish.list].text = finish.text;
+            this->tabs.lists->update ();
+            break;
+
+        // Delete List
+        case 0xAD:
+            DestroyWindow (this->tabs.lists->tabs [finish.list].content);
+            this->tabs.lists->tabs.erase (finish.list);
+            this->tabs.lists->update ();
+            break;
+
+        // New List Group
+        case 0xB1:
+            if (finish.list) {
+                HWND hListView = this->tabs.lists->tabs [finish.list].content;
+                
+                if (Lists::CreateGroup (hListView, finish.group, finish.text)) {
+                    if (!finish.items.empty ()) {
+                        ListView_MoveItemsToGroup (hListView, finish.group, finish.items);
+                        Lists::CleanGroups (hListView);
+                    }
+                }
+            }
+            break;
+
+        // List Group Rename
+        case 0xB3:
+            if (finish.list && finish.group) {
+                ListView_SetGroupTitle (this->tabs.lists->tabs [finish.list].content, finish.group, finish.text);
+            }
+            break;
+
+        // Delete List Group
+        case 0xBD:
+            if (finish.list && finish.group) {
+                Lists::DeleteGroup (this->tabs.lists->tabs [finish.list].content, finish.group);
+            }
+            break;
+
+        // Delete List Item
+        case 0xBE:
+            if (finish.list) {
+                HWND hListView = this->tabs.lists->tabs [finish.list].content;
+                for (auto item : finish.items) {
+                    ListView_DeleteItem (hListView, item);
+                }
+                Lists::CleanGroups (hListView);
+            }
+            break;
+    }
+
+    if (command >= 0x10000) {
+        switch ((FinishCommand) (command - 0x10000)) {
+
+            case FinishCommand::RefreshList:
+                InvalidateRect (this->tabs.lists->tabs [this->tabs.lists->current].content, NULL, FALSE);
+                break;
+        }
+    }
+
+    if (command >= ID::LIST_BASE && command <= ID::LIST_LAST) {
+        switch (Menu::LastTracked) {
+
+            case Menu::ListGroup:
+                if (finish.source && finish.list && finish.group) {
+                    HWND hSourceListView = this->tabs.lists->tabs [finish.source].content;
+                    HWND hTargetListView = this->tabs.lists->tabs [finish.list].content;
+
+                    if (Lists::CreateGroup (hTargetListView, finish.group, finish.text)) {
+                        ListView_CopyGroupToListView (hSourceListView, finish.group, hTargetListView);
+                        Lists::DeleteGroup (hSourceListView, finish.group);
+                        ListView_EnableGroupView (hTargetListView, ListView_GetGroupCount (hTargetListView) > 1);
+                    }
+                }
+                break;
+        }
+    }
+
+    if (command >= ID::LIST_SUBMENU_BASE && command <= ID::LIST_SUBMENU_LAST) {
+        switch (Menu::LastTracked) {
+
+            case Menu::ListItem:
+                if (finish.list) {
+                    HWND hSourceListView = this->tabs.lists->tabs [finish.source].content;
+                    HWND hTargetListView = this->tabs.lists->tabs [finish.list].content;
+
+                    if (finish.list == finish.source) {
+                        ListView_MoveItemsToGroup (hSourceListView, finish.group, finish.items);
+                    } else {
+                        LVITEM item;
+                        item.mask = LVIF_GROUPID | LVIF_PARAM | LVIF_STATE | LVIF_TEXT | LVIF_IMAGE | LVIF_INDENT;
+                        item.iSubItem = 0;
+
+                        for (auto & i : finish.items) {
+                            wchar_t buffer [2]; // dummy, it's LPSTR_TEXTCALLBACK actually
+                            item.iItem = i;
+                            item.pszText = buffer;
+                            item.cchTextMax = sizeof buffer / sizeof buffer [0];
+
+                            if (ListView_GetItem (hSourceListView, &item)) {
+                                item.iGroupId = finish.group;
+                                ListView_InsertItem (hTargetListView, &item);
+                                ListView_DeleteItem (hSourceListView, i); // this requires finish.items in descending order!
+                            }
+                        }
+                    }
+
+                    Lists::CleanGroups (hSourceListView);
+                    ListView_EnableGroupView (hTargetListView, ListView_GetGroupCount (hTargetListView) > 1);
+                }
+                break;
+
+            case Menu::ListChannels:
+                if (finish.list) {
+                    HWND hTargetListView = this->tabs.lists->tabs [finish.list].content;
+                    for (auto & i : finish.items) {
+                        Lists::InsertEntry (hTargetListView, i, finish.group);
+                    }
+                }
+                break;
+        }
+    }
+    return 0;
+}
+ 
+void Window::Reposition () {
+    RedrawWindow (hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
+    SetWindowPos (hWnd, NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    InvalidateRect (hWnd, NULL, TRUE);
 }
 
 // TODO: tabs overflow menu (move tab to front, if overflown)
@@ -766,6 +1244,13 @@ LRESULT Window::OnNotify (NMHDR * nm) {
 
         case ID::TABS_VIEWS:
             switch (nm->code) {
+                case TCN_UPDATED:
+                    if (this->tabs.lists) {
+                        if (auto h = GetDlgItem (this->tabs.views->hWnd, ID::OVERFLOW_BUTTON)) {
+                            EnableWindow (h, !this->tabs.views->overflow.empty ());
+                        }
+                    }
+                    break;
                 case TCN_SELCHANGE:
                     database.current.set (this->id, "tab", this->tabs.views->current);
 
@@ -792,6 +1277,26 @@ LRESULT Window::OnNotify (NMHDR * nm) {
 
         case ID::TABS_LISTS:
             switch (nm->code) {
+                case TCN_UPDATED:
+                    if (this->tabs.lists) {
+                        if (auto h = GetDlgItem (this->tabs.lists->hWnd, ID::LIST_OVERFLOW_BUTTON)) {
+                            EnableWindow (h, !this->tabs.lists->overflow.empty ());
+                        }
+
+                        // update all menus that list Lists
+
+                        std::vector <std::wstring> overview;
+                        overview.reserve (this->tabs.lists->tabs.size ());
+
+                        for (const auto & tab : this->tabs.lists->tabs) {
+                            if (tab.first > 0) {
+                                overview.push_back (tab.second.text);
+                            }
+                        }
+
+                        UpdateContextMenu (Menu::ListGroup, L'\x200B', Window::ID::LIST_BASE, overview);
+                    }
+                    break;
                 case TCN_SELCHANGE:
                     database.current.set (this->id, "list", this->tabs.lists->current);
                     break;
@@ -811,8 +1316,8 @@ LRESULT Window::OnNotify (NMHDR * nm) {
             return this->lists.identities->OnNotify (nm);
 
         default:
-            if (nm->idFrom >= ID::LIST_FIRST && nm->idFrom <= ID::LIST_LAST) {
-                return List::OnNotify (nm);
+            if (nm->idFrom >= ID::LIST_BASE && nm->idFrom <= ID::LIST_LAST) {
+                return Lists::OnNotify (this, nm);
             }
 
             switch (nm->code) {
@@ -824,22 +1329,9 @@ LRESULT Window::OnNotify (NMHDR * nm) {
                     break;
             }
     }
-    return 0;
-}
 
-LRESULT Window::OnFinishCommand (WPARAM command, LPARAM parameter) {
-    switch (command) {
-        // New List:
-        case 0xA1:
-            // TODO: add List that was inserted into db ('parameter')
-            break;
-
-        // Delete List
-        case 0xAD:
-            DestroyWindow (this->tabs.lists->tabs [parameter].content);
-            this->tabs.lists->tabs.erase (parameter);
-            this->tabs.lists->update ();
-            break;
+    if (nm->code == NM_OUTOFMEMORY) {
+        // TODO: same error dialog as for catching std::bad_alloc&
     }
     return 0;
 }
@@ -871,34 +1363,55 @@ LONG Window::UpdateStatusBar (HWND hStatusBar, UINT dpi, const RECT & rParent) {
         return 0;
 }
 
-std::intptr_t Window::TabIdFromContentMenu (LONG & x, LONG & y, TabControlInterface * tc) {
-    if ((x == -1) && (y == -1)) {
+std::intptr_t Window::TabIdFromContentMenu (LONG * x, LONG * y, TabControlInterface * tc) {
+    if ((*x == -1) && (*y == -1)) {
 
         auto r = tc->outline (tc->current);
-        MapWindowPoints (tc->hWnd, HWND_DESKTOP, (POINT *) & r, 2);
-        x = r.left + metrics [SM_CXSMICON] / 2;
-        y = r.bottom - metrics [SM_CYSMICON] / 2;
+        MapWindowPoints (tc->hWnd, HWND_DESKTOP, (POINT *) &r, 2);
+        *x = r.left + metrics [SM_CXSMICON] / 2;
+        *y = r.bottom - metrics [SM_CYSMICON] / 2;
 
         tc->contextual = tc->current;
     }
     return tc->contextual;
 }
 
+std::intptr_t Window::FindFirstAvailableListId () const {
+    // user list tab IDs are 1...ID::MAX_LISTS; and map is ordered, so this is simple
+    std::intptr_t id = 1;
+    for (auto & tab : this->tabs.lists->tabs) {
+        if (tab.first > 0) {
+            if (tab.first != id)
+                break;
+
+            ++id;
+        }
+    }
+    if (id <= ID::MAX_LISTS)
+        return id;
+    else
+        return 0;
+}
+
 LRESULT Window::OnContextMenu (HWND hChild, LONG x, LONG y) {
-    switch (GetDlgCtrlID (hChild)) {
+    const auto id = GetDlgCtrlID (hChild);
+    switch (id) {
         case ID::TABS_LISTS:
-            if (auto tab = TabIdFromContentMenu (x, y, this->tabs.lists)) {
-                // for fixed lists disable most items
-                TrackPopupMenu (hListTabsMenu, TPM_RIGHTBUTTON, x, y, 0, hWnd, NULL);
+            if (auto tab = TabIdFromContentMenu (&x, &y, this->tabs.lists)) {
+                TrackContextMenu (hWnd, x, y, Menu::ListTabs, tab);
             }
             break;
 
         case ID::TABS_VIEWS:
-            if (auto tab = TabIdFromContentMenu (x, y, this->tabs.views)) {
-                // TODO: only disable duplicate/close menuitems for tabID < 0
-                TrackPopupMenu (hMainTabsMenu, TPM_RIGHTBUTTON, x, y, 0, hWnd, NULL);
+            if (auto tab = TabIdFromContentMenu (&x, &y, this->tabs.views)) {
+                TrackContextMenu (hWnd, x, y, Menu::ViewTabs, tab);
             }
             break;
+
+        case ID::LIST_IDENTITIES:
+            return this->lists.identities->OnContextMenu (this, x, y);
+        case ID::LIST_CHANNELS:
+            return this->lists.channels->OnContextMenu (this, x, y);
 
         case ID::IDENTITIES:
             if ((x == -1) && (y == -1)) {
@@ -909,15 +1422,44 @@ LRESULT Window::OnContextMenu (HWND hChild, LONG x, LONG y) {
             }
             TrackPopupMenu (GetSubMenu (LoadMenu (GetModuleHandle (NULL), MAKEINTRESOURCE (0x40)), 0), TPM_RIGHTBUTTON, x, y, 0, hWnd, NULL);
     }
+    if (id >= ID::LIST_BASE && id <= ID::LIST_LAST) {
+        return Lists::OnContextMenu (this, hChild, this->GetUserListIndexById (id - ID::LIST_BASE), x, y);
+    }
     return 0;
+}
+
+std::intptr_t Window::GetUserListIdFromIndex (std::size_t index) const {
+    for (const auto & tab : this->tabs.lists->tabs) {
+        if (tab.first > 0) {
+            if (!index--)
+                return tab.first;
+        }
+    }
+    return 0;
+}
+std::intptr_t Window::GetUserListIndexById (std::size_t id) const {
+    std::intptr_t index = 0;
+    for (const auto & tab : this->tabs.lists->tabs) {
+        if (tab.first > 0) {
+            if (tab.first == id) {
+                break;
+            }
+            ++index;
+        }
+    }
+    return index;
 }
 
 LRESULT CALLBACK Window::InitialProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
         case WM_NCCREATE:
             try {
-                new Window (hWnd, wParam, lParam, reinterpret_cast <CREATESTRUCT *> (lParam));
-                break;
+                auto window = new Window (hWnd, reinterpret_cast <CREATESTRUCT *> (lParam));
+
+                SetWindowLongPtr (hWnd, GWLP_USERDATA, (LONG_PTR) window);
+                SetWindowLongPtr (hWnd, GWLP_WNDPROC, (LONG_PTR) &Window::Procedure);
+                
+                return window->Dispatch (WM_NCCREATE, wParam, lParam);
             } catch (const std::bad_alloc &) {
                 return FALSE;
             }
@@ -951,6 +1493,9 @@ LRESULT CALLBACK Window::DefaultProcedure (HWND hWnd, UINT message, WPARAM wPara
 LRESULT CALLBACK Window::Procedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     try {
         return reinterpret_cast <Window *> (GetWindowLongPtr (hWnd, GWLP_USERDATA))->Dispatch (message, wParam, lParam);
+    } catch (const SQLite::InStatementException & x) {
+        ErrorBox (0x06, x.what ());
+        return 0;
     } catch (const std::exception & x) {
         SetWindowLongPtr (hWnd, GWLP_WNDPROC, (LONG_PTR) InitialProcedure);
         DestroyWindow (hWnd);
@@ -959,23 +1504,15 @@ LRESULT CALLBACK Window::Procedure (HWND hWnd, UINT message, WPARAM wParam, LPAR
     }
 }
 
-namespace {
-    void FinishCommandInAllWindows (WPARAM command, LPARAM parameter) {
-        struct Params {
-            WPARAM command;
-            LPARAM parameter;
-        } parameters = {
-            command,
-            parameter
-        };
-        EnumThreadWindows (GetCurrentThreadId (),
-                           [](HWND hWnd, LPARAM parameters_)->BOOL {
-                               auto p = reinterpret_cast <const Params *> (parameters_);
-                               SendMessage (hWnd, WM_APP_FINISH_COMMAND, p->command, p->parameter);
-                               return TRUE;
-                           }, reinterpret_cast <LPARAM> (&parameters));
-    }
+void Window::FinishCommandInAllWindows (LPARAM command) const {
+    EnumThreadWindows (GetCurrentThreadId (),
+                       [](HWND hWnd, LPARAM command)->BOOL {
+                           SendMessage (hWnd, WM_APP_FINISH_COMMAND, 0, command);
+                           return TRUE;
+                       }, command);
+}
 
+namespace {
     LRESULT OnSubclassPaint (HWND hWnd, HDC _hDC, RECT, DWORD_PTR dwRefData) {
         RECT rc;
         GetClientRect (hWnd, &rc);

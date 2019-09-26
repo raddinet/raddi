@@ -1,11 +1,11 @@
 #include "tabs.h"
-#include "appapi.h"
 #include <VersionHelpers.h>
 #include <uxtheme.h>
 #include <vsstyle.h>
 #include <vssym32.h>
 #include <algorithm>
 
+#include "../common/appapi.h"
 #include "../common/log.h"
 
 #include <string>

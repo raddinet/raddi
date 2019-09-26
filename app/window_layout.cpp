@@ -15,13 +15,12 @@
 #include "menus.h"
 #include "feed.h"
 #include "data.h"
-#include "errorbox.h"
+#include "../common/errorbox.h"
 #include "editbox.h"
-#include "node.h"
+#include "../common/node.h"
 #include "resolver.h"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
-extern "C" const IID IID_IImageList;
 
 extern Design design;
 extern Cursors cursor;
@@ -289,83 +288,23 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
     GetWindowPlacement (hWnd, &placement);
 
     database.windows.update (placement.rcNormalPosition.left, placement.rcNormalPosition.top,
-                                placement.rcNormalPosition.right - placement.rcNormalPosition.left,
-                                placement.rcNormalPosition.bottom - placement.rcNormalPosition.top,
-                                placement.showCmd, this->id);
+                             placement.rcNormalPosition.right - placement.rcNormalPosition.left,
+                             placement.rcNormalPosition.bottom - placement.rcNormalPosition.top,
+                             placement.showCmd, this->id);
     return 0;
 }
 
 LRESULT Window::OnDpiChange (WPARAM dpi, const RECT * r) {
     dpi = LOWORD (dpi);
     if (this->dpi != dpi) {
-        dividers.left = dividers.left * dpi / this->dpi;
-        dividers.right = dividers.right * dpi / this->dpi;
-        this->dpi = dpi;
+        dividers.left = dividers.left * LONG (dpi) / this->dpi;
+        dividers.right = dividers.right * LONG (dpi) / this->dpi;
+        this->dpi = LONG (dpi);
     }
 
     OnVisualEnvironmentChange ();
     SetWindowPos (hWnd, NULL, r->left, r->top, r->right - r->left, r->bottom - r->top, 0);
     return 0;
-}
-
-LRESULT Window::RefreshVisualMetrics (UINT dpiNULL) {
-    if (ptrGetSystemMetricsForDpi) {
-        for (auto i = 0; i != sizeof metrics / sizeof metrics [0]; ++i) {
-            this->metrics [i] = ptrGetSystemMetricsForDpi (i, this->dpi);
-        }
-    } else {
-        for (auto i = 0; i != sizeof metrics / sizeof metrics [0]; ++i) {
-            this->metrics [i] = this->dpi * GetSystemMetrics (i) / dpiNULL;
-        }
-    }
-    return 0;
-}
-
-SIZE Window::GetIconMetrics (IconSize size, UINT dpiNULL) {
-    switch (size) {
-        case SmallIconSize:
-            return { metrics [SM_CXSMICON], metrics [SM_CYSMICON] };
-        case StartIconSize:
-            return {
-                (metrics [SM_CXICON] + metrics [SM_CXSMICON]) / 2,
-                (metrics [SM_CYICON] + metrics [SM_CYSMICON]) / 2
-            };
-        case LargeIconSize:
-        default:
-            return { metrics [SM_CXICON], metrics [SM_CYICON] };
-
-        case ShellIconSize:
-        case JumboIconSize:
-            if (IsWindowsVistaOrGreater () || (size == ShellIconSize)) { // XP doesn't have Jumbo
-                if (HMODULE hShell32 = GetModuleHandle (L"SHELL32")) {
-                    HRESULT (WINAPI * ptrSHGetImageList) (int, const GUID &, void**) = NULL;
-
-                    if (IsWindowsVistaOrGreater ()) {
-                        Symbol (hShell32, ptrSHGetImageList, "SHGetImageList");
-                    } else {
-                        Symbol (hShell32, ptrSHGetImageList, reinterpret_cast <const char *> (727));
-                    }
-                    if (ptrSHGetImageList) {
-                        HIMAGELIST list;
-                        if (ptrSHGetImageList ((size == JumboIconSize) ? SHIL_JUMBO : SHIL_EXTRALARGE,
-                                                IID_IImageList, (void **) &list) == S_OK) {
-                            int cx, cy;
-                            if (ImageList_GetIconSize (list, &cx, &cy)) {
-                                switch (size) {
-                                    case ShellIconSize: return { long (cx * dpi / dpiNULL), long (cy * dpi / dpiNULL) };
-                                    case JumboIconSize: return { long (cx * dpi / 96), long (cy * dpi / 96) };
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            switch (size) {
-                default:
-                case ShellIconSize: return { long (48 * dpi / dpiNULL), long (48 * dpi / dpiNULL) };
-                case JumboIconSize: return { long (256 * dpi / 96), long (256 * dpi / 96) };
-            }
-    }
 }
 
 BOOL WINAPI UpdateWindowTreeTheme (HWND hCtrl, LPARAM param) {
@@ -382,6 +321,13 @@ LRESULT Window::OnVisualEnvironmentChange () {
     this->fonts.text.Update (hTheme, dpi, dpiNULL, TMT_MSGBOXFONT);
     this->fonts.tabs.Update (hTheme, dpi, dpiNULL, TMT_CAPTIONFONT);
     this->fonts.tiny.Update (hTheme, dpi, dpiNULL, TMT_MENUFONT, L"Calibri", 7, 8);
+
+    this->fonts.italic.make_italic = true;
+    this->fonts.italic.Update (hTheme, dpi, dpiNULL, TMT_MSGBOXFONT);
+    this->fonts.underlined.make_underlined = true;
+    this->fonts.underlined.Update (hTheme, dpi, dpiNULL, TMT_MSGBOXFONT);
+
+
     // TODO: Wingdings for some
 
     if (hTheme) {
@@ -398,6 +344,22 @@ LRESULT Window::OnVisualEnvironmentChange () {
     // SetProp (hWnd, L"UseImmersiveDarkModeColors", (HANDLE) !design.light); // ???
     EnumChildWindows (this->hWnd, UpdateWindowTreeTheme, 0);
     SetWindowTheme (this->hToolTip, design.light ? NULL : L"DarkMode_Explorer", NULL);
+
+    COLORREF clrListBack = 0x212223;
+    COLORREF clrListText = 0xEEEEEE;
+
+    if (design.light) {
+        clrListBack = GetSysColor (COLOR_WINDOW);
+        clrListText = GetSysColor (COLOR_WINDOWTEXT);
+    }
+
+    for (auto tab : this->tabs.lists->tabs) {
+        ListView_SetBkColor (tab.second.content, clrListBack);
+        ListView_SetTextColor (tab.second.content, clrListText);
+        ListView_SetTextBkColor (tab.second.content, CLR_NONE);
+    }
+
+    //ListView_SetBkColor (this->lists)
 
     SendDlgItemMessage (hWnd, ID::TABS_VIEWS, WM_SETFONT, (WPARAM) this->fonts.tabs.handle, 0);
     SendDlgItemMessage (hWnd, ID::TABS_FEEDS, WM_SETFONT, (WPARAM) this->fonts.tabs.handle, 0);
@@ -442,6 +404,11 @@ LRESULT Window::OnVisualEnvironmentChange () {
     this->tabs.views->dpi = (std::uint16_t) dpi;
     this->tabs.lists->dpi = (std::uint16_t) dpi;
     this->tabs.feeds->dpi = (std::uint16_t) dpi;
+
+    Lists::OnDpiChange (this->tabs.lists, dpi);
+
+    this->lists.channels->OnDpiChange (dpi);
+    this->lists.identities->OnDpiChange (dpi);
 
     SetWindowPos (hWnd, NULL, 0,0,0,0, SWP_FRAMECHANGED | SWP_DRAWFRAME | SWP_NOREPOSITION | SWP_NOSIZE | SWP_NOMOVE);
     return 0;

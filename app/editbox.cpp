@@ -1,4 +1,5 @@
 #include "editbox.h"
+#include "../common/appapi.h"
 #include <CommCtrl.h>
 #include <VersionHelpers.h>
 
@@ -24,8 +25,8 @@ namespace {
             }
         }
 
-        if (!parameters->text.empty ()) {
-            SetDlgItemText (hWnd, 0x101, parameters->text.c_str ());
+        if (!parameters->text->empty ()) {
+            SetDlgItemText (hWnd, 0x101, parameters->text->c_str ());
         }
         if (parameters->idEditHint || parameters->idTitle || parameters->idSubTitle || parameters->idButtonText) {
             const auto size = 65536;
@@ -64,20 +65,6 @@ namespace {
         return TRUE;
     }
 
-    std::wstring GetWindowText (HWND hWnd) {
-        std::wstring s;
-        if (hWnd) {
-            if (auto length = GetWindowTextLength (hWnd)) {
-                s.resize (length);
-                GetWindowText (hWnd, &s [0], length + 1);
-            }
-        }
-        return s;
-    }
-    std::wstring GetDlgItemText (HWND hWnd, UINT id) {
-        return GetWindowText (GetDlgItem (hWnd, id));
-    }
-
     INT_PTR CALLBACK EditDialogBoxProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
         switch (message) {
             case WM_INITDIALOG:
@@ -89,7 +76,7 @@ namespace {
                     case IDCANCEL:
                         if (auto * data = reinterpret_cast <EditDialogBoxParameters *> (GetProp (hWnd, L"DATA"))) {
                             try {
-                                data->text = GetDlgItemText (hWnd, 0x101);
+                                *data->text = GetDlgItemString (hWnd, 0x101);
                             } catch (const std::bad_alloc &) {
                                 MessageBeep (MB_ICONERROR);
                                 wParam = IDABORT;
@@ -104,8 +91,8 @@ namespace {
                                 if (auto * data = reinterpret_cast <EditDialogBoxParameters *> (GetProp (hWnd, L"DATA"))) {
                                     if (data->onUpdate) {
                                         try {
-                                            data->text = GetDlgItemText (hWnd, 0x101);
-                                            data->onUpdate (data->onUpdateParameter, data->text);
+                                            *data->text = GetDlgItemString (hWnd, 0x101);
+                                            data->onUpdate (data->onUpdateParameter, *data->text);
                                         } catch (...) {
                                         }
                                     }
@@ -119,6 +106,31 @@ namespace {
 
         return FALSE;
     }
+}
+
+bool EditDialogBox (HWND hParent, UINT idBase, HWND hReference, POINT offset, std::wstring * text) {
+    EditDialogBoxParameters parameters;
+
+    parameters.text = text;
+    parameters.idTitle = idBase;
+    parameters.idSubTitle = idBase + 1;
+    parameters.idButtonText = idBase + 2;
+
+    if (hReference) {
+        RECT r;
+        if (GetWindowRect (hReference, &r)) {
+            parameters.ptReference.x = r.left + offset.x;
+            parameters.ptReference.y = r.bottom + offset.y;
+        }
+    } else {
+        parameters.ptReference = offset;
+    }
+
+    if (EditDialogBox (hParent, &parameters)) {
+        text = parameters.text;
+        return true;
+    } else
+        return false;
 }
 
 bool EditDialogBox (HWND hParent, EditDialogBoxParameters * parameters) {

@@ -1,51 +1,29 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include "appapi.h"
+#include "../common/window_environment.h"
 #include "property.h"
 #include "tabs.h"
 #include "view.h"
-#include "list.h"
+#include "lists.h"
+#include "channels.h"
 
-#define WM_APP_INSTANCE_NOTIFY  (WM_APP + 0)
-#define WM_APP_NODE_CONNECTION  (WM_APP + 1)
-#define WM_APP_TITLE_RESOLVED   (WM_APP + 2)
-#define WM_APP_CHANNELS_COUNT   (WM_APP + 3)
-#define WM_APP_IDENTITIES_COUNT (WM_APP + 4)
-#define WM_APP_FINISH_COMMAND   (WM_APP + 5)
-#define WM_APP_GUI_THEME_CHANGE (WM_APP + 6)
+#define WM_APP_TITLE_RESOLVED   (WM_APP + 3) // TODO: remove?
+//#define WM_APP_CHANNELS_COUNT   (WM_APP + 3)
+//#define WM_APP_IDENTITIES_COUNT (WM_APP + 4)
 
-enum IconSize {
-    SmallIconSize = 0,
-    StartIconSize,
-    LargeIconSize,
-    ShellIconSize,
-    JumboIconSize,
-    IconSizesCount
-};
+// TODO: AppWindow : Window : WindowEnvironmnet
+//  - appwindow.h, common/window.h, common/window_environment.h
 
-struct WindowPublic {
-    HWND hWnd;
-    long dpi = 96;
-    int  metrics [SM_CMETRICS];
-
-    HWND hToolTip = NULL;
-    HICON icons [IconSizesCount] = { NULL, NULL, NULL, NULL, NULL };
-
-    explicit inline WindowPublic (HWND hWnd)
-        : hWnd (hWnd)
-        , dpi (GetDPI (hWnd)) {};
-};
-
-class Window : public WindowPublic {
-    LPARAM id;
-
-    bool active = false;
-    long extension = 0;
-    long height = 0;
+class Window : public WindowEnvironment {
+public:
+    const HWND hWnd;
+    const LPARAM id;
 
     // TODO: remove unused IDs, keep only those needed for callbacks
     struct ID {
+        static constexpr auto MAX_LISTS = 0x1F0;
+        // static constexpr auto MAX_LIST_GROUPS = 0x1F0;
         enum {
             ADD_TAB_BUTTON = 0x1001,
             OVERFLOW_BUTTON = 0x1008,
@@ -56,10 +34,13 @@ class Window : public WindowPublic {
             TABS_LISTS = 0x2002,
             TABS_FEEDS = 0x2003,
 
-            LIST_FIRST = 0x3000,
-            LIST_LAST = 0x3FF0,
-            LIST_IDENTITIES = 0x3FFF,
-            LIST_CHANNELS = 0x3FFE,
+            LIST_BASE = 0x3000,
+            LIST_LAST = LIST_BASE + MAX_LISTS,
+            LIST_CHANNELS = 0x31FE,
+            LIST_IDENTITIES = 0x31FF,
+
+            LIST_SUBMENU_BASE = 0x3200,
+            LIST_SUBMENU_LAST = 0x4000,
 
             IDENTITIES = 0x4001,
             FILTERS = 0x4002,
@@ -73,6 +54,11 @@ class Window : public WindowPublic {
         };
     };
 
+private:
+    bool active = false;
+    long extension = 0;
+    long height = 0;
+
     union {
         struct {
             TabControlInterface * views = nullptr;
@@ -83,21 +69,20 @@ class Window : public WindowPublic {
     };
     struct {
         ListOfChannels * channels = nullptr;
-        ListOfIdentities * identities = nullptr;
+        ListOfChannels * identities = nullptr;
     } lists;
 
+public:
     struct Fonts {
-        struct Font {
-            HFONT handle = NULL;
-            long  height = 0;
+        Font text;
+        Font tabs;
+        Font tiny;
 
-            ~Font ();
-            bool Update (HTHEME hTheme, UINT dpi, UINT dpiNULL, int id, const wchar_t * replace = nullptr, int m = 0, int d = 0);
-        } text
-        , tabs
-        , tiny;
+        Font italic;
+        Font underlined;
     } fonts;
 
+private:
     // TODO: on window resize, keep horz fixed (restrict min size), percentually adjust all vertical ones (but with limit to see one row)
     struct {
         property <long> left;
@@ -107,14 +92,24 @@ class Window : public WindowPublic {
     } dividers;
 
     struct {
-        int what; // divider ID
-        int x;
-        int y;
+        int what = 0; // divider ID
+        int x = 0;
+        int y = 0;
     } drag;
 
     struct {
         SIZE statusbar = { 0, 0 };
     } minimum;
+
+public:
+    enum class FinishCommand {
+        RefreshList
+    };
+
+    void FinishCommandInAllWindows (LPARAM command) const;
+    void FinishCommandInAllWindows (FinishCommand command) const {
+        this->FinishCommandInAllWindows (0x10000 + (LPARAM) command); // not an ID
+    }
 
 private:
     LRESULT Dispatch (UINT message, WPARAM wParam, LPARAM lParam);
@@ -135,14 +130,15 @@ private:
     LRESULT OnDpiChange (WPARAM dpi, const RECT * target);
     LRESULT OnNodeConnectionUpdate (WPARAM information, LPARAM parameter);
     LRESULT OnVisualEnvironmentChange ();
-    LRESULT OnFinishCommand (WPARAM action, LPARAM parameter);
-    LRESULT RefreshVisualMetrics (UINT dpiNULL = GetDPI (NULL));
+    LRESULT OnFinishCommand (LPARAM action);
+    LRESULT OnAppEidResolved (UINT child);
 
     void AssignHint (HWND hCtrl, UINT string);
 
     std::intptr_t CreateTab (const raddi::eid & entry, const std::wstring & text, std::intptr_t id = 0);
     std::intptr_t CreateTab (const raddi::eid & entry, std::intptr_t id = 0);
     void CloseTab (std::intptr_t id);
+    void CloseTabStack (std::intptr_t id); // tab id
 
     const MARGINS * GetDwmMargins ();
     RECT GetListsTabRect ();
@@ -155,22 +151,25 @@ private:
 
     RECT GetTabControlClipRect (RECT);
     RECT GetTabControlContentRect (RECT);
-    SIZE GetIconMetrics (IconSize size, UINT dpiNULL = GetDPI (NULL));
     void BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, bool fromControl);
     LONG UpdateStatusBar (HWND hStatusBar, UINT dpi, const RECT & rParent);
     void UpdateListsPosition (HDWP &, const RECT &, const RECT & rListTabs);
     void UpdateViewsPosition (HDWP &, const RECT &);
     void UpdateFeedsPosition (HDWP &, const RECT &, const RECT & rFeedsTabs);
+    void Reposition ();
     bool GetCaptionTextColor (COLORREF & color, UINT & glow) const;
 
-    std::intptr_t TabIdFromContentMenu (LONG & x, LONG & y, TabControlInterface * tc);
+    std::intptr_t TabIdFromContentMenu (LONG * x, LONG * y, TabControlInterface * tc);
+    std::intptr_t FindFirstAvailableListId () const;
+    std::intptr_t GetUserListIdFromIndex (std::size_t index) const;
+    std::intptr_t GetUserListIndexById (std::size_t id) const;
 
     static LRESULT CALLBACK Procedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK InitialProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK DefaultProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, BOOL * bResultFromDWM = NULL);
 public:
     static LPCTSTR Initialize (HINSTANCE);
-    explicit Window (HWND hWnd, WPARAM wParam, LPARAM lParam, CREATESTRUCT * cs);
+    explicit Window (HWND hWnd, CREATESTRUCT * cs);
 };
 
 inline std::wstring LoadString (unsigned int id) {

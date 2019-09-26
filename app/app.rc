@@ -21,6 +21,7 @@
 
     "^Q", 0xCF // Ctrl+Q - quit app
 
+    VK_F2, 0xF2, VIRTKEY // F2 - contextual rename
     VK_F4, 0xF4, VIRTKEY // F4 - show/hide right pane
 
     // F1 - help, CTRL+F1 shortcuts list

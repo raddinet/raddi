@@ -12,7 +12,7 @@ namespace {
     }
 }
 
-bool Node::initialize (const wchar_t * pid, DWORD message) {
+bool Node::initialize (const wchar_t * pid, DWORD status, DWORD message) {
     if (iocp == NULL) {
         iocp = CreateIoCompletionPort (INVALID_HANDLE_VALUE, NULL, 0, 0);
     }
@@ -23,6 +23,7 @@ bool Node::initialize (const wchar_t * pid, DWORD message) {
     if (iocp && thread) {
         this->parameter = pid;
         this->message = message;
+        this->status = status;
         this->report (raddi::log::level::note, 0x20, gui, this->parameter);
         return true;
     } else
@@ -81,13 +82,13 @@ long Node::worker () noexcept {
 
             } catch (const std::bad_alloc & x) {
                 this->report (raddi::log::level::error, 0x21, x.what ());
-                PostThreadMessage (gui, this->message, 1, ERROR_NOT_ENOUGH_MEMORY);
+                PostThreadMessage (gui, this->status, 2, ERROR_NOT_ENOUGH_MEMORY);
             } catch (const std::exception & x) {
                 this->report (raddi::log::level::error, 0x21, x.what ());
-                PostThreadMessage (gui, this->message, 1, 0);
+                PostThreadMessage (gui, this->status, 2, 0);
             } catch (...) {
                 this->report (raddi::log::level::error, 0x20);
-                PostThreadMessage (gui, this->message, 1, 0);
+                PostThreadMessage (gui, this->status, 2, 0);
                 Sleep (10);
             }
             timeout = false;
@@ -121,11 +122,11 @@ long Node::worker () noexcept {
 
         switch (report) {
             case 1:
-                PostThreadMessage (gui, this->message, 0, FALSE);
+                PostThreadMessage (gui, this->status, 0, 0);
                 this->report (raddi::log::level::note, 0x22);
                 break;
             case 2:
-                PostThreadMessage (gui, this->message, 0, TRUE);
+                PostThreadMessage (gui, this->status, 1, 0);
                 this->report (raddi::log::level::note, 0x21);
                 break;
         }
@@ -137,12 +138,12 @@ long Node::worker () noexcept {
     return 0;
 }
 
-template <unsigned int X>
-void Node::db_table_change_notify (void * self_) {
+template <enum Node::table X>
+void Node::db_table_change_notify (void * self_, std::uint32_t shard, std::uint32_t upper) {
     auto self = reinterpret_cast <Node *> (self_);
 
-    PostThreadMessage (gui, self->message, 2, X);
-    self->report (raddi::log::level::note, 0x23, X);
+    PostThreadMessage (gui, self->message + (unsigned int) X, shard, upper);
+    self->report (raddi::log::level::note, 0x23, (unsigned int) X); // TODO: report range, translate X
 }
 
 bool Node::reconnect ()  noexcept {
@@ -156,10 +157,10 @@ bool Node::reconnect ()  noexcept {
             this->database->channels->notification_callback_context = this;
             this->database->identities->notification_callback_context = this;
 
-            this->database->data->reader_change_notification_callback = &Node::db_table_change_notify <0u>;
-            this->database->threads->reader_change_notification_callback = &Node::db_table_change_notify <1u>;
-            this->database->channels->reader_change_notification_callback = &Node::db_table_change_notify <2u>;
-            this->database->identities->reader_change_notification_callback = &Node::db_table_change_notify <3u>;
+            this->database->data->reader_change_notification_callback = &Node::db_table_change_notify <table::data>;
+            this->database->threads->reader_change_notification_callback = &Node::db_table_change_notify <table::threads>;
+            this->database->channels->reader_change_notification_callback = &Node::db_table_change_notify <table::channels>;
+            this->database->identities->reader_change_notification_callback = &Node::db_table_change_notify <table::identities>;
 
             return this->database->connected ();
         }

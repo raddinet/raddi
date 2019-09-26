@@ -5,7 +5,8 @@
 #include <string>
 
 struct EditDialogBoxParameters {
-    std::wstring text;
+    std::wstring * text;
+
     POINT ptReference = { 0, 0 };
     UINT idTitle = 0;
     UINT idSubTitle = 0;
@@ -16,6 +17,7 @@ struct EditDialogBoxParameters {
     void * onUpdateParameter = nullptr;
 };
 
+bool EditDialogBox (HWND hParent, UINT idBase, HWND hReference, POINT offset, std::wstring *);
 bool EditDialogBox (HWND hParent, EditDialogBoxParameters * parameters);
 
 #endif

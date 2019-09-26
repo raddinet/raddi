@@ -18,10 +18,10 @@ STRINGTABLE {
     // list tabs
     0x20    "Channels"
     0x21    ""
-    0x22    "People"
+    0x22    "Identities"
     0x23    ""
     0x24    "TODO: Hint text. ""Bookmark channels/people/threads or posts into this list by ..."" "
-    0x25    "TODO: Improve text: The application is connecting to node software. The list will populate shortly."
+    0x25    "Loading...\n\nConnecting to node software, the list will populate shortly. If not, press F1 for help how to resolve this problem."
     0x2C    "[Ctrl+???] List of overflowing List (that don't fit)"
     // feed tabs
     0x30    "Activity"
@@ -39,19 +39,36 @@ STRINGTABLE {
     0x51    "Original name"
     0x52    "Resolved name"
     0x53    "Custom name"
-    0x54    "EID"
-    0x55    "Created"
-    // 0x57    "Topics (last ? months)"
-    // 0x58    "Participants (last ? months)"
+    0x54    "ID"
+    0x55    "Date/Time created"
+    0x56    "Topics in channel"
+    0x57    "Active participants in channel"
+    0x58    "Posts by author"
     // TODO: menu item to customize range? count voters? how many replies count? count posts? count only posts not removed as spam?
 
     // new list title dialog
     0x60    "New List"
-    0x61    "&New List title:"
-    0x62    "" // edit box hint text
-    0x63    "Create"
+    0x61    "&Name:"
+    0x62    "Create"
+    0x64    "Cannot create new List. Supported maximum reached."
+    0x65    "Rename List"
+    0x66    "List &name:"
+    0x67    "Rename"
+    0x68    "&New List…" // "Move Item" submenu item
 
-    
+    // list groups
+    0x70    "Default Group"
+    0x71    "&New Group…" // "Move Item" submenu item
+
+    // rename list group dialog
+    0x72    "New Group"
+    0x73    "&Name of the new group:"
+    0x74    "Create"
+
+    0x75    "Rename Group"
+    0x76    "Group &name:"
+    0x77    "Rename"
+
 
     MAIN | EVENT | 0x01 "raddi.net {1}.{2} {3}, {4}"
     MAIN | EVENT | 0x02 "generated uuid {1}"
@@ -63,17 +80,27 @@ STRINGTABLE {
     MAIN | NOTE | 0x10  ""
 
     // 0x2x - Node Connection (app/node.cpp)
-    MAIN | NOTE | 0x20  "initialized, parameter {2}, notifying thread {1}"
+    MAIN | NOTE | 0x20  "initialized, parameter {2}, notify thread {1}"
     MAIN | NOTE | 0x21  "connected"
     MAIN | NOTE | 0x22  "disconnected"
     MAIN | NOTE | 0x23  "data {1} change notification"
     MAIN | NOTE | 0x2F  "finished"
+
+    // 0x30 - Resolver
+    MAIN | NOTE | 0x30  "initialized"
+    MAIN | NOTE | 0x31  "updated {1} rules, erased {2} windows ({3} registrations) and {4} other registrations; added {6} registrations for {5} enqueued EIDs"
+    MAIN | NOTE | 0x32  "abandoned {1} registrations"
+    MAIN | NOTE | 0x33  "window {1} gets assigned index {2}"
+    MAIN | NOTE | 0x34  "provided resolved title {1} of entry {2} for {3} (index {4})"
+    MAIN | NOTE | 0x35  "provided initial title {1} of entry {2} for {3}, queued to resolve: {4}"
+    MAIN | NOTE | 0x3F  "finished"
 
     MAIN | ERROR | 0x01 "Error attaching database files. Applicataion state may be broken/lost. Identities and decryption keys may not be available. The situation might be temporary."
     MAIN | ERROR | 0x02 "Internal error, uncaught exception: {1}.\nThe affected window has been closed. Consider restarting whole application. Also reporting the bug to developers would be nice."
     MAIN | ERROR | 0x03 "Error reopening stashed tabs. SQLite error: {1}"
     MAIN | ERROR | 0x04 "Error reading channel lists. SQLite error: {1}"
     MAIN | ERROR | 0x05 "Unable to create (another) window. Not enough memory."
+    MAIN | ERROR | 0x06 "Data reading/manipulation error. SQLite error: {1}"
     // MAIN | ERROR | 0x06 "DEBUG {1:x} {2:x} {3}"
 
     // 0x2x - Node Connection (app/node.cpp)
@@ -100,34 +127,47 @@ STRINGTABLE {
 }
 
 0x10 MENU {
-    POPUP "" { // Single Tab
-        MENUITEM "&New Tab\tCtrl+T", 0xC1
+    // Main View Tab
+    //  - \x200C prefix = available for fixed views
+    //
+    POPUP "" {
+        MENUITEM L"\x200C&New Tab\tCtrl+T", 0xC1
         MENUITEM "&Stack New Tab\tCtrl+Y", 0xC3
         MENUITEM SEPARATOR
-        // TODO: POPUP "Move To..." > list of other windows (highlight window when menu item is hot)
+        // TODO: POPUP "Move To..." > list of other windows (highlight window when menu item is hot?)
         MENUITEM "&Duplicate\tCtrl+K", 0xC5//, GRAYED
+        // MENUITEM SEPARATOR
+        // POPUP L"\x200BAdd to List" {
+        //    MENUITEM "-", -1
+        //}
         MENUITEM SEPARATOR
         MENUITEM "&Close Tab\tCtrl+W", 0xCD
-        // MENUITEM "&Close Stack", 0xCC
+        MENUITEM "&Close Stack…", 0xCC
     }
 }
 
-0x20 MENU { // Lists Tabs Right Click Menu
+0x20 MENU { // Lists Tabs Right Click Menu, \x200C prefix = available for fixed Lists
     POPUP "" {
-        MENUITEM L"New List", 0xA1
+        MENUITEM L"\x200C&New List…", 0xA1
         MENUITEM SEPARATOR
-        //MENUITEM L"Duplicate", 0xA2
-        //MENUITEM L"Rename...", 0xA3
+        //MENUITEM "Duplicate", 0xA2
+        MENUITEM "&Rename…", 0xA3
         //POPUP "Merge to" {
         //    MENUITEM "TODO: List of other Lists", -1
         //}
+        //POPUP "Move" { // TODO: drag&drop?
+        //    MENUITEM "Front", -1
+        //    MENUITEM "Left", -1
+        //    MENUITEM "Right", -1
+        //    MENUITEM "Back", -1
+        //}
         //MENUITEM SEPARATOR
-        //POPUP "Style" {
+        //POPUP "Style" { // TODO: style of fixed tabs
         //    MENUITEM "Text", -1
         //    MENUITEM "Icons", -1
         //}
         //MENUITEM SEPARATOR
-        MENUITEM "&Delete", 0xAD
+        MENUITEM "&Delete…", 0xAD
     }
 }
 
@@ -144,70 +184,102 @@ STRINGTABLE {
     }
 }*/
 
-// TODO: mark with \x200C \x200B \x200D
+// NOTE: marks available are \x200C \x200B \x200D
 
 0x22 MENU { // Lists Sub (Group) Menu
     POPUP "" {
-        MENUITEM "Rename group...", -1
-        POPUP "Move" {
+        MENUITEM "Open all // TODO", -1 // DEFAULT
+        MENUITEM "Open separately // TODO", -1 // DEFAULT
+        MENUITEM SEPARATOR
+        /*POPUP "Move group // TODO" {
             MENUITEM "Top", -1
+            MENUITEM SEPARATOR
             MENUITEM "Up", -1
             MENUITEM "Down", -1
+            MENUITEM SEPARATOR
             MENUITEM "Bottom", -1
-        }
+        }*/
+        // MENUITEM "Sort groups…", -1
+        MENUITEM L"Rename group…\tF2", 0xB3
+        //MENUITEM L"Duplicate… // TODO", -1
         MENUITEM SEPARATOR
-        MENUITEM "Duplicate", -1
-        POPUP "Merge to" {
-            MENUITEM "TODO: List of other Groups", -1
-        }
+        MENUITEM "Add channel…", 0xB0
         MENUITEM SEPARATOR
-        // Delete > And move all items to ...
-        MENUITEM "Delete", -1
+        POPUP L"\x200BMove group to" {
+            MENUITEM "-", -1
+        }
+        MENUITEM L"Delete…", 0xBD
     }
 }
 
-0x23 MENU { // User-created Lists Items Right Click Menu
+0x23 MENU { // List Items Right Click Menu
     POPUP "" {
-        // "Move To" ...Groups
-        // "Rename" // F2
-        // "Reset name to 'xxx'" // eid or default
-        // --
-        // New Group
-        //
+        MENUITEM "Open // TODO", -1 // DEFAULT
         MENUITEM SEPARATOR
-        MENUITEM "", -1
-
-                // open (open channel in new view tab, start downloading content) - double click also
-                // open author's channel
-
-                // items: show/hide hidden, hide this, remove (just me, delete from computer)
-                //  mod ops: ... ban, ban author
-
-                // restore resolved name
-
-                // copy 'eid' to clipboard
+        // TODO: open author's channel
+        // TODO: subscribe? preload content
+        // TODO: Copy EID
+        // TODO: mod ops: ... ban, ban author
+        // TODO: remove (just me, or delete from computer)
+        // MENUITEM SEPARATOR
+        MENUITEM "Rename\tF2", 0xF2
+        MENUITEM "Revert name", 0xB5
+        POPUP L"\x200BMove to" {
+            MENUITEM "-", -1
+        }
+        MENUITEM "Delete…", 0xBE // TODO: unsubscribe if deleted from last list?
     }
 }
 
-0x24 MENU { // Channels/Identities Lists Items Right Click Menu
+0x24 MENU { // List canvas Right Click Menu
     POPUP "" {
-        MENUITEM "Open", -1 // DEFAULT
-        // open author's channel for channels
-        MENUITEM "Pin/Unpin", -1
-        MENUITEM "Rename...", -1
-            // POPUP "Moderation" -> "Rename..." ...
-        MENUITEM "Revert name", -1, GRAYED
-        MENUITEM "Copy EID", -1
+        MENUITEM "Add channel… // TODO", 0xB0 // TODO: edit box to insert EID
+        // MENUITEM SEPARATOR
+        // MENUITEM "Merge all groups…", -1
+        // MENUITEM "Clear…", -1
+        // MENUITEM "Sort groups", -1
+    }
+}
+
+0x25 MENU { // Channels/Identities Lists Items Right Click Menu, TODO: \x200C prefix = available on click on whitespace
+    POPUP "" {
+        MENUITEM "Open // TODO", -1 // DEFAULT
+        POPUP L"\x200BAdd to list" {
+            MENUITEM "-", -1
+        }
         MENUITEM SEPARATOR
-        MENUITEM "Refresh", -1
+        // MENUITEM "Pin/Unpin", -1 // Mark/Unmark?
+        MENUITEM "Rename…\tF2", 0xF2
+        MENUITEM "Revert name", 0xB6
+        //MENUITEM "Copy EID", -1 // as raddi://a1b2c3d4-e5f6/
+        // MENUITEM SEPARATOR
+        // POPUP "Moderation" -> "Rename..." ...
+        // MENUITEM L"Delete…", -1
+        // MENUITEM SEPARATOR
+        // MENUITEM L"\x200CNew Identity", -1
+        // MENUITEM L"\x200CNew Channel", -1
+        MENUITEM SEPARATOR
+        //POPUP L"\x200CSort" {
+        //    MENUITEM "", -1 // dynamically generated
+        //}
+        //POPUP L"\x200CColumns" {
+        //    MENUITEM "", -1 // dynamically generated
+        //}
+        MENUITEM L"\x200CRefresh", 0xDF
 
         // items: show/hide hidden, hide this, remove (just me, delete from computer)
         //  mod ops: ... ban, ban author
+
+        // open author's channel for channels?
+        // hide this, remove (just me or delete from computer)
+        // mod ops: ... ban, ban author
+        // copy 'eid' to clipboard
     }
 }
 
 0x40 MENU { // Identities Drop-down Right Click Menu
     POPUP "" {
+        MENUITEM "New Identity", -1
         MENUITEM "Manage", -1
     }
 }
@@ -224,4 +296,3 @@ FONT 9, "Segoe UI"
     CONTROL "OK", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 36, 50, 14
     CONTROL "Cancel", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 129, 36, 50, 14
 }
-END

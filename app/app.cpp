@@ -1,6 +1,7 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <shlobj.h>
+#include <winternl.h>
 
 #include <stdexcept>
 #include <cstdarg>
@@ -25,12 +26,13 @@
 #include "../core/raddi_content.h"
 #include "../core/raddi_defaults.h"
 
-#include "errorbox.h"
+#include "../common/errorbox.h"
+#include "searchbox.h"
 #include "window.h"
 #include "menus.h"
 #include "tabs.h"
 #include "data.h"
-#include "node.h"
+#include "../common/node.h"
 #include "resolver.h"
 
 #pragma warning (disable:6053) // snprintf may not NUL terminate
@@ -56,6 +58,8 @@ namespace {
     bool InteractiveAppDataInitialization ();
     void GuiThreadMessageProcedure (const MSG &);
     bool CreateWindows (HINSTANCE hInstance, LPCTSTR atom, int mode);
+
+    DWORD idGuiChangesCoalescingTimer = 0;
 }
 
 int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
@@ -66,12 +70,12 @@ int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR
         
     raddi::log::display (L"all"); // TODO: redirect display to internal history window
     raddi::log::initialize (option (__argc, __wargv, L"log"), raddi::defaults::log_subdir, L"app", false);
-
+    
     if (version == nullptr) {
         SetLastError (ERROR_FILE_CORRUPT);
         return StopBox (0x01);
     }
-
+    
     raddi::log::event (0x01,
                        HIWORD (version->dwProductVersionMS),
                        LOWORD (version->dwProductVersionMS),
@@ -109,24 +113,27 @@ int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR
     }
 
     ::gui = GetCurrentThreadId ();
-
+    
     // TODO: if portable installation, check database for option to run own local instance
 
-    if (!connection.initialize (option (__argc, __wargv, L"instance"), WM_APP_NODE_CONNECTION)) {
+    if (!connection.initialize (option (__argc, __wargv, L"instance"), WM_APP_NODE_STATE, WM_APP_NODE_UPDATE)) {
         return StopBox (0x0C);
     }
     if (!resolver.initialize (WM_APP_TITLE_RESOLVED)) {
         // TODO: log error, but continue...
     }
-
+    
     if (auto atom = InitializeGUI (hInstance)) {
         cursor.update ();
         design.update ();
 
-        // TODO: register for restart in case of crash or windows update
-        // RegisterApplicationRestart (... , 0);
-        // RegisterApplicationRecoveryCallback()
-        // SetUnhandledExceptionFilter -> record to file for upload on restart
+        idGuiChangesCoalescingTimer = SetTimer (NULL, 0, USER_TIMER_MAXIMUM, NULL);
+
+        // register for restart in case of crash or windows update
+        //  - TODO: RegisterApplicationRecoveryCallback/SetUnhandledExceptionFilter
+        //          to save unsent pending entries, and save unfinished replies
+
+        Optional <HRESULT, PCWSTR, DWORD> (L"KERNEL32", "RegisterApplicationRestart", L"recover", 0);
 
         if (database.identities.size.query <int> () == 0) {
             // TODO: if not connected, wait
@@ -199,6 +206,7 @@ namespace {
             return false;
 
         InitializeMenus (hInstance);
+        InitializeSearchBox (hInstance);
 
         switch (CoInitializeEx (NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE | COINIT_SPEED_OVER_MEMORY)) {
             case S_OK:
@@ -295,7 +303,7 @@ namespace {
     void BroadcastMessage (UINT message) {
         EnumThreadWindows (GetCurrentThreadId (),
                            [](HWND hWnd, LPARAM message)->BOOL {
-                               return PostMessage (hWnd, message, 0, 0);
+                               return PostMessage (hWnd, (UINT) message, 0, 0);
                            }, message);
     }
     void BroadcastMessage (const MSG & message) {
@@ -306,16 +314,26 @@ namespace {
                            }, reinterpret_cast <LPARAM> (&message));
     }
 
-    void OnFullAppCommand (UINT id);
-    void OnGuiThemeUpdate ();
+    void OnFullAppCommand (WPARAM id);
 
     void GuiThreadMessageProcedure (const MSG & message) {
         switch (message.message) {
 
             case WM_COMMAND:
                 return OnFullAppCommand (message.wParam);
+
             case WM_APP_GUI_THEME_CHANGE:
-                return OnGuiThemeUpdate ();
+                SetTimer (NULL, idGuiChangesCoalescingTimer, USER_TIMER_MINIMUM, NULL);
+                break;
+
+            case WM_TIMER: // note that we don't call DispatchMessage so timers' procedures are not called
+                if (message.wParam == idGuiChangesCoalescingTimer) {
+                    cursor.update ();
+                    design.update ();
+                    BroadcastMessage (WM_APP_GUI_THEME_CHANGE);
+                    SetTimer (NULL, idGuiChangesCoalescingTimer, USER_TIMER_MAXIMUM, NULL);
+                }
+                break;
 
             case WM_APP_INSTANCE_NOTIFY: // notifications from other instances 
                 switch (message.wParam) {
@@ -350,10 +368,10 @@ namespace {
                             if (EnumThreadWindows (GetCurrentThreadId (),
                                                    [](HWND hWnd, LPARAM)->BOOL {
 
-                                                       // TODO: is eid open here, activate (and scroll) and return FALSE
+                                                       // TODO: is eid open in this window? then activate (and scroll) and return FALSE
 
                                                        return TRUE;
-                                                   }, 0) == TRUE) {
+                                                   }, 0)) {
                                 // all returned TRUE, direct last active window to open 'entry' in new tab
                             }
                         }
@@ -361,38 +379,29 @@ namespace {
                 }
                 break;
 
-            case WM_APP_NODE_CONNECTION: // node connection
+            case WM_APP_NODE_STATE: // node connection
                 switch (message.wParam) {
-
-                    case 1: // exception
+                    case 0: // disconnected
+                        break;
+                    case 1: // connected
+                        resolver.advance ();
+                        break;
+                    case 2: // exception, lParam is detail
                         return; // do not broadcast to windows
-
-                    case 0: // connected state, lParam == true/false
-                        if (message.lParam) {
-                            
-                        }
-                        break;
-
-                    case 2: // table changed
-                        switch (message.lParam) {
-                            case 0: // data
-
-                                // TODO: enum all new entries, enum windows, enum views, if relevant, signal update
-
-                                break;
-
-                            case 1: // threads
-                                resolver.evaluate ();
-                                break;
-
-                            case 2: // channels
-                                break;
-                            case 3: // identities
-                                break;
-                        }
-                        break;
-
                 }
+                BroadcastMessage (message);
+                break;
+
+            case WM_APP_NODE_UPDATE + (UINT) Node::table::identities:
+            case WM_APP_NODE_UPDATE + (UINT) Node::table::channels:
+
+            case WM_APP_NODE_UPDATE + (UINT) Node::table::threads:
+            case WM_APP_NODE_UPDATE + (UINT) Node::table::data:
+                resolver.advance ((Node::table) (message.message - WM_APP_NODE_UPDATE), message.wParam, message.lParam);
+                // TODO: for data enum all new entries, enum windows, enum views, if relevant, signal update
+                break;
+
+/*
                 switch (message.wParam) {
                     case 0:
                     case 2:
@@ -424,21 +433,29 @@ namespace {
                                                        return TRUE;
                                                    }, (LPARAM) & n);
                             }
-                                // TODO: make List fetch data from data->top to raddi::now () + 1
+                            // TODO: make List fetch data from data->top to raddi::now () + 1
                         }
                         break;
                 }
 
                 // BroadcastMessage (message);
-                break;
+                break;*/
 
-            case WM_APP_TITLE_RESOLVED:
-                // eid* wParam resolved as wchar_t* lParam
-                break;
+            /*case WM_APP_TITLE_RESOLVED: // eid* wParam resolved as string (lParam ...std::wstring* ???)
+                EnumThreadWindows (GetCurrentThreadId (),
+                                   [] (HWND hWnd, LPARAM message_)->BOOL {
+                                       SendMessage (hWnd,
+                                                    reinterpret_cast <MSG *> (message_)->message,
+                                                    reinterpret_cast <MSG *> (message_)->wParam,
+                                                    reinterpret_cast <MSG *> (message_)->lParam);
+                                       return TRUE;
+                                   }, reinterpret_cast <LPARAM> (&message));
+                // TODO: delete *lParam (std::wstring *) ??? or delete [] wchar_t?
+                break;*/
         }
     }
 
-    void OnFullAppCommand (UINT id) {
+    void OnFullAppCommand (WPARAM id) {
         switch (id) {
             case 0xCF: // close App
                 EnumThreadWindows (GetCurrentThreadId (),
@@ -448,16 +465,6 @@ namespace {
                                    }, 0);
                 break;
         }
-    }
-
-    void OnGuiThemeUpdate () {
-        // coalesce all the change messages, 10ms after last we refresh
-        SetTimer (NULL, 0, USER_TIMER_MINIMUM,
-                  [](HWND, UINT, UINT_PTR, DWORD) {
-                      cursor.update ();
-                      design.update ();
-                      BroadcastMessage (WM_APP_GUI_THEME_CHANGE);
-                  });
     }
 }
 

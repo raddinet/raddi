@@ -25,13 +25,26 @@ public:
 
     struct {
         Statement query; // id, name
-        Statement maxID; // SELECT MAX(id)
+        Statement insert; // id, name
+        Statement rename; // UPDATE text WHERE id
+        Statement remove [3]; // id
 
         struct {
-            Statement query; // SELECT id, name WHERE list
-        } subs;
+            Statement insert; // id, list, name
+            Statement query; // SELECT id, list, name
+            Statement move; // UPDATE group WHERE id
+            Statement rename; // UPDATE text WHERE id
+            Statement remove [2]; // id
+            Statement cleanup; // delete empty groups from `list`
+            Statement maxID; // SELECT MAX(id)
+        } groups;
         struct {
-            Statement query; // SELECT sub, eid, name WHERE list
+            Statement insert; // group, entry
+            Statement query; // SELECT id, group, eid
+            Statement get; // SELECT eid WHERE id
+            Statement move; // SET group WHERE id
+            Statement remove; // group, id
+            Statement maxID; // SELECT MAX(id)
         } data;
     } lists;
 
@@ -51,6 +64,17 @@ public:
         Statement get;
         Statement set;
     } current;
+
+    struct {
+        Statement is;
+        Statement set;
+        Statement get;
+        Statement remove;
+
+        Statement setByListedId;
+        Statement getByListedId;
+        Statement removeByListedId;
+    } names;
 
     struct {
         Statement size;
