@@ -19,7 +19,15 @@ Common parameters:
 			- "data" - malformed/invalid data processed and all below
 			- "error" or "errors" - recoverable runtime errors and below
 			- "stop" or "stops" - logs irrecoverable errors
-		- path is optional path to log
+		- path is optional path to log, if not specified the file's name is built
+		  from application's file name, replacing its extension (typically .exe)
+		  with .log
+		- the log file is attempt to open/create in following directories:
+			1) current directory
+				- only when 'path' parameter is present and does not
+				  specify full path
+			2) user local app data path (not roaming)
+			3) application directory
 	- display:<default|all|everything|event(s)|data|error(s)|stop(s)|disable(d)>
 		- selects events displayed to console when started as application
 		- parameter is same as log level
@@ -201,7 +209,7 @@ RADDI.exe application optional parameters:
 		  .db, then searched for in following order in following directories:
 			1) current directory
 			2) application directory
-			3) user local app data path
+			3) user app data path (roaming)
 				- file is finally created here if not found anywhere else
 				  and usually split into several parts for resiliency
 	- raddi:<iid/eid>

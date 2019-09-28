@@ -72,10 +72,9 @@ bool Data::locate_and_open () {
 
         // finally try standard user local app data
         //  - whilst this is fourth attempt, this path is expected to be the most common
-        //  - TODO: CSIDL_APPDATA ??? (Roaming profiles)
 
         wchar_t path [2 * MAX_PATH];
-        if (SHGetFolderPath (NULL, CSIDL_LOCAL_APPDATA, NULL, 0, path) == S_OK) {
+        if (SHGetFolderPath (NULL, CSIDL_APPDATA, NULL, 0, path) == S_OK) {
 
             std::wcscat (path, raddi::defaults::data_subdir);
             std::wcscat (path, raddi::defaults::app_subdir);
