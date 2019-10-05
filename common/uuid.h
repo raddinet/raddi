@@ -8,7 +8,7 @@
 // uuid
 //  - simple UUID usable as map key
 //
-class uuid {
+class alignas (4) uuid {
     std::uint8_t data [16];
 
 public:
