@@ -12,7 +12,7 @@ downloadable from [raddi-builds-windows](https://github.com/raddinet/raddi-build
 Pre-built binaries of required libraries are available from [raddi-redist-windows](https://github.com/raddinet/raddi-redist-windows) repository.
 Those are needed only for *release* builds. For *portable* builds everything necessary is already compiled in.
 
-* https://github.com/jedisct1/libsodium
+* https://github.com/jedisct1/libsodium - fork at https://github.com/raddinet/libsodium
 * https://github.com/tromp/cuckoo - adapted to [/lib/cuckoocycle.h](https://github.com/raddinet/raddi/blob/master/lib/cuckoocycle.h) ([.tcc](https://github.com/raddinet/raddi/blob/master/lib/cuckoocycle.tcc))
 * https://tukaani.org/xz
 * https://sqlite.org/ - client application
