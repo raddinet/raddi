@@ -236,9 +236,10 @@ namespace raddi {
             provider () {
                 this->report (level::note, 0xA1F1);
             }
-            provider (provider && from) {
-                this->identity = from.identity;
-                from.identity.instance = L"\x0018";
+            provider (provider && from) noexcept {
+                this->identity.object = from.identity.object;
+                this->identity.instance = std::move (from.identity.instance);
+                from.identity.instance.assign (1, L'\x0018');
             }
             /*provider & operator = (provider && from) {
                 this->internal::provider_name::operator = (from);
