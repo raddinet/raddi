@@ -115,13 +115,19 @@ Node parameters:
 			- "discovery:off" to prevent local network connections
 			- "listen:off" so the node doesn't advertise listening port
 		- no proxy is used by default, if the parameter is omitted
-	- aes:<auto(matic)|disable(d)|force(d)>
-		- adjusts how node selects between AES256-GCM and XChaCha20-Poly1305
+	- aes:<auto(matic)|disable(d)|force(d)|(force-)gcm|(force-)aegis>
+		- adjusts how node selects between AEGIS-256, AES256-GCM and the default
+		  XChaCha20-Poly1305
 		- value: one of predefined strings:
-			- "auto" - uses AES when supported by both parties,
-				   XChaCha20-Poly1305 otherwise
+			- "auto" - uses either AEGIS-256 (preferred) or AES256-GCM
+			  whichever is supported by both parties, XChaCha20-Poly1305
+			  otherwise
 			- "disabled" - always uses XChaCha20-Poly1305
-			- "forced" - disconnects peers that don't support AES256-GCM
+			- "forced" - disconnects peers that won't support some AES
+			- "aegis" - disconnects peers that won't support AEGIS-256
+			- "gcm" - disconnects peers that won't support AES256-GCM
+		- forcing scheme that is not supported in hardware will result in error
+		  message and reverting to XChaCha20-Poly1305
 	- local:<0|1|false|true>
 		- limits outbound connections to local peers only (locally discovered)
 		- default is false
