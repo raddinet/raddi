@@ -21,9 +21,11 @@ namespace raddi {
         //  - configures when to use HW AES256-GCM
         //
         enum class aes256gcm_mode {
-            automatic, // HW AES used when supported by both parties, XChaCha20-Poly1305 when not
             disabled, // AES is not reported to other peers and thus never used
-            forced // AES is always used, peers that don't support AES are disconnected
+            automatic, // HW AES used when supported by both parties, XChaCha20-Poly1305 when not
+            forced, // AES is always used, peers that don't support some AES variant are disconnected
+            force_gcm, // AES256-GCM is used, peers that don't support it are disconnected
+            force_aegis, // AEGIS-256 is used, peers that don't support it are disconnected
         };
         extern enum aes256gcm_mode aes256gcm_mode;
         
@@ -34,15 +36,17 @@ namespace raddi {
 
             // (in/out)bound_key (32 bytes)
             //  - public parts of private link encryption keys, exchanged usings D-H (crypto_scalarmult)
+            //  - std::max (crypto_aead_xchacha20poly1305_ietf_KEYBYTES, crypto_aead_aes256gcm_KEYBYTES, crypto_aead_aegis256_KEYBYTES)
             // 
-            std::uint8_t inbound_key [std::max (crypto_aead_xchacha20poly1305_ietf_KEYBYTES, crypto_aead_aes256gcm_KEYBYTES)];
-            std::uint8_t outbound_key [std::max (crypto_aead_xchacha20poly1305_ietf_KEYBYTES, crypto_aead_aes256gcm_KEYBYTES)];
+            std::uint8_t inbound_key [32];
+            std::uint8_t outbound_key [32];
 
-            // (in/out)bound_nonce (24 bytes, XChaCha20-Poly1305 nonces are the largest now)
+            // (in/out)bound_nonce (32 bytes, AEGIS-256 nonces are the largest now)
             //  - part of a link encryption nonce, added to peer's part to establish actual nonce used
+            //  - std::max (crypto_aead_xchacha20poly1305_ietf_NPUBBYTES, crypto_aead_aes256gcm_NPUBBYTES, crypto_aead_aegis256_NPUBBYTES)
             //
-            std::uint8_t inbound_nonce [std::max (crypto_aead_xchacha20poly1305_ietf_NPUBBYTES, crypto_aead_aes256gcm_NPUBBYTES)];
-            std::uint8_t outbound_nonce [std::max (crypto_aead_xchacha20poly1305_ietf_NPUBBYTES, crypto_aead_aes256gcm_NPUBBYTES)];
+            std::uint8_t inbound_nonce [32];
+            std::uint8_t outbound_nonce [32];
         };
 
         // initial
@@ -87,10 +91,10 @@ namespace raddi {
             //
             virtual std::size_t decode (unsigned char * message, std::size_t max, const unsigned char * data, std::size_t size) = 0;
 
-            // name
+            // reveal
             //  - returns name of the encryption scheme
             //
-            virtual const wchar_t * name () const = 0;
+            virtual const char * reveal () const = 0;
         };
 
         // proposal
@@ -110,17 +114,30 @@ namespace raddi {
             //
             encryption * accept (const initial * head);
 
-            // name
-            //  - returns name of encryption scheme being proposed
-            //
-            const wchar_t * name () const;
-
             // destructor clears keys from memory
             ~proposal ();
         };
         
+        // aegis256
+        //  - state for AEGIS-256, a much faster variant of AES than AES256-GCM, hardware (AES-NI) only
+        //
+        class aegis256
+            : public encryption
+            , private keyset {
+
+            virtual std::size_t encode (unsigned char *, std::size_t, const unsigned char *, std::size_t) override;
+            virtual std::size_t decode (unsigned char *, std::size_t, const unsigned char *, std::size_t) override;
+            virtual const char * reveal () const override;
+
+        public:
+            explicit aegis256 (const proposal * proposal, const keyset * peer);
+            virtual ~aegis256 ();
+
+            static const char * const name;
+        };
+
         // aes256gcm
-        //  - state for fast hardware (AES-NI) AES256-GCM encryption
+        //  - state for fast hardware (AES-NI) standard AES256-GCM encryption
         //
         class aes256gcm
             : public encryption {
@@ -132,11 +149,13 @@ namespace raddi {
 
             virtual std::size_t encode (unsigned char *, std::size_t, const unsigned char *, std::size_t) override;
             virtual std::size_t decode (unsigned char *, std::size_t, const unsigned char *, std::size_t) override;
-            virtual const wchar_t * name () const override;
+            virtual const char * reveal () const override;
 
         public:
             explicit aes256gcm (const proposal * proposal, const keyset * peer);
             virtual ~aes256gcm ();
+
+            static const char * const name;
         };
 
         // xchacha20poly1305
@@ -149,18 +168,20 @@ namespace raddi {
         
             virtual std::size_t encode (unsigned char *, std::size_t, const unsigned char *, std::size_t) override;
             virtual std::size_t decode (unsigned char *, std::size_t, const unsigned char *, std::size_t) override;
-            virtual const wchar_t * name () const override;
+            virtual const char * reveal () const override;
 
         public:
             explicit xchacha20poly1305 (const proposal * proposal, const keyset * peer);
             virtual ~xchacha20poly1305 ();
+
+            static const char * const name;
         };
 
         // frame_overhead
         //  - protocol frame overhead, i.e. how many bytes 'encode' adds
         //
         static constexpr std::size_t frame_overhead = sizeof (std::uint16_t)
-                                                    + std::max (crypto_aead_aes256gcm_ABYTES, crypto_aead_xchacha20poly1305_ietf_ABYTES);
+                                                    + 16; // std::max (crypto_aead_aes256gcm_ABYTES, crypto_aead_xchacha20poly1305_ietf_ABYTES, crypto_aead_aegis256_ABYTES)
 
         // max_payload
         //  - maximum data encoded inside the protocol frame

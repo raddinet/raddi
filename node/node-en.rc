@@ -77,6 +77,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 8    "command {1} failed with {2} exception"
     MAIN | ERROR | 9    "entry {1} erase failed, no such entry or database failure"
     MAIN | ERROR | 10   "failed to initialize system facility, error {ERR}"
+    MAIN | ERROR | 11   "HW support for {1} encryption scheme is not available, reverting to default {2}"
     MAIN | ERROR | 0x20 "bootstrap: failed to parse URL {1}, error {ERR}"
     MAIN | ERROR | 0x21 "bootstrap: failed to prepare request to {1}:{2}, error {ERR}"
     MAIN | ERROR | 0x22 "bootstrap: failed to prepare request to {1}:{2}{3}, error {ERR}"
@@ -98,6 +99,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | NOTE | 3     "worker {1} ({2}) started"
     MAIN | NOTE | 4     "worker {1} ({2}) finished"
     MAIN | NOTE | 5     "{1} version {2}, linkage: {3}"
+    MAIN | NOTE | 6     "only {1} encryption available"
     MAIN | NOTE | 0x10  "" // blank, notes 0x10..0x1F reserved for content creation (raddi.com and raddi.exe)
 
     MAIN | STOP | 1     "executable corrupted or miscompiled"

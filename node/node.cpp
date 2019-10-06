@@ -203,7 +203,7 @@ bool raddi::connection::head (const raddi::protocol::initial * peer) {
         delete this->proposal;
         this->encryption = ee;
 
-        this->report (raddi::log::level::event, 4, ee->name ());
+        this->report (raddi::log::level::event, 4, ee->reveal ());
 
         // this may also call 'send' thus we need to have the 'encryption' above already set
         ::coordinator->established (this);
@@ -1017,22 +1017,71 @@ namespace {
         }
 
         if (auto aes = option (argc, argw, L"aes")) {
+            using namespace raddi::protocol;
+
             static const struct {
-                const wchar_t * value;
-                enum raddi::protocol::aes256gcm_mode mode;
+                const wchar_t *     value;
+                enum aes256gcm_mode mode;
             } map [] = {
-                { L"force", raddi::protocol::aes256gcm_mode::forced },
-                { L"forced", raddi::protocol::aes256gcm_mode::forced },
-                { L"disable", raddi::protocol::aes256gcm_mode::disabled },
-                { L"disabled", raddi::protocol::aes256gcm_mode::disabled },
-                { L"auto", raddi::protocol::aes256gcm_mode::automatic },
-                { L"automatic", raddi::protocol::aes256gcm_mode::automatic }
+                { L"aegis", aes256gcm_mode::force_aegis },
+                { L"force-aegis", aes256gcm_mode::force_aegis },
+                { L"gcm", aes256gcm_mode::force_gcm },
+                { L"force-gcm", aes256gcm_mode::force_gcm },
+                { L"force", aes256gcm_mode::forced },
+                { L"forced", aes256gcm_mode::forced },
+                { L"disable", aes256gcm_mode::disabled },
+                { L"disabled", aes256gcm_mode::disabled },
+                { L"auto", aes256gcm_mode::automatic },
+                { L"automatic", aes256gcm_mode::automatic }
             };
-            for (const auto & mapping : map)
+            for (const auto & mapping : map) {
                 if (!std::wcscmp (aes, mapping.value)) {
-                    raddi::protocol::aes256gcm_mode = mapping.mode;
+                    aes256gcm_mode = mapping.mode;
                     break;
                 }
+            }
+
+            // verify HW AES capabilities
+
+            if (aes256gcm_mode != aes256gcm_mode::disabled) {
+                switch (aes256gcm_mode) {
+
+                    // if forced particular AES version is not available revert to default
+
+                    case aes256gcm_mode::force_gcm:
+                        if (!crypto_aead_aes256gcm_is_available ()) {
+                            aes256gcm_mode = aes256gcm_mode::disabled;
+                            raddi::log::error (11, aes256gcm::name, xchacha20poly1305::name);
+                        }
+                        break;
+
+                    case aes256gcm_mode::force_aegis:
+                        if (!crypto_aead_aegis256_is_available ()) {
+                            aes256gcm_mode = aes256gcm_mode::disabled;
+                            raddi::log::error (11, aegis256::name, xchacha20poly1305::name);
+                        }
+                        break;
+
+                    // when forcing AES in general and only one of is available, select that
+                    //  - if neither, revert to default as above
+
+                    case aes256gcm_mode::forced:
+                        if (!crypto_aead_aegis256_is_available () && !crypto_aead_aes256gcm_is_available ()) {
+                            aes256gcm_mode = aes256gcm_mode::disabled;
+                            raddi::log::error (11, "AES", xchacha20poly1305::name);
+                        } else {
+                            if (crypto_aead_aegis256_is_available ()) {
+                                aes256gcm_mode = aes256gcm_mode::force_aegis;
+                                raddi::log::note (6, aegis256::name);
+                            } else
+                            if (crypto_aead_aes256gcm_is_available ()) {
+                                aes256gcm_mode = aes256gcm_mode::force_gcm;
+                                raddi::log::note (6, aes256gcm::name);
+                            }
+                        }
+                        break;
+                }
+            }
         }
 
         // proxy server connections

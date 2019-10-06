@@ -4,21 +4,18 @@
 alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/1";
 enum raddi::protocol::aes256gcm_mode raddi::protocol::aes256gcm_mode = raddi::protocol::aes256gcm_mode::automatic;
 
-const wchar_t * raddi::protocol::proposal::name () const {
-    if (this->outbound_nonce [7] & 0x01) {
-        return L"AES256-GCM";
-    } else {
-        return L"XChaCha20-Poly1305";
-    }
-}
-const wchar_t * raddi::protocol::aes256gcm::name () const {
-    return L"AES256-GCM";
-}
-const wchar_t * raddi::protocol::xchacha20poly1305::name () const {
-    return L"XChaCha20-Poly1305";
-}
+const char * const raddi::protocol::aegis256::name = "AEGIS-256";
+const char * const raddi::protocol::aes256gcm::name = "AES256-GCM";
+const char * const raddi::protocol::xchacha20poly1305::name = "XChaCha20-Poly1305";
+
+const char * raddi::protocol::aegis256::reveal () const { return this->name; }
+const char * raddi::protocol::aes256gcm::reveal () const { return this->name; }
+const char * raddi::protocol::xchacha20poly1305::reveal () const { return this->name; }
 
 raddi::protocol::proposal::~proposal () {
+    sodium_memzero (static_cast <keyset *> (this), sizeof (keyset));
+}
+raddi::protocol::aegis256::~aegis256 () {
     sodium_memzero (static_cast <keyset *> (this), sizeof (keyset));
 }
 raddi::protocol::aes256gcm::~aes256gcm () {
@@ -48,10 +45,24 @@ void raddi::protocol::proposal::propose (initial * head) {
     std::memcpy (head->keys.inbound_nonce, this->inbound_nonce, sizeof this->inbound_nonce);
     std::memcpy (head->keys.outbound_nonce, this->outbound_nonce, sizeof this->outbound_nonce);
 
-    auto aes = (aes256gcm_mode != aes256gcm_mode::disabled) && crypto_aead_aes256gcm_is_available ();
+    std::uint32_t aes = 0;
+    if (aes256gcm_mode != aes256gcm_mode::disabled) {
+        switch (aes256gcm_mode) {
+            case aes256gcm_mode::force_gcm:
+                aes = 0x01;
+                break;
+            case aes256gcm_mode::force_aegis:
+                aes = 0x02;
+                break;
+            default: // automatic or forced
+                if (crypto_aead_aegis256_is_available ()) aes |= 0x02;
+                if (crypto_aead_aes256gcm_is_available ()) aes |= 0x01;
+                break;
+        }
+    }
 
     head->flags.hard.encode (0);
-    head->flags.soft.encode (aes ? 0x0000'0001 : 0x0000'0000);
+    head->flags.soft.encode (aes);
 }
 
 raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::protocol::initial * peer) {
@@ -71,14 +82,29 @@ raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::pr
     if (peer->flags.hard.decode () != 0)
         return nullptr;
 
-    if ((aes256gcm_mode != aes256gcm_mode::disabled) && crypto_aead_aes256gcm_is_available () && (peer->flags.soft.decode () & 0x0000'0001)) {
-        return new aes256gcm (this, &peer->keys);
-    } else {
-        if (aes256gcm_mode != aes256gcm_mode::forced) {
-            return new xchacha20poly1305 (this, &peer->keys);
-        } else
-            return nullptr;
+    if (aes256gcm_mode != aes256gcm_mode::disabled) {
+        if ((peer->flags.soft.decode () & 0x0000'0002) && (aes256gcm_mode != aes256gcm_mode::force_gcm) && crypto_aead_aegis256_is_available ()) {
+            return new aegis256 (this, &peer->keys);
+        }
+        if ((peer->flags.soft.decode () & 0x0000'0001) && (aes256gcm_mode != aes256gcm_mode::force_aegis) && crypto_aead_aes256gcm_is_available ()) {
+            return new aes256gcm (this, &peer->keys);
+        }
+
+        switch (aes256gcm_mode) {
+            case aes256gcm_mode::forced:
+            case aes256gcm_mode::force_gcm:
+            case aes256gcm_mode::force_aegis:
+                return nullptr;
+        }
     }
+    return new xchacha20poly1305 (this, &peer->keys);
+}
+
+raddi::protocol::aegis256::aegis256 (const proposal * local, const keyset * peer) {
+    static_cast <keyset &> (*this) = *local;
+
+    sodium_add (this->inbound_nonce, peer->outbound_nonce, sizeof this->inbound_nonce);
+    sodium_add (this->outbound_nonce, peer->inbound_nonce, sizeof this->outbound_nonce);
 }
 
 raddi::protocol::aes256gcm::aes256gcm (const proposal * local, const keyset * peer) {
@@ -97,6 +123,22 @@ raddi::protocol::xchacha20poly1305::xchacha20poly1305 (const proposal * local, c
 
     sodium_add (this->inbound_nonce, peer->outbound_nonce, sizeof this->inbound_nonce);
     sodium_add (this->outbound_nonce, peer->inbound_nonce, sizeof this->outbound_nonce);
+}
+
+std::size_t raddi::protocol::aegis256::encode (unsigned char * message, std::size_t max,
+                                               const unsigned char * data, std::size_t size) {
+    if ((size <= raddi::protocol::max_payload) && (size + raddi::protocol::frame_overhead <= max)) {
+
+        auto length = size + crypto_aead_aegis256_ABYTES;
+        message [0] = (length >> 0) & 0xFF;
+        message [1] = (length >> 8) & 0xFF;
+
+        sodium_increment (this->outbound_nonce, sizeof this->outbound_nonce);
+        if (crypto_aead_aegis256_encrypt (&message [2], nullptr, data, size, &message [0], 2,
+                                          nullptr, this->outbound_nonce, this->outbound_key) == 0)
+            return length + sizeof (std::uint16_t);
+    }
+    return 0;
 }
 
 std::size_t raddi::protocol::aes256gcm::encode (unsigned char * message, std::size_t max,
@@ -127,6 +169,19 @@ std::size_t raddi::protocol::xchacha20poly1305::encode (unsigned char * message,
         if (crypto_aead_chacha20poly1305_ietf_encrypt (&message [2], nullptr, data, size, &message [0], 2,
                                                        nullptr, this->outbound_nonce, this->outbound_key) == 0)
             return length + sizeof (std::uint16_t);
+    }
+    return 0;
+}
+
+std::size_t raddi::protocol::aegis256::decode (unsigned char * message, std::size_t max,
+                                               const unsigned char * data, std::size_t size) {
+    if ((size >= raddi::protocol::frame_overhead) && (size - raddi::protocol::frame_overhead <= max)) {
+        unsigned long long length;
+        sodium_increment (this->inbound_nonce, sizeof this->inbound_nonce);
+        if (crypto_aead_aegis256_decrypt (message, &length, nullptr,
+                                          &data [2], size - 2, &data [0], 2,
+                                          this->inbound_nonce, this->inbound_key) == 0)
+            return (std::size_t) length;
     }
     return 0;
 }

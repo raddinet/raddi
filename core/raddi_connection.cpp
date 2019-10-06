@@ -159,7 +159,7 @@ std::uint64_t raddi::connection::keepalive (std::uint64_t now, std::uint64_t exp
 
 void raddi::connection::status () const {
     this->report (raddi::log::level::note, 1,
-                  this->retired ? L"retired" : this->secured ? this->encryption->name () : L"connecting",
+                  this->retired ? "retired" : this->secured ? this->encryption->reveal () : "connecting",
                   this->buffer_size (),
                   (raddi::microtimestamp () - std::max (this->probed, this->latest)) / 1'000'000uLL,
                   this->counter, this->messages, this->keepalives,
