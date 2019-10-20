@@ -15,7 +15,6 @@
 //  - TODO: move common operations to indexer
 //  - TODO: make solver->base /buckets class with 'write<N>' function
 //  - TODO: use libsimdpp for SipHash and other
-//  - TODO: heavily uses unaligned access, this will be problem on ARM
 //
 namespace cuckoo {
 

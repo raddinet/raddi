@@ -12,7 +12,7 @@ namespace raddi {
     //  - proof-of-work validates the entry through dynamically chosen complexity
     //  - appended to entry content and signed along with the rest
     //  - currently cuckoo cycle algorithm, may be extended later
-    //  - NOTE: ARM: unaligned memory access here and in cuckoocycle.tcc !!!
+    //  - NOTE: on ARMv7 unaligned memory access is OK (with performance penalty)
     //  - TODO: simplify somehow, too much raw pointer arithmetics here
     //
     struct proof __attribute__ ((ms_struct)) {
