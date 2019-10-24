@@ -27,6 +27,20 @@ LRESULT ReportOutOfMemory (HWND hParent, HWND hControl, UINT idControl);
 std::wstring GetWindowString (HWND hWnd);
 std::wstring GetDlgItemString (HWND hWnd, UINT id);
 
+typedef enum CompositionAttribute {
+    WCA_NCRENDERING_ENABLED = 1,
+    WCA_NCRENDERING_POLICY = 2,
+    WCA_CAPTION_BUTTON_BOUNDS = 5,
+    WCA_ACCENT_POLICY = 19,
+    WCA_USEDARKMODECOLORS = 26, // build 18875+
+} CompositionAttribute;
+
+struct CompositionAttributeData {
+    CompositionAttribute attribute;
+    PVOID data;
+    ULONG size;
+};
+
 struct DrawCompositedTextOptions {
     HTHEME  theme = NULL;
     HFONT   font = NULL;
@@ -112,6 +126,7 @@ extern UINT (WINAPI * pfnGetDpiForWindow) (HWND);
 extern int (WINAPI * ptrGetSystemMetricsForDpi) (int, UINT);
 extern DPI_AWARENESS_CONTEXT (WINAPI * ptrGetWindowDpiAwarenessContext) (HWND);
 extern BOOL (WINAPI * ptrAreDpiAwarenessContextsEqual) (DPI_AWARENESS_CONTEXT, DPI_AWARENESS_CONTEXT);
+extern BOOL (WINAPI * ptrSetWindowCompositionAttribute) (HWND, CompositionAttributeData *);
 
 extern HRESULT (WINAPI * ptrLoadIconWithScaleDown) (HINSTANCE, PCWSTR, int, int, HICON *);
 extern HRESULT (WINAPI * ptrTaskDialogIndirect) (const TASKDIALOGCONFIG *, int * button, int * radio, BOOL * check);

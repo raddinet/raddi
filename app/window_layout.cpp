@@ -337,8 +337,13 @@ LRESULT Window::OnVisualEnvironmentChange () {
     if (ptrAllowDarkModeForWindow) {
         ptrAllowDarkModeForWindow (hWnd, true);
 
-        LONG v = !design.light;
-        ptrDwmSetWindowAttribute (hWnd, 0x13, &v, sizeof v);
+        LONG dark = !design.light;
+        if (IsWindowsBuildOrGreater (10, 0, 18875)) {
+            CompositionAttributeData attr = { WCA_USEDARKMODECOLORS, &dark, sizeof dark };
+            ptrSetWindowCompositionAttribute (hWnd, &attr);
+        } else {
+            ptrDwmSetWindowAttribute (hWnd, 0x13, &dark, sizeof dark);
+        }
     }
 
     // SetProp (hWnd, L"UseImmersiveDarkModeColors", (HANDLE) !design.light); // ???

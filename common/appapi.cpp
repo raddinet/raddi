@@ -34,6 +34,7 @@ UINT (WINAPI * pfnGetDpiForWindow) (HWND) = NULL;
 int (WINAPI * ptrGetSystemMetricsForDpi) (int, UINT) = NULL;
 DPI_AWARENESS_CONTEXT (WINAPI * ptrGetWindowDpiAwarenessContext) (HWND) = NULL;
 BOOL (WINAPI * ptrAreDpiAwarenessContextsEqual) (DPI_AWARENESS_CONTEXT, DPI_AWARENESS_CONTEXT) = NULL;
+BOOL (WINAPI * ptrSetWindowCompositionAttribute) (HWND, CompositionAttributeData *) = NULL;
 
 HRESULT (WINAPI * ptrLoadIconWithScaleDown) (HINSTANCE, PCWSTR, int, int, HICON *) = NULL;
 HRESULT (WINAPI * ptrTaskDialogIndirect) (const TASKDIALOGCONFIG *, int * button, int * radio, BOOL * check) = NULL;
@@ -71,6 +72,7 @@ void AppApiInitialize () {
         Symbol (hUser32, ptrGetSystemMetricsForDpi, "GetSystemMetricsForDpi");
         Symbol (hUser32, ptrGetWindowDpiAwarenessContext, "GetWindowDpiAwarenessContext");
         Symbol (hUser32, ptrAreDpiAwarenessContextsEqual, "AreDpiAwarenessContextsEqual");
+        Symbol (hUser32, ptrSetWindowCompositionAttribute, "SetWindowCompositionAttribute");
     }
     if (HMODULE hComCtl32 = GetModuleHandle (L"COMCTL32")) {
         Symbol (hComCtl32, ptrLoadIconWithScaleDown, "LoadIconWithScaleDown");
