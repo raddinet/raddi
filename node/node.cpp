@@ -924,8 +924,8 @@ namespace {
             settings.track_all_channels = false;
             coordinator.settings.network_propagation_participation = false;
             coordinator.settings.channels_synchronization_participation = false;
-            coordinator.settings.min_core_connections += raddi::defaults::coordinator_additional_leaf_min_core_connections;
-            coordinator.settings.max_core_connections += raddi::defaults::coordinator_additional_leaf_max_core_connections;
+            coordinator.settings.min_core_connections = std::max (coordinator.settings.min_core_connections, raddi::defaults::coordinator_leaf_min_core_connections);
+            coordinator.settings.max_core_connections = std::max (coordinator.settings.max_core_connections, raddi::defaults::coordinator_leaf_max_core_connections);
         }
         if (core) {
             coordinator.settings.full_database_downloads_allowed = true;

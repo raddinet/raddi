@@ -160,7 +160,7 @@ namespace raddi {
             std::size_t max_connections = 1024; // absolute hard maximum, includes inbound, 0 means unlimited
             std::size_t min_connections = 2; // minimum normal connected nodes to allow broadcasting
             std::size_t max_core_connections = 3; // maximum connections to core nodes
-            std::size_t min_core_connections = 0; // minimum core nodes to allow broadcasting
+            std::size_t min_core_connections = 1; // minimum core nodes to allow broadcasting
 
             bool local_peers_only = false;
             bool network_propagation_participation = true;
