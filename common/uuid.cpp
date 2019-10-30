@@ -5,7 +5,7 @@
 // simply using what Windows have to offer
 
 uuid::uuid () {
-    UuidCreate ((UUID *) this->data);
+    (void) UuidCreate ((UUID *) this->data);
 }
 void uuid::null () {
     for (auto & byte : this->data) {
