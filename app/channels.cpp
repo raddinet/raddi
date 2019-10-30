@@ -25,9 +25,9 @@ namespace {
     std::wstring u82ws (const uint8_t * data, std::size_t size) {
         std::wstring result;
         if (data && size) {
-            if (auto n = MultiByteToWideChar (CP_UTF8, 0, ( LPCCH) data, ( int) size, NULL, 0)) {
+            if (auto n = MultiByteToWideChar (CP_UTF8, 0, (LPCCH) data, (int) size, NULL, 0)) {
                 result.resize (n);
-                MultiByteToWideChar (CP_UTF8, 0, ( LPCCH) data, ( int) size, &result [0], n);
+                MultiByteToWideChar (CP_UTF8, 0, (LPCCH) data, (int) size, &result [0], n);
             };
         }
         return result;
