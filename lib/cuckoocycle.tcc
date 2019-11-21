@@ -1,6 +1,123 @@
 #ifndef CUCKOOCYCLE_TCC
 #define CUCKOOCYCLE_TCC
 
+// hash
+
+template <unsigned N1, unsigned N2>
+inline std::uint64_t cuckoo::hash <N1, N2> ::rotl64 (const std::uint64_t x, const int b) {
+    return (x << b) | (x >> (64 - b));
+}
+template <unsigned N1, unsigned N2>
+inline void cuckoo::hash <N1, N2> ::round (std::uint64_t (&v) [4]) {
+    v [0] += v [1];
+    v [1] = rotl64 (v [1], 13);
+    v [1] ^= v [0];
+    v [0] = rotl64 (v [0], 32);
+    v [2] += v [3];
+    v [3] = rotl64 (v [3], 16);
+    v [3] ^= v [2];
+    v [0] += v [3];
+    v [3] = rotl64 (v [3], 21);
+    v [3] ^= v [0];
+    v [2] += v [1];
+    v [1] = rotl64 (v [1], 17);
+    v [1] ^= v [2];
+    v [2] = rotl64 (v [2], 32);
+}
+
+template <unsigned N1, unsigned N2>
+inline void cuckoo::hash <N1, N2> ::seed (const std::uint8_t (&base) [width]) {
+    std::memcpy (this->base, base, width);
+}
+template <unsigned N1, unsigned N2>
+inline void cuckoo::hash <N1, N2> ::seed (const std::uint8_t (&base) [width], const std::uint8_t * key, std::size_t length) {
+    std::uint8_t seed [width];
+    std::size_t i = 0;
+
+    if (length > width) {
+        length = width;
+    }
+    for (; i != length; ++i) {
+        seed [i] = base [i] ^ key [i];
+    }
+    for (; i != width; ++i) {
+        seed [i] = base [i];
+    }
+    this->seed (seed);
+}
+
+template <unsigned N1, unsigned N2>
+inline typename cuckoo::hash <N1, N2> ::type cuckoo::hash <N1, N2> ::operator () (type input) const {
+    std::uint64_t v [4] = {
+        this->base [0],
+        this->base [1] ^ (input * !N1),
+        this->base [2],
+        this->base [3] ^ (input * !!N2),
+    };
+
+    for (auto i = 0u; i != N1; ++i) {
+        round (v);
+    }
+    if (N1 && N2) {
+        v [0] ^= input;
+        v [2] ^= 0xff;
+    }
+    for (auto i = 0u; i != N2; ++i) {
+        round (v);
+    }
+    return (v [0] ^ v [1]) ^ (v [2] ^ v [3]);
+}
+
+template <unsigned N1, unsigned N2>
+inline typename cuckoo::hash <N1, N2> ::type cuckoo::hash <N1, N2> ::operator () (const void * data, std::size_t size) const {
+    auto input = reinterpret_cast <const type *> (data);
+    auto cycles = size / sizeof (type);
+    type final = size << 56;
+
+    std::uint64_t v [4] = { this->base [0], this->base [1], this->base [2], this->base [3] };
+
+    if (input && cycles) {
+        v [1] ^= (*input * !N1);
+        v [3] ^= (*input * !!N2);
+
+        for (; cycles; ++input, --cycles) {
+            v [3] ^= *input;
+            for (auto i = 0u; i != N1; ++i) {
+                round (v);
+            }
+            v [0] ^= *input;
+        }
+    }
+
+    if (auto remaining = size % 8) {
+        auto end = reinterpret_cast <const std::uint8_t *> (data) + size - remaining;
+        switch (remaining) {
+            case 7: final |= type (end [6]) << 48; // continue...
+            case 6: final |= type (end [5]) << 40; // continue...
+            case 5: final |= type (end [4]) << 32; // continue...
+            case 4: final |= type (end [3]) << 24; // continue...
+            case 3: final |= type (end [2]) << 16; // continue...
+            case 2: final |= type (end [1]) << 8; // continue...
+            case 1: final |= type (end [0]);
+        }
+    }
+
+    if (N1 || N2) {
+        if (N1) {
+            v [3] ^= final;
+            for (auto i = 0u; i != N1; ++i) {
+                round (v);
+            }
+        }
+        v [0] ^= final;
+        v [2] ^= 0xff;
+    }
+    for (auto i = 0u; i != N2; ++i) {
+        round (v);
+    }
+    return (v [0] ^ v [1]) ^ (v [2] ^ v [3]);
+}
+
 // indexer
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>

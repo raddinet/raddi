@@ -47,7 +47,6 @@ namespace cuckoo {
 
         // width
         //  - required seed size in bytes
-        //  - 
         //
         static constexpr auto width = sizeof (hash::base);
 
@@ -59,60 +58,35 @@ namespace cuckoo {
         // seed
         //  - initialization function
         //
-        inline void seed (const std::uint8_t (&base) [width]) {
-            std::memcpy (this->base, base, width);
-        }
+        inline void seed (const std::uint8_t (&base) [width]);
+        inline void seed (const std::uint8_t (&base) [width], const std::uint8_t * key, std::size_t length);
 
         // operator ()
-        //  - generates either one or full parallelism-sized batch of outputs per input(s)
+        //  - generates single simplified hash
+        //  - NOTE: result is NOT equal to calling operator()(const void *, std::size_t)
         //
-        inline type operator () (type input) const {
-            std::uint64_t v [4] = {
-                this->base [0],
-                this->base [1] ^ (input * !N1),
-                this->base [2],
-                this->base [3] ^ (input * !!N2),
-            };
+        inline type operator () (type input) const;
 
-            for (auto i = 0u; i != N1; ++i) {
-                round (v);
-            }
-            if (N1 && N2) {
-                v [0] ^= input;
-                v [2] ^= 0xff;
-            }
-            for (auto i = 0u; i != N2; ++i) {
-                round (v);
-            }
-            return (v [0] ^ v [1]) ^ (v [2] ^ v [3]);
-        }
+        // operator ()
+        //  - generates full parallelism-sized batch of outputs per input(s)
+        //
         inline void operator () (type (&output) [parallelism], const type (&input) [parallelism]) const {
-            // TODO: implement SSE2/AVX version
+            // TODO: implement SSE2/AVX version, see 'cuckoo\src\crypto\siphashxN.h'
             for (std::size_t i = 0u; i != this->parallelism; ++i) {
                 output [i] = this->operator () (input [i]);
             }
         }
 
+        // operator (const void *, std::size_t)
+        //  - hashes a buffer of data
+        //  - NOTE: result of hashing one uint64_t is not equal to direct hashing because 'size' is included too
+        //  - 'size' MUST be multiple of sizeof(type)
+        //
+        inline type operator () (const void * data, std::size_t size) const;
+
     private:
-        static inline std::uint64_t rotl64 (const std::uint64_t x, const int b) {
-            return (x << b) | (x >> (64 - b));
-        }
-        static inline void round (std::uint64_t (&v) [4]) {
-            v [0] += v [1];
-            v [1] = rotl64 (v [1], 13);
-            v [1] ^= v [0];
-            v [0] = rotl64 (v [0], 32);
-            v [2] += v [3];
-            v [3] = rotl64 (v [3], 16);
-            v [3] ^= v [2];
-            v [0] += v [3];
-            v [3] = rotl64 (v [3], 21);
-            v [3] ^= v [0];
-            v [2] += v [1];
-            v [1] = rotl64 (v [1], 17);
-            v [1] ^= v [2];
-            v [2] = rotl64 (v [2], 32);
-        }
+        static inline std::uint64_t rotl64 (const std::uint64_t x, const int b);
+        static inline void round (std::uint64_t (&v) [4]);
     };
 
     // verify
@@ -123,7 +97,6 @@ namespace cuckoo {
     //
     template <typename Generator>
     bool verify (unsigned complexity, const std::uint8_t (&seed) [Generator::width], const std::uintmax_t * cycle, std::size_t length);
-
 
     // solver
     //  - modified matrix/mean solver
