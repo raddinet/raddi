@@ -1,8 +1,6 @@
 TODO
 ====
 
-document force-aegis and force-gcm options for aes:xxx
-
 allow only plain text in identities/channels names
 
 accept all data from core nodes (don't consider old)
