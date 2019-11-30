@@ -71,6 +71,16 @@ namespace raddi {
                 } soft
                 , hard;
             } flags;
+
+            // timestamp
+            //  - peer current system time (UTC)
+            //
+            std::uint64_t timestamp;
+
+            // checksum
+            //  - hash of protocol::magic + keys + flags + timestamp
+            //
+            std::uint64_t checksum;
         };
 
         // encryption
@@ -97,6 +107,17 @@ namespace raddi {
             virtual const char * reveal () const = 0;
         };
 
+        // accept_fail_reason
+        //  - list of reasons the 'proposal::accept' function can fail to establish encrypted connection
+        //
+        enum class accept_fail_reason {
+            succeeded = 0,
+            checksum,   // checksum doesn't match, probably different software on port or different protocol magic
+            flags,      // unknown hard flag(s) set
+            time,       // maximum time skew/difference exceeded, one side needs to sync it's clock
+            aes,        // forced AES mode is not available
+        };
+
         // proposal
         //  - created for every new connection, contains private parts of D-H key exchange
         //    and random nonces
@@ -112,7 +133,7 @@ namespace raddi {
             // accept
             //  - finishes D-H and generates encryption object according to peer's proposal
             //
-            encryption * accept (const initial * head);
+            encryption * accept (const initial * head, accept_fail_reason *);
 
             // destructor clears keys from memory
             ~proposal ();

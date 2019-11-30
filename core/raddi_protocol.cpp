@@ -1,5 +1,7 @@
 #include "raddi_protocol.h"
 #include "raddi_timestamp.h"
+#include "raddi_consensus.h"
+#include "../lib/cuckoocycle.h"
 
 alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/1";
 enum raddi::protocol::aes256gcm_mode raddi::protocol::aes256gcm_mode = raddi::protocol::aes256gcm_mode::automatic;
@@ -63,9 +65,15 @@ void raddi::protocol::proposal::propose (initial * head) {
 
     head->flags.hard.encode (0);
     head->flags.soft.encode (aes);
+    head->timestamp = raddi::microtimestamp ();
+    
+    cuckoo::hash <2,4> hash;
+    hash.seed (head->keys.inbound_key, (const std::uint8_t *) &raddi::protocol::magic [0], sizeof raddi::protocol::magic);
+
+    head->checksum = hash (head, sizeof (initial) - sizeof (initial::checksum));
 }
 
-raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::protocol::initial * peer) {
+raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::protocol::initial * peer, accept_fail_reason * failure) {
     unsigned char rcvscalarmul [crypto_scalarmult_BYTES];
     unsigned char trmscalarmul [crypto_scalarmult_BYTES];
 
@@ -79,14 +87,31 @@ raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::pr
     sodium_memzero (rcvscalarmul, sizeof rcvscalarmul);
     sodium_memzero (trmscalarmul, sizeof trmscalarmul);
     
-    if (peer->flags.hard.decode () != 0)
+    cuckoo::hash <2, 4> hash;
+    hash.seed (peer->keys.inbound_key, (const std::uint8_t *) & raddi::protocol::magic [0], sizeof raddi::protocol::magic);
+
+    if (peer->checksum != hash (peer, sizeof (initial) - sizeof (initial::checksum))) {
+        *failure = accept_fail_reason::checksum;
         return nullptr;
+    }
+
+    if (std::abs ((std::int64_t) (peer->timestamp - raddi::microtimestamp ())) > (1000'000 * raddi::consensus::max_entry_skew_allowed)) {
+        *failure = accept_fail_reason::time;
+        return nullptr;
+    }
+
+    if (peer->flags.hard.decode () != 0) {
+        *failure = accept_fail_reason::flags;
+        return nullptr;
+    }
 
     if (aes256gcm_mode != aes256gcm_mode::disabled) {
         if ((peer->flags.soft.decode () & 0x0000'0002) && (aes256gcm_mode != aes256gcm_mode::force_gcm) && crypto_aead_aegis256_is_available ()) {
+            *failure = accept_fail_reason::succeeded;
             return new aegis256 (this, &peer->keys);
         }
         if ((peer->flags.soft.decode () & 0x0000'0001) && (aes256gcm_mode != aes256gcm_mode::force_aegis) && crypto_aead_aes256gcm_is_available ()) {
+            *failure = accept_fail_reason::succeeded;
             return new aes256gcm (this, &peer->keys);
         }
 
@@ -94,9 +119,12 @@ raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::pr
             case aes256gcm_mode::forced:
             case aes256gcm_mode::force_gcm:
             case aes256gcm_mode::force_aegis:
+                *failure = accept_fail_reason::aes;
                 return nullptr;
         }
     }
+
+    *failure = accept_fail_reason::succeeded;
     return new xchacha20poly1305 (this, &peer->keys);
 }
 
