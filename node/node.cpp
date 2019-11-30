@@ -197,7 +197,8 @@ bool raddi::connection::head (const raddi::protocol::initial * peer) {
         return false;
     }
 
-    if (auto ee = this->proposal->accept (peer)) {
+    raddi::protocol::accept_fail_reason failure;
+    if (auto ee = this->proposal->accept (peer, &failure)) {
 
         // replace proposal with encryption
         delete this->proposal;
@@ -209,13 +210,23 @@ bool raddi::connection::head (const raddi::protocol::initial * peer) {
         ::coordinator->established (this);
         return true;
     } else {
-        auto hardflags = peer->flags.hard.decode ();
-        if (hardflags != 0) {
-            this->report (raddi::log::level::error, 17, hardflags);
-            return false;
-        }
+        switch (failure) {
+            case raddi::protocol::accept_fail_reason::checksum:
+                this->report (raddi::log::level::error, 17);
+                break;
+            case raddi::protocol::accept_fail_reason::flags:
+                this->report (raddi::log::level::error, 18, peer->flags.hard.decode ());
+                break;
+            case raddi::protocol::accept_fail_reason::time:
+                this->report (raddi::log::level::error, 19, (std::int64_t) (peer->timestamp - raddi::microtimestamp ()));
+                break;
+            case raddi::protocol::accept_fail_reason::aes:
+                this->report (raddi::log::level::error, 20);
+                break;
 
-        this->report (raddi::log::level::note, 10, peer->flags.soft.decode ());
+            default:
+                this->report (raddi::log::level::note, 10, peer->flags.soft.decode ());
+        }
         return false;
     }
 }

@@ -201,8 +201,11 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     // SOCKS5t proxy
     SERVER | ERROR | 15     "invalid proxy response"
     SERVER | ERROR | 16     "connection through proxy failed, code {1}: {2}"
-    // connection (again)
-    SERVER | ERROR | 17     "connection aborted, incompatible hard flags: {1:X}"
+    // connection (connect failures)
+    SERVER | ERROR | 17     "aborted, checksum mismatch, probably different software/protocol"
+    SERVER | ERROR | 18     "aborted, incompatible hard flags: {1:X}"
+    SERVER | ERROR | 19     "aborted, clock difference {1} exceeds allowed maximum"
+    SERVER | ERROR | 20     "aborted, peer doesn't support locally enforced AES mode"
 
     // coordinator
     SERVER | ERROR | 0x20   ""
