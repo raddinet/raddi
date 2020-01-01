@@ -72,7 +72,7 @@ template <unsigned N1, unsigned N2>
 inline typename cuckoo::hash <N1, N2> ::type cuckoo::hash <N1, N2> ::operator () (const void * data, std::size_t size) const {
     auto input = reinterpret_cast <const type *> (data);
     auto cycles = size / sizeof (type);
-    type final = size << 56;
+    type final = type (size) << 56;
 
     std::uint64_t v [4] = { this->base [0], this->base [1], this->base [2], this->base [3] };
 
