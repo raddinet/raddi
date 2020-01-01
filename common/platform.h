@@ -54,6 +54,7 @@ static const char BUILD_TIMESTAMP [] = {
 #ifdef _WIN32
 #include <windows.h>
 #include <string_view>
+#include "log.h"
 
 // Windows API platform helper functions
 
