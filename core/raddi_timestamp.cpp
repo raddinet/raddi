@@ -6,9 +6,8 @@
 
 namespace {
     
-    // difference of 1.1.2018 00:00:00 - January 1, 1601 UTC in seconds (unix timestamp minus 0x5a497a00)
-    static const auto base = 0x3105a0b00uLL;
-    //static const auto base = 0x3141c7200uLL; // 1.1.2020, unix timestamp minus 0x5e0be100
+    // difference of 1.1.2020 00:00:00 - January 1, 1601 UTC in seconds (unix timestamp minus 0x5e0be100)
+    static const auto base = 0x3141c7200uLL;
 
     // difference of 1.1.1970 00:00:00 - January 1, 1601 UTC in seconds
     // static const auto base = 0x2b6109100uLL;
