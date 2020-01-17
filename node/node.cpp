@@ -853,6 +853,29 @@ namespace {
             }
         }
 #endif
+        struct {
+            const char * name;
+            int present;
+        } cpu_features [] = {
+#if defined (_M_ARM64)
+            { "NEON", sodium_runtime_has_neon () },
+            { "CRYPTO", sodium_runtime_has_armcrypto () },
+#else
+            { "SSE2", sodium_runtime_has_sse2 () },
+            { "SSE3", sodium_runtime_has_sse3 () },
+            { "SSSE3", sodium_runtime_has_ssse3 () },
+            { "SSE4.1", sodium_runtime_has_sse41 () },
+            { "AVX", sodium_runtime_has_avx () },
+            { "AVX2", sodium_runtime_has_avx2 () },
+            { "AVX512F", sodium_runtime_has_avx512f () },
+            { "RDRAND", sodium_runtime_has_rdrand () },
+            { "CLMUL", sodium_runtime_has_pclmul () },
+            { "AES-NI", sodium_runtime_has_aesni () },
+#endif
+        };
+        for (auto cpu_feature : cpu_features) {
+            raddi::log::note (0x07, cpu_feature.name, (bool) cpu_feature.present);
+        }
 
         raddi::log::event (0xF0, raddi::log::path);
         
@@ -1008,7 +1031,7 @@ namespace {
         if (workers == 0) {
             status.dwWin32ExitCode = GetLastError ();
         }
-
+        
         overview.set (L"workers", workers);
         overview.set (L"broadcasting", 0u);
         overview.set (L"log", raddi::log::path);
