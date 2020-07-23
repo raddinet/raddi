@@ -100,6 +100,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | NOTE | 4     "worker {1} ({2}) finished"
     MAIN | NOTE | 5     "{1} version {2}, linkage: {3}"
     MAIN | NOTE | 6     "only {1} encryption available"
+    MAIN | NOTE | 7     "CPU feature {1} available: {2}"
     MAIN | NOTE | 0x10  "" // blank, notes 0x10..0x1F reserved for content creation (raddi.com and raddi.exe)
 
     MAIN | STOP | 1     "executable corrupted or miscompiled"
