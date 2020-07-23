@@ -231,7 +231,7 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
                     yStatusBar = 0;
                 }
 
-                if (HDWP hDwp = BeginDeferWindowPos (16 + this->tabs.views->tabs.size () + this->tabs.lists->tabs.size ())) {
+                if (HDWP hDwp = BeginDeferWindowPos ((int) (16 + this->tabs.views->tabs.size () + this->tabs.lists->tabs.size ()))) {
                     auto rListTabs = this->GetListsTabRect ();
                     auto rRightPane = this->GetRightPane (client, rListTabs);
                     auto rFeedsTabs = this->GetFeedsTabRect (rRightPane);

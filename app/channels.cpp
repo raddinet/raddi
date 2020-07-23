@@ -178,7 +178,7 @@ LRESULT ListOfChannels::OnNotify (NMHDR * nm) {
                                     break;
 
                             case 0:
-                                auto found = this->cache.find (draw->nmcd.dwItemSpec);
+                                auto found = this->cache.find ((int) draw->nmcd.dwItemSpec);
                                 if (found != this->cache.end ()) {
                                     if (database.names.is.query <int> (SQLite::Blob (found->second.id))) {
                                         SelectObject (draw->nmcd.hdc, parent->fonts.italic.handle);

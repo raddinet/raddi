@@ -208,7 +208,7 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
         case WM_APP_FINISH_COMMAND:
             return this->OnFinishCommand (lParam);
         case WM_APP_TITLE_RESOLVED:
-            return this->OnAppEidResolved (wParam);
+            return this->OnAppEidResolved ((UINT) wParam);
         case WM_APP_NODE_STATE:
             return OnNodeConnectionUpdate (wParam, lParam);
         /*case WM_APP_CHANNELS_COUNT:
@@ -1083,7 +1083,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
 LRESULT Window::OnFinishCommand (LPARAM command) {
     switch (command) {
         // New List
-        case 0xA1:
+        case 0xA1:  
             if (finish.list) {
                 if (auto hList = Lists::Create (this, this->tabs.lists, finish.list, finish.text)) {
                     Lists::CreateGroup (hList, finish.group, LoadString (0x70));
@@ -1161,7 +1161,7 @@ LRESULT Window::OnFinishCommand (LPARAM command) {
         switch ((FinishCommand) (command - 0x10000)) {
 
             case FinishCommand::RefreshList:
-                InvalidateRect (this->tabs.lists->tabs [this->tabs.lists->current].content, NULL, FALSE);
+                InvalidateRect (this->tabs.lists->tabs [this->tabs.lists->current].content, NULL, TRUE);
                 break;
         }
     }

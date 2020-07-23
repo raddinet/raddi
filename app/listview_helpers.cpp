@@ -102,7 +102,7 @@ int ListView_SetGroupTitle (HWND hListView, int groupID, const std::wstring & te
     lvGroup.cbSize = sizeof lvGroup;
     lvGroup.mask = LVGF_HEADER;
     lvGroup.pszHeader = const_cast <wchar_t *> (&text [0]);
-    lvGroup.cchHeader = text.length ();
+    lvGroup.cchHeader = (int) text.length ();
 
     return (int) ListView_SetGroupInfo (hListView, groupID, &lvGroup);
 }

@@ -59,7 +59,7 @@ namespace {
     void GuiThreadMessageProcedure (const MSG &);
     bool CreateWindows (HINSTANCE hInstance, LPCTSTR atom, int mode);
 
-    DWORD idGuiChangesCoalescingTimer = 0;
+    UINT_PTR idGuiChangesCoalescingTimer = 0;
 }
 
 int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
@@ -200,10 +200,10 @@ namespace {
 
         InitCommonControls ();
         if (!InitCommonControlsEx (&classes))
-            return false;
+            return nullptr;
 
         if (!InitializeTabControl (hInstance))
-            return false;
+            return nullptr;
 
         InitializeMenus (hInstance);
         InitializeSearchBox (hInstance);
@@ -213,7 +213,7 @@ namespace {
             case S_FALSE: // already initialized
                 break;
             default:
-                return false;
+                return nullptr;
         }
 
         if (ptrBufferedPaintInit) {
@@ -397,7 +397,7 @@ namespace {
 
             case WM_APP_NODE_UPDATE + (UINT) Node::table::threads:
             case WM_APP_NODE_UPDATE + (UINT) Node::table::data:
-                resolver.advance ((Node::table) (message.message - WM_APP_NODE_UPDATE), message.wParam, message.lParam);
+                resolver.advance ((Node::table) (message.message - WM_APP_NODE_UPDATE), (std::uint32_t) message.wParam, (std::uint32_t) message.lParam);
                 // TODO: for data enum all new entries, enum windows, enum views, if relevant, signal update
                 break;
 

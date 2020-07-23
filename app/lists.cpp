@@ -67,14 +67,14 @@ ListPart ListView_OnContextMenu (const WindowEnvironment * parent, HWND hListVie
         }
     }
     return ListPart::Canvas;
-    }
+}
 
 bool Lists::Load (const Window * parent, TabControlInterface * tc) {
     try {
         auto columns = Lists::Internal::GetColumns ();
 
         while (database.lists.query.next ()) {
-            auto id = database.lists.query.get <std::size_t> (0);
+            auto id = database.lists.query.get <int> (0);
 
             if (auto h = Lists::Internal::Create (parent->hWnd, parent->hToolTip, id, columns)) {
                 tc->tabs [id].text = database.lists.query.get <std::wstring> (1);
@@ -149,7 +149,7 @@ HWND Lists::Internal::Create (HWND hParent, HWND hToolTip, int id, const std::ve
     static constexpr auto extra = LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER;
 
     if (auto h = CreateWindowEx (WS_EX_NOPARENTNOTIFY, WC_LISTVIEW, L"", style,
-                                 0,0,0,0, hParent, (HMENU) (Window::ID::LIST_BASE + id), NULL, NULL)) {
+                                 0,0,0,0, hParent, (HMENU) (std::intptr_t) (Window::ID::LIST_BASE + id), NULL, NULL)) {
 
         ListView_SetExtendedListViewStyle (h, extra);
         ListView_SetToolTips (h, hToolTip);
@@ -394,7 +394,7 @@ int Lists::CreateGroup (HWND hList, int id, const std::wstring & text) {
     group.pszHeader = const_cast <wchar_t *> (text.c_str ());
     group.iGroupId = id;
 
-    return ListView_InsertGroup (hList, -1, &group);
+    return (int) ListView_InsertGroup (hList, -1, &group);
 }
 
 int Lists::DeleteGroup (HWND hListView, int id) {
