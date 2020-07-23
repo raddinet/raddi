@@ -338,6 +338,9 @@ LRESULT Window::OnVisualEnvironmentChange () {
         ptrAllowDarkModeForWindow (hWnd, true);
 
         LONG dark = !design.light;
+        if (IsWindowsBuildOrGreater (10, 0, 20161)) {
+            ptrDwmSetWindowAttribute (hWnd, 20, &dark, sizeof dark); // DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+        } else
         if (IsWindowsBuildOrGreater (10, 0, 18875)) {
             CompositionAttributeData attr = { WCA_USEDARKMODECOLORS, &dark, sizeof dark };
             ptrSetWindowCompositionAttribute (hWnd, &attr);
