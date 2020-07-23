@@ -27,6 +27,7 @@
     // F1 - help, CTRL+F1 shortcuts list
     // F2 - list of tabs with incremental search
     // F3 - next in search
+    // F6/Alt+F6 - switch top level windows? address bar? Ctrl+F6 traverse tabs
     // F8/Ctrl+L - address
     // Ctrl+(1-8) - switch tab (or stack, on repeated press switch inside stack)
     // Ctrl+9 - last tab
@@ -51,6 +52,6 @@
     // Alt+Left Arrow, Backspace – Back.
     // Alt + Right Arrow, Shift + Backspace – Forward.
 
-    VK_F11, 0xFB, VIRTKEY // F11 - full screen?
+    VK_F11, 0xFB, VIRTKEY // F11 - full screen? TODO: Win+Shift+Enter
     VK_F12, 0xFC, VIRTKEY
 }
