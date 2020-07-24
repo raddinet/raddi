@@ -8,7 +8,7 @@ namespace raddi {
 
     // timestamp
     //  - returns raddi timestamp (current or by parameter)
-    //  - number of seconds since January 1, 2018 UTC
+    //  - number of seconds since January 1, 2020 UTC
     //
     std::uint32_t timestamp ();
     std::uint32_t timestamp (const std::tm &);
@@ -23,7 +23,7 @@ namespace raddi {
 
     // microtimestamp
     //  - returns raddi timestamp in resolution of microseconds
-    //  - number of microseconds since January 1, 2018 UTC
+    //  - number of microseconds since January 1, 2020 UTC
     //
     std::uint64_t microtimestamp ();
 
