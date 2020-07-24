@@ -57,7 +57,8 @@ namespace raddi {
 
             // flags
             //  - 'soft' flags are options that can be refused or ignored
-            //     - 0x0000'0001 - preference to use HW AES256-GCM instead of XChaCha20-Poly1305
+            //     - 0x0000'0001 - preference to use HW AES256-GCM encryption
+            //     - 0x0000'0002 - preference to use HW AEGIS-256 encryption
             //  - 'hard' flags are breaking changes; unknown set hard flag means disconnect
             //     - no hard flags defined yet
             //
