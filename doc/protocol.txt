@@ -6,27 +6,52 @@ This specification is work in progress and subject to significant changes and ex
 Initial handshake
 -----------------
 
-Proposal (basically randomly generated data)
-|  IN KEY | OUT KEY |  IN NONCE | OUT NONCE |
-|   32B   |   32B   |    24B    |    24B    |
-
-OUT NONCE, byte 7 (eight), bit 0 (LSB)
- - 1 - AES-256-GCM available
- - 0 - AES-256-GCM not available or disabled
-
-AES is used only when both parties signal the bit. In both directions in that case.
+| Proposal/Keyset (randomly generated data) | Flags (Soft/Hard) |                      |
+|  IN KEY | OUT KEY |  IN NONCE | OUT NONCE |  S | ^S |  H | ^H | TIMESTAMP | CHECKSUM |
+|   32B   |   32B   |    32B    |    32B    | 4B | 4B | 4B | 4B |     8B    |    8B    |
 
 In/Out keys are established using D-H from IN KEY and OUT KEY. The protocol uses distinct
 keys/nonces for each direction.
 Nonces are added to establish final nonces used for encryption/decryption of frames.
 Nonces are incremented every time a frame is sent/received in particular direction.
 
+Different amount of bytes is used for different supported protocols:
+ - 32 bytes for AEGIS-256
+ - 12 bytes for AES256-GCM
+ - 24 bytes for ChaCha20-Poly1305
+
+FLAGS signalize optional protocol features and requirements.
+Unknown SOFT FLAGS are ignored by the node. Their purpose is to enable optional features.
+Unknown HARD FLAGS will terminate the connection. Their purpose is to prevent connection
+between nodes with incompatible protocol.
+
+To increase random appearance, flags are encoded as a pairs of 4B values, that will yield
+the actual flag bitmaps when XORed together.
+
+Following flags are defined:
+ - SOFT
+    - 0x0000'0001 - the node prefers to use HW AES256-GCM encryption
+    - 0x0000'0002 - the node prefers to use HW AEGIS-256 encryption
+ - HARD
+    - none
+
+TIMESTAMP declares current RTC time of the node. Microseconds since January 1, 2020 UTC.
+Nodes with clock skewed beyond supported range will be disconnected (180s by default).
+
+CHECKSUM covers all preceeding 152 bytes. The purpose is to early disconnect other
+software or applications attempting to connect at the port that RADDI.net is using, as
+some core nodes are expected to use port 443 or 80.
+
+No cryptographic properties are required here. The algorithm used to compute checksum is
+the modified SipHash24, using the same source code as the proof-of-work hash.
+
+
 Communication
 -------------
 
 KEEP ALIVE TOKENS
-raddi_connection.cpp/.h
-Exchanged when there is quiet on the connection for some time.
+ - raddi_connection.cpp/.h
+ - exchanged when there is quiet on the connection for some time
 
 0x0000 - keep alive request
 0xFFFF - keep alive response (chosen intentionally to fit whole valid frame into 64 kB)
@@ -36,15 +61,15 @@ connection.
 
 
 FRAMING
-raddi_protocol.cpp/.h
-Each message exchanged within the established connection is preceeded by FRAMING data.
+ - raddi_protocol.cpp/.h
+ - each message exchanged within the established connection is preceeded by FRAMING data
 
 | FRAMING  |
 | CB | AES |
 | 2B | 16B | ...
 
 CB - amount of data, in bytes, following the two CB bytes
-AES - authentication tag of ChaCha20-Poly1305 or AES256-GCM
+AES - authentication tag of ChaCha20-Poly1305, AES256-GCM or AEGIS-256
 
 The additional authenticated data for AEAD construction are the two CB bytes. The rest of
 the frame is encrypted using the keys/nonces generated in the initial handshake. Nonce is
@@ -53,8 +78,8 @@ described data in their decrypted form:
 
 
 REQUEST
-raddi_request.cpp/.h
-Valid when CB is range 20 ~ 153 inclusive.
+ - raddi_request.cpp/.h
+ - valid when CB is range 20 ~ 153 inclusive
 
 | FRAMING  | REQUEST | CONTENT |
 | CB | AES | RQ | TL |         |
@@ -62,8 +87,8 @@ Valid when CB is range 20 ~ 153 inclusive.
 
 
 ENTRY
-raddi_entry.cpp/.h
-Valid when CB is range 154 ~ 65534 inclusive.
+ - raddi_entry.cpp/.h
+ - valid when CB is range 154 ~ 65534 inclusive
 
 | FRAMING  | HEADER                                  | CONTENT | PROOF OF WORK         |
 |          |      ID      |  PARENT ID   | SIGNATURE |         |                       |
