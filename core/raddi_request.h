@@ -178,28 +178,28 @@ namespace raddi {
         public:
             // length converts 'size' in bytes to 'span' array length
             static constexpr std::size_t length (std::size_t size) {
-                if (size > request::history::header_size)
-                    return (size - request::history::header_size) / sizeof (struct span);
+                if (size > header_size)
+                    return (size - header_size) / sizeof (struct span);
                 else
                     return 0;
             }
             static constexpr bool is_valid_length (std::size_t length) {
-                return length < request::history::depth;
+                return length < depth;
             }
 
             // size converts 'span' array 'length' to size in bytes
             static constexpr std::size_t size (std::size_t length) {
                 if (length)
-                    return request::history::header_size + length * sizeof (struct span);
+                    return header_size + length * sizeof (struct span);
                 else
-                    return request::history::minimal_size;
+                    return minimal_size;
             }
             static constexpr bool is_valid_size (std::size_t size) {
-                if (size < request::history::header_size)
-                    return size == request::history::minimal_size;
+                if (size < header_size)
+                    return size == :minimal_size;
                 else
-                    return size <= request::max_payload - reduction
-                        && (size - request::history::header_size) % sizeof (struct span) == 0;
+                    return (size <= request::max_payload - reduction)
+                        && (size - header_size) % sizeof (struct span) == 0;
             }
 
             // decode

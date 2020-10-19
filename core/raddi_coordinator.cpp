@@ -594,7 +594,7 @@ bool raddi::coordinator::process_table_history (const raddi::request::history * 
         // compare peer's ranges against amount of data we have
         for (const auto & m : map) {
             n = table->count (m.first.first, m.first.second);
-
+            
             this->report (log::level::note, 0x27, connection->peer, RT, m.first.first, m.first.second, m.second, n);
 
             // if we have more entries than peer does
@@ -1052,9 +1052,9 @@ void raddi::coordinator::report_table_history (raddi::connection * connection, e
     struct state {
         std::uint32_t now = raddi::now ();
         std::uint32_t threshold = 0;
-        std::uint32_t thresholds [request::history::depth];
+        std::uint32_t thresholds [request::history::depth] = {};
         std::uint16_t flags = 0x0000;
-        std::size_t numbers [request::history::depth];
+        std::size_t numbers [request::history::depth] = {};
         std::size_t length = 0;
         std::size_t tooold = 0;
         std::size_t sources = 0;
@@ -1137,8 +1137,8 @@ std::size_t raddi::coordinator::gather_history (const eid & channel, raddi::requ
         bool first_iteration = true;
         std::uint32_t now = raddi::now ();
         std::uint32_t threshold = 0;
-        std::uint32_t thresholds [request::subscription::depth];
-        std::size_t numbers [request::subscription::depth];
+        std::uint32_t thresholds [request::subscription::depth] = {};
+        std::size_t numbers [request::subscription::depth] = {};
         std::size_t length = 0;
     } s;
 
@@ -1171,7 +1171,7 @@ std::size_t raddi::coordinator::gather_history (const eid & channel, raddi::requ
                     ++s.numbers [s.length];
                 } else {
                     s.threshold = t;
-                    if (++s.length < request::history::depth) {
+                    if (++s.length < request::subscription::depth) { // request::history::depth
                         s.numbers [s.length] = 0;
                         s.thresholds [s.length] = t;
                     } else {
@@ -1208,6 +1208,7 @@ std::size_t raddi::coordinator::gather_history (const eid & channel, raddi::requ
     auto i = s.length;
     auto tx = s.threshold;
     while (i--) {
+
         auto t = tx - s.thresholds [i] - 1;
         result->history.span [i].threshold [0] = (t >> 0) & 0xFF;
         result->history.span [i].threshold [1] = (t >> 8) & 0xFF;
