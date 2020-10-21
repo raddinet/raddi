@@ -135,10 +135,10 @@ private:
 
     void AssignHint (HWND hCtrl, UINT string);
 
-    std::intptr_t CreateTab (const raddi::eid & entry, const std::wstring & text, std::intptr_t id = 0);
-    std::intptr_t CreateTab (const raddi::eid & entry, std::intptr_t id = 0);
-    void CloseTab (std::intptr_t id);
-    void CloseTabStack (std::intptr_t id); // tab id
+    int CreateTab (const raddi::eid & entry, const std::wstring & text, int id = 0);
+    int CreateTab (const raddi::eid & entry, int id = 0);
+    void CloseTab (int id);
+    void CloseTabStack (int id); // tab id
 
     const MARGINS * GetDwmMargins ();
     RECT GetListsTabRect ();

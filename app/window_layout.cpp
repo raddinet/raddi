@@ -392,7 +392,7 @@ LRESULT Window::OnVisualEnvironmentChange () {
 
     this->RefreshVisualMetrics (dpiNULL);
 
-    for (auto i = 0u; i != IconSizesCount; ++i) {
+    for (auto i = 0u; i != (std::size_t) IconSize::Count; ++i) {
         if (auto icon = LoadBestIcon (reinterpret_cast <HINSTANCE> (&__ImageBase), MAKEINTRESOURCE (1),
                                         GetIconMetrics ((IconSize) i, dpiNULL))) {
             if (this->icons [i]) {
@@ -402,11 +402,11 @@ LRESULT Window::OnVisualEnvironmentChange () {
         }
     }
     // TODO: for XP with blue luna theme or dark colored active caption, load white with black outline
-    SendMessage (hWnd, WM_SETICON, ICON_SMALL, (LPARAM) this->icons [SmallIconSize]);
-    SendMessage (hWnd, WM_SETICON, ICON_BIG, (LPARAM) this->icons [IsWindows10OrGreater () ? StartIconSize : LargeIconSize]);
+    SendMessage (hWnd, WM_SETICON, ICON_SMALL, (LPARAM) this->icons [(std::size_t) IconSize::Small]);
+    SendMessage (hWnd, WM_SETICON, ICON_BIG, (LPARAM) this->icons [(std::size_t) (IsWindows10OrGreater () ? IconSize::Start : IconSize::Large)]);
 
         // tc->tabs [301].icon = icons [SmallIconSize];
-    this->tabs.views->min_tab_width = 2 * (std::uint16_t) GetIconMetrics (SmallIconSize, dpiNULL).cx;
+    this->tabs.views->min_tab_width = 2 * (std::uint16_t) GetIconMetrics (IconSize::Small, dpiNULL).cx;
     this->tabs.views->max_tab_width = 5 * this->tabs.views->min_tab_width; // TODO: settings
 
     this->tabs.views->dpi = (std::uint16_t) dpi;
@@ -914,7 +914,7 @@ LRESULT Window::OnPaint () {
 
         if (design.composited) {
             POINT iconPos = { 0, metrics [SM_CYFRAME] };
-            SIZE iconSize = GetIconMetrics (StartIconSize);
+            SIZE iconSize = GetIconMetrics (IconSize::Start);
 
             if (IsWindows10OrGreater ()) {
                 if (IsZoomed (hWnd) || design.contrast) {
@@ -962,7 +962,7 @@ LRESULT Window::OnPaint () {
 
                 CloseThemeData (hTheme);
             }
-            DrawIconEx (hDC, iconPos.x, iconPos.y, this->icons [StartIconSize], 0, 0, 0, NULL, DI_NORMAL);
+            DrawIconEx (hDC, iconPos.x, iconPos.y, this->icons [(std::size_t) IconSize::Start], 0, 0, 0, NULL, DI_NORMAL);
         }
 
         // TODO: draw button floating over right edge of content (show/hide right panel)

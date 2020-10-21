@@ -199,7 +199,7 @@ LRESULT ListOfChannels::OnNotify (NMHDR * nm) {
                     
 
                 } else {
-                    if (this->cache.size () > 16 * (hint->iTo - hint->iFrom + 1)) {
+                    if (this->cache.size () > 16u * (hint->iTo - hint->iFrom + 1)) {
                         this->cache.clear ();
                     }
                     try {

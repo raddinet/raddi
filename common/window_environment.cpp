@@ -19,20 +19,20 @@ LRESULT WindowEnvironment::RefreshVisualMetrics (UINT dpiNULL) {
 
 SIZE WindowEnvironment::GetIconMetrics (IconSize size, UINT dpiNULL) {
     switch (size) {
-        case SmallIconSize:
+        case IconSize::Small:
             return { metrics [SM_CXSMICON], metrics [SM_CYSMICON] };
-        case StartIconSize:
+        case IconSize::Start:
             return {
                 (metrics [SM_CXICON] + metrics [SM_CXSMICON]) / 2,
                 (metrics [SM_CYICON] + metrics [SM_CYSMICON]) / 2
             };
-        case LargeIconSize:
+        case IconSize::Large:
         default:
             return { metrics [SM_CXICON], metrics [SM_CYICON] };
 
-        case ShellIconSize:
-        case JumboIconSize:
-            if (IsWindowsVistaOrGreater () || (size == ShellIconSize)) { // XP doesn't have Jumbo
+        case IconSize::Shell:
+        case IconSize::Jumbo:
+            if (IsWindowsVistaOrGreater () || (size == IconSize::Shell)) { // XP doesn't have Jumbo
                 if (HMODULE hShell32 = GetModuleHandle (L"SHELL32")) {
                     HRESULT (WINAPI * ptrSHGetImageList) (int, const GUID &, void **) = NULL;
 
@@ -43,13 +43,13 @@ SIZE WindowEnvironment::GetIconMetrics (IconSize size, UINT dpiNULL) {
                     }
                     if (ptrSHGetImageList) {
                         HIMAGELIST list;
-                        if (ptrSHGetImageList ((size == JumboIconSize) ? SHIL_JUMBO : SHIL_EXTRALARGE,
+                        if (ptrSHGetImageList ((size == IconSize::Jumbo) ? SHIL_JUMBO : SHIL_EXTRALARGE,
                                                IID_IImageList, (void **) & list) == S_OK) {
                             int cx, cy;
                             if (ImageList_GetIconSize (list, &cx, &cy)) {
                                 switch (size) {
-                                    case ShellIconSize: return { long (cx * dpi / dpiNULL), long (cy * dpi / dpiNULL) };
-                                    case JumboIconSize: return { long (cx * dpi / 96), long (cy * dpi / 96) };
+                                    case IconSize::Shell: return { long (cx * dpi / dpiNULL), long (cy * dpi / dpiNULL) };
+                                    case IconSize::Jumbo: return { long (cx * dpi / 96), long (cy * dpi / 96) };
                                 }
                             }
                         }
@@ -58,8 +58,8 @@ SIZE WindowEnvironment::GetIconMetrics (IconSize size, UINT dpiNULL) {
             }
             switch (size) {
                 default:
-                case ShellIconSize: return { long (48 * dpi / dpiNULL), long (48 * dpi / dpiNULL) };
-                case JumboIconSize: return { long (256 * dpi / 96), long (256 * dpi / 96) };
+                case IconSize::Shell: return { long (48 * dpi / dpiNULL), long (48 * dpi / dpiNULL) };
+                case IconSize::Jumbo: return { long (256 * dpi / 96), long (256 * dpi / 96) };
             }
     }
 }

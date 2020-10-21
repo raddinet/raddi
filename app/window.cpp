@@ -159,6 +159,7 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
 
         case WM_CTLCOLORSTATIC:
             SetBkMode ((HDC) wParam, TRANSPARENT);
+            [[ fallthrough ]];
         case WM_CTLCOLORBTN:
             return OnControlPrePaint ((HDC) wParam, (HWND) lParam);
 
@@ -254,10 +255,10 @@ LRESULT Window::OnAppEidResolved (UINT child) {
     return 0;
 }
 
-std::intptr_t Window::CreateTab (const raddi::eid & entry, const std::wstring & text, std::intptr_t id) {
+int Window::CreateTab (const raddi::eid & entry, const std::wstring & text, int id) {
     bool reposition = false;
     if (id == 0) {
-        id = this->tabs.views->tabs.crbegin ()->first + 1;
+        id = (int) this->tabs.views->tabs.crbegin ()->first + 1;
         if (id < 1) {
             id = 1;
         }
@@ -266,15 +267,15 @@ std::intptr_t Window::CreateTab (const raddi::eid & entry, const std::wstring & 
 
     try {
         wchar_t szTmp [16];
-        szTmp [std::swprintf (szTmp, 15, L"[%zu] ", id)] = 0;
+        szTmp [std::swprintf (szTmp, 15, L"[%d] ", id)] = 0;
 
         this->tabs.views->tabs [id].text = szTmp + text;
         this->tabs.views->tabs [id].icon = NULL; // TODO: loading animating ICO and EID in title
 
         this->tabs.views->tabs [id].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", szTmp,
-                                                                WS_CHILD | WS_CLIPSIBLINGS,// | WS_BORDER,// | WS_HSCROLL | WS_VSCROLL,
-                                                                0, 0, 0, 0, this->hWnd, NULL,
-                                                                (HINSTANCE) GetWindowLongPtr (this->hWnd, GWLP_HINSTANCE), NULL);
+                                                              WS_CHILD | WS_CLIPSIBLINGS,// | WS_BORDER,// | WS_HSCROLL | WS_VSCROLL,
+                                                              0, 0, 0, 0, this->hWnd, NULL,
+                                                              (HINSTANCE) GetWindowLongPtr (this->hWnd, GWLP_HINSTANCE), NULL);
         // View::Create (...)
         // this->tabs.views->tabs [id].progress = 1; // TODO: enqueue threadpool item to load the
         
@@ -287,11 +288,11 @@ std::intptr_t Window::CreateTab (const raddi::eid & entry, const std::wstring & 
     }
 }
 
-std::intptr_t Window::CreateTab (const raddi::eid & entry, std::intptr_t id) {
+int Window::CreateTab (const raddi::eid & entry, int id) {
     return this->CreateTab (entry, entry.serialize (), id);
 }
 
-void Window::CloseTab (std::intptr_t id) {
+void Window::CloseTab (int id) {
     if ((id > 0) && this->tabs.views->tabs.count (id)) {
         database.tabs.close [0] (this->id, id, this->tabs.views->tabs [id].text);
         database.tabs.close [1] (this->id, id);
@@ -304,7 +305,7 @@ void Window::CloseTab (std::intptr_t id) {
     }
 }
 
-void Window::CloseTabStack (std::intptr_t id) {
+void Window::CloseTabStack (int id) {
     if ((id > 0) && this->tabs.views->tabs.count (id)) {
         auto index = this->tabs.views->tabs [id].stack_index;
 
@@ -393,7 +394,7 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
 
                 raddi::eid entry = database.tabs.query.get <SQLite::Blob> (2);
 
-                if (auto tab = this->CreateTab (entry, database.tabs.query.get <std::intptr_t> (0))) {
+                if (auto tab = this->CreateTab (entry, database.tabs.query.get <int> (0))) {
                     if (auto stack = database.tabs.query.get <std::intptr_t> (1)) {
 
                         auto ii = last_stack_tab.find (stack);
@@ -579,9 +580,10 @@ namespace {
     //  - GUI is single threaded and synchronous thus this can be global
     //
     struct {
-        std::intptr_t list = 0;
-        std::intptr_t group = 0;
-        std::intptr_t source = 0;
+        int list = 0;
+        int group = 0;
+        int source = 0;
+
         std::vector <int> items;
         std::wstring  text;
     } finish;
@@ -677,13 +679,13 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
         // Close Tab
         case 0xCC: // Close Whole Stack, content menu
             // TODO: prompt!!!
-            this->CloseTabStack (this->tabs.views->contextual);
+            this->CloseTabStack ((int) this->tabs.views->contextual);
             break;
         case 0xCD: // Tab context menu
-            this->CloseTab (this->tabs.views->contextual);
+            this->CloseTab ((int) this->tabs.views->contextual);
             break;
         case 0xCE: // CTRL+W / CTRL+F4
-            this->CloseTab (this->tabs.views->current);
+            this->CloseTab ((int) this->tabs.views->current);
             break;
 
         // Quit App
@@ -701,7 +703,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
                                    GetDlgItem (hWnd, ID::TABS_LISTS), { metrics [SM_CXICON], metrics [SM_CYICON] },
                                    &finish.text)) {
 
-                    if (auto new_list_id = this->FindFirstAvailableListId ()) {
+                    if (auto new_list_id = (int) this->FindFirstAvailableListId ()) {
                         finish.list = new_list_id;
                         finish.group = database.lists.groups.maxID.query <int> () + 1;
 
@@ -722,7 +724,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
         case 0xA3:
             if (this->tabs.lists->contextual > 0) {
 
-                finish.list = this->tabs.lists->contextual;
+                finish.list = (int) this->tabs.lists->contextual;
                 finish.text = this->tabs.lists->tabs [this->tabs.lists->contextual].text;
 
                 if (EditDialogBox (hWnd, 0x65,
@@ -746,7 +748,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
                     }
                         
                     // notify all windows
-                    finish.list = this->tabs.lists->contextual;
+                    finish.list = (int) this->tabs.lists->contextual;
                     FinishCommandInAllWindows (command);
                 }
             }
@@ -766,7 +768,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
                                GetDlgItem (hWnd, ID::TABS_LISTS), { metrics [SM_CXICON], metrics [SM_CYICON] },
                                &finish.text)) {
 
-                finish.list = this->tabs.lists->current;
+                finish.list = (int) this->tabs.lists->current;
                 finish.group = database.lists.groups.maxID.query <int> () + 1;
 
                 database.lists.groups.insert (finish.group, finish.list, finish.text);
@@ -798,7 +800,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
                                    NULL, { r.left + metrics [SM_CXICON], r.bottom + metrics [SM_CYICON] },
                                    &finish.text)) {
 
-                    finish.list = this->tabs.lists->current;
+                    finish.list = (int) this->tabs.lists->current;
                     database.lists.groups.rename (finish.text, finish.group);
 
                     FinishCommandInAllWindows (command);
@@ -854,7 +856,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
                         }
                             
                         // notify all windows
-                        finish.list = this->tabs.lists->current;
+                        finish.list = (int) this->tabs.lists->current;
                         finish.group = groupID;
                         FinishCommandInAllWindows (command);
                     }
@@ -866,7 +868,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
         case 0xBE: {
             auto hList = this->tabs.lists->tabs [this->tabs.lists->current].content;
 
-            finish.list = this->tabs.lists->current;
+            finish.list = (int) this->tabs.lists->current;
             finish.items.clear ();
             finish.items.reserve (ListView_GetSelectedCount (hList));
 
@@ -969,9 +971,9 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
             // move focused group into selected list
             case Menu::ListGroup:
 
-                finish.source = this->tabs.lists->current;
+                finish.source = (int) this->tabs.lists->current;
                 finish.group = ListView_GetFocusedGroupId (hList, &finish.text);
-                finish.list = this->GetUserListIdFromIndex (command - ID::LIST_BASE);
+                finish.list = (int) this->GetUserListIdFromIndex (command - ID::LIST_BASE);
 
                 database.lists.groups.move (finish.list, finish.group);
                 FinishCommandInAllWindows (command);
@@ -996,7 +998,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
                                        GetDlgItem (hWnd, ID::TABS_LISTS), { metrics [SM_CXICON], metrics [SM_CYICON] },
                                        &finish.text)) {
 
-                        if (auto new_list_id = this->FindFirstAvailableListId ()) {
+                        if (auto new_list_id = (int) this->FindFirstAvailableListId ()) {
                             finish.list = new_list_id;
                             finish.group = database.lists.groups.maxID.query <int> () + 1;
 
@@ -1039,7 +1041,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
                 case Menu::ListItem:
                 case Menu::ListChannels:
 
-                    finish.source = this->tabs.lists->current;
+                    finish.source = (int) this->tabs.lists->current;
                     finish.items.clear ();
                     finish.items.reserve (ListView_GetSelectedCount (hList));
 
@@ -1269,7 +1271,7 @@ LRESULT Window::OnNotify (NMHDR * nm) {
                 case NM_CLICK:
                     // TODO: if ALT, close all except this one!
                     if (reinterpret_cast <const NMMOUSE *> (nm)->dwHitInfo == HTCLOSE) {
-                        this->CloseTab (reinterpret_cast <const NMMOUSE *> (nm)->dwItemSpec);
+                        this->CloseTab ((int) reinterpret_cast <const NMMOUSE *> (nm)->dwItemSpec);
                     }
                     break;
             }
@@ -1330,9 +1332,9 @@ LRESULT Window::OnNotify (NMHDR * nm) {
             }
     }
 
-    if (nm->code == NM_OUTOFMEMORY) {
+    //if (nm->code == NM_OUTOFMEMORY) {
         // TODO: same error dialog as for catching std::bad_alloc&
-    }
+    //}
     return 0;
 }
 
@@ -1423,7 +1425,7 @@ LRESULT Window::OnContextMenu (HWND hChild, LONG x, LONG y) {
             TrackPopupMenu (GetSubMenu (LoadMenu (GetModuleHandle (NULL), MAKEINTRESOURCE (0x40)), 0), TPM_RIGHTBUTTON, x, y, 0, hWnd, NULL);
     }
     if (id >= ID::LIST_BASE && id <= ID::LIST_LAST) {
-        return Lists::OnContextMenu (this, hChild, this->GetUserListIndexById (id - ID::LIST_BASE), x, y);
+        return Lists::OnContextMenu (this, hChild, (int) this->GetUserListIndexById (id - std::size_t (ID::LIST_BASE)), x, y);
     }
     return 0;
 }
@@ -1535,6 +1537,8 @@ namespace {
             case WM_MOUSEMOVE: // ????
                 if (!wParam)
                     break;
+
+                [[ fallthrough ]];
 
             case WM_ACTIVATE:
             case WM_VSCROLL:

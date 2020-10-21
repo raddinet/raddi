@@ -10,13 +10,13 @@
 #define WM_APP_NODE_STATE       (WM_APP + 10)
 #define WM_APP_NODE_UPDATE      (WM_APP + 11) // ...reserved to WM_APP+14
 
-enum IconSize {
-    SmallIconSize = 0,
-    StartIconSize,
-    LargeIconSize,
-    ShellIconSize,
-    JumboIconSize,
-    IconSizesCount
+enum class IconSize : std::size_t {
+    Small = 0,
+    Start,
+    Large,
+    Shell,
+    Jumbo,
+    Count
 };
 
 struct WindowEnvironment {
@@ -24,7 +24,7 @@ struct WindowEnvironment {
     int  metrics [SM_CMETRICS];
 
     HWND hToolTip = NULL;
-    HICON icons [IconSizesCount] = { NULL, NULL, NULL, NULL, NULL };
+    HICON icons [(std::size_t) IconSize::Count] = { NULL, NULL, NULL, NULL, NULL };
 
     explicit inline WindowEnvironment (HWND hWnd)
         : dpi (GetDPI (hWnd)) {
