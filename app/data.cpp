@@ -309,13 +309,13 @@ bool Data::prepare_queries () {
         this->lists.groups.remove [0] = this->prepare (L"DELETE FROM `groups` WHERE `id`=?");
         this->lists.groups.remove [1] = this->prepare (L"DELETE FROM `listed` WHERE `group`=?");
         this->lists.groups.cleanup = this->prepare (L"DELETE FROM `groups` WHERE `list`=? AND `id` NOT IN (SELECT DISTINCT `group` FROM `listed`)");
-        this->lists.groups.maxID = this->prepare (L"SELECT MAX(`id`) FROM `groups`");
+        this->lists.groups.maxID = this->prepare (L"SELECT COALESCE(MAX(`id`),0) FROM `groups`");
 
         this->lists.data.insert = this->prepare (L"INSERT INTO `listed` (`id`,`group`,`entry`) VALUES ((SELECT MAX(`id`)+1 FROM `listed`),?,?)");
         this->lists.data.query = this->prepare (L"SELECT `id`,`group`,`entry` FROM `listed`");
         this->lists.data.get = this->prepare (L"SELECT `entry` FROM `listed` WHERE `id`=?");
         this->lists.data.move = this->prepare (L"UPDATE `listed` SET `group`=? WHERE `id`=?");
-        this->lists.data.maxID = this->prepare (L"SELECT MAX(`id`) FROM `listed`");
+        this->lists.data.maxID = this->prepare (L"SELECT COALESCE(MAX(`id`),0) FROM `listed`");
         this->lists.data.remove = this->prepare (L"DELETE FROM `listed` WHERE `id`=?");
 
         this->names.is = this->prepare (L"SELECT COUNT(*) FROM `names` WHERE `entry`=?");
