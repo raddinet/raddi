@@ -27,20 +27,20 @@ ListPart ListView_OnContextMenu (const WindowEnvironment * parent, HWND hListVie
 
 namespace Lists {
     bool Load (const Window * parent, TabControlInterface * tc);
-    HWND Create (const Window * parent, TabControlInterface * tc, int id, const std::wstring & text);
+    HWND Create (const Window * parent, TabControlInterface * tc, std::intptr_t id, const std::wstring & text);
     void OnDpiChange (TabControlInterface * tc, long dpi);
     
     LRESULT OnNotify (const Window * parent, NMHDR *);
     LRESULT OnContextMenu (const Window * parent, HWND, int, LONG x, LONG y);
 
-    int CreateGroup (HWND, int id, const std::wstring &);
-    int DeleteGroup (HWND, int id);
+    int CreateGroup (HWND, std::intptr_t id, const std::wstring &);
+    int DeleteGroup (HWND, std::intptr_t id);
     int CleanGroups (HWND);
 
     int InsertEntry (HWND, std::intptr_t id, int group);
 
     namespace Internal {
-        HWND Create (HWND hParent, HWND hToolTip, int id, const std::vector <std::wstring> & columns);
+        HWND Create (HWND hParent, HWND hToolTip, std::intptr_t id, const std::vector <std::wstring> & columns);
         void CreateFinalize (HWND hList);
         std::vector <std::wstring> GetColumns ();
     }

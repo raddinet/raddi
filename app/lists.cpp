@@ -131,7 +131,7 @@ bool Lists::Load (const Window * parent, TabControlInterface * tc) {
     return false;
 }
 
-HWND Lists::Create (const Window * parent, TabControlInterface * tc, int id, const std::wstring & text) {
+HWND Lists::Create (const Window * parent, TabControlInterface * tc, std::intptr_t id, const std::wstring & text) {
     if (auto h = Lists::Internal::Create (parent->hWnd, parent->hToolTip, id, Lists::Internal::GetColumns ())) {
         tc->tabs [id].text = text;
         tc->tabs [id].content = h;
@@ -144,12 +144,12 @@ HWND Lists::Create (const Window * parent, TabControlInterface * tc, int id, con
         return NULL;
 }
 
-HWND Lists::Internal::Create (HWND hParent, HWND hToolTip, int id, const std::vector <std::wstring> & columns) {
+HWND Lists::Internal::Create (HWND hParent, HWND hToolTip, std::intptr_t id, const std::vector <std::wstring> & columns) {
     static constexpr auto style = WS_CHILD | WS_CLIPSIBLINGS | LVS_REPORT | LVS_EDITLABELS | LVS_SHAREIMAGELISTS;// | LVS_NOCOLUMNHEADER;
     static constexpr auto extra = LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER;
 
     if (auto h = CreateWindowEx (WS_EX_NOPARENTNOTIFY, WC_LISTVIEW, L"", style,
-                                 0,0,0,0, hParent, (HMENU) (std::intptr_t) (Window::ID::LIST_BASE + id), NULL, NULL)) {
+                                 0,0,0,0, hParent, (HMENU) (Window::ID::LIST_BASE + id), NULL, NULL)) {
 
         ListView_SetExtendedListViewStyle (h, extra);
         ListView_SetToolTips (h, hToolTip);
@@ -385,20 +385,20 @@ LRESULT Lists::OnContextMenu (const Window * parent, HWND hList, int listIndex, 
     return 0;
 }
 
-int Lists::CreateGroup (HWND hList, int id, const std::wstring & text) {
+int Lists::CreateGroup (HWND hList, std::intptr_t id, const std::wstring & text) {
     LVGROUP group;
     group.cbSize = sizeof group;
     group.mask = LVGF_HEADER | LVGF_GROUPID | LVGF_STATE;
     group.state = LVGS_NORMAL; // TODO: support colapsing? add symbols marking colapsed state?
     group.stateMask = group.state;
     group.pszHeader = const_cast <wchar_t *> (text.c_str ());
-    group.iGroupId = id;
+    group.iGroupId = (int) id;
 
     return (int) ListView_InsertGroup (hList, -1, &group);
 }
 
-int Lists::DeleteGroup (HWND hListView, int id) {
-    int n = ListView_DeleteGroupAndItems (hListView, id);
+int Lists::DeleteGroup (HWND hListView, std::intptr_t id) {
+    int n = ListView_DeleteGroupAndItems (hListView, (int) id);
     ListView_EnableGroupView (hListView, ListView_GetGroupCount (hListView) > 1);
     return n;
 }
