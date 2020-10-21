@@ -5,7 +5,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE {
     1   "RADDI"
-    2   "UNCENSORED DISCUSSION"
+    2   "DISCUSSION NETWORK"
 
     // view tabs
     0x11    "[Ctrl+???] All Network View"
@@ -52,7 +52,7 @@ STRINGTABLE {
     0x62    "Create"
     0x64    "Cannot create new List. Supported maximum reached."
     0x65    "Rename List"
-    0x66    "List &name:"
+    0x66    "New &name:"
     0x67    "Rename"
     0x68    "&New List…" // "Move Item" submenu item
 
@@ -66,7 +66,7 @@ STRINGTABLE {
     0x74    "Create"
 
     0x75    "Rename Group"
-    0x76    "Group &name:"
+    0x76    "New &name:"
     0x77    "Rename"
 
 
@@ -280,6 +280,7 @@ STRINGTABLE {
 0x40 MENU { // Identities Drop-down Right Click Menu
     POPUP "" {
         MENUITEM "New Identity", -1
+        MENUITEM "Copy Identity ID", -1 // TODO: display the ID here; copy name too?
         MENUITEM "Manage", -1
     }
 }
