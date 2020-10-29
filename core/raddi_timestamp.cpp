@@ -5,12 +5,6 @@
 #include "raddi_timestamp.h"
 
 namespace {
-    
-    // difference of 1.1.2020 00:00:00 - January 1, 1601 UTC in seconds (unix timestamp minus 0x5e0be100)
-    static const auto base = 0x3141c7200uLL;
-
-    // difference of 1.1.1970 00:00:00 - January 1, 1601 UTC in seconds
-    // static const auto base = 0x2b6109100uLL;
 
     // helper type punning union
     union uULL {
@@ -52,7 +46,7 @@ namespace {
 std::uint32_t raddi::timestamp () {
     uULL u;
     GetSystemTimeAsFileTime (&u.ft);
-    return static_cast <std::uint32_t> (u.ns / 1'000'000'0uLL - base);
+    return static_cast <std::uint32_t> (u.ns / 1'000'000'0uLL - timestamp_base);
 }
 
 std::uint32_t raddi::timestamp (const std::tm & tm) {
@@ -72,13 +66,13 @@ std::uint64_t raddi::microtimestamp () {
         }
     }
     pfnGetSystemTime (&u.ft);
-    return static_cast <std::uint64_t> (u.ns / 10uLL - base * 1'000'000uLL);
+    return static_cast <std::uint64_t> (u.ns / 10uLL - timestamp_base * 1'000'000uLL);
 }
 
 std::uint32_t raddi::timestamp (const SYSTEMTIME & st) {
     uULL u;
     if (SystemTimeToFileTime (&st, &u.ft))
-        return static_cast <std::uint32_t> (u.ns / 1'000'000'0uLL - base);
+        return static_cast <std::uint32_t> (u.ns / 1'000'000'0uLL - timestamp_base);
     else
         return 0u;
 }
@@ -90,22 +84,14 @@ std::tm raddi::time (std::uint32_t t) {
 SYSTEMTIME raddi::wintime (std::uint32_t t) {
     SYSTEMTIME st;
     uULL u;
-    u.ns = (t + base) * 1'000'000'0uLL;
+    u.ns = (t + timestamp_base) * 1'000'000'0uLL;
     FileTimeToSystemTime (&u.ft, &st);
     return st;
 }
 SYSTEMTIME raddi::wintime (std::uint64_t t) {
     SYSTEMTIME st;
     uULL u;
-    u.ns = t * 10uLL + base * 1'000'000'0uLL;
+    u.ns = t * 10uLL + timestamp_base * 1'000'000'0uLL;
     FileTimeToSystemTime (&u.ft, &st);
     return st;
-}
-
-bool raddi::older (std::uint32_t timestamp, std::uint32_t reference) {
-    return (timestamp - reference) > 0x8000'0000u;
-}
-
-bool raddi::older (std::uint64_t microtimestamp, std::uint64_t reference) {
-    return (microtimestamp - reference) > 0x8000'0000'0000'0000uLL;
 }
