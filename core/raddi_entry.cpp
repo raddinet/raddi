@@ -92,11 +92,34 @@ const raddi::proof * raddi::entry::proof (std::size_t size, std::size_t * proof_
 }
 
 crypto_sign_ed25519ph_state raddi::entry::prehash (std::size_t size) const {
+    static_assert (sizeof raddi::protocol::magic == 8);
+    static_assert (sizeof raddi::timestamp_base == 8);
+    static_assert (sizeof (raddi::eid) == 12);
+    static_assert (sizeof raddi::protocol::magic + sizeof raddi::timestamp_base + sizeof this->id + sizeof this->parent < 128u);
+
     crypto_sign_ed25519ph_state state;
-    crypto_sign_ed25519ph_init (&state);
-    crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (raddi::protocol::magic), sizeof raddi::protocol::magic);
-    crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (&this->id), sizeof this->id);
-    crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (&this->parent), sizeof this->parent);
+
+    // common initialization of Ed25519ph state
+    //  - manually inlined pre-initialization to prevent multiple copies and unnecessary zeroing when calling the API
+    //  - the reason is that this might be quite hot function under hight traffic
+    //
+    state.hs.state [0] = 0x6a09e667f3bcc908uLL;
+    state.hs.state [1] = 0xbb67ae8584caa73buLL;
+    state.hs.state [2] = 0x3c6ef372fe94f82buLL;
+    state.hs.state [3] = 0xa54ff53a5f1d36f1uLL;
+    state.hs.state [4] = 0x510e527fade682d1uLL;
+    state.hs.state [5] = 0x9b05688c2b3e6c1fuLL;
+    state.hs.state [6] = 0x1f83d9abfb41bd6buLL;
+    state.hs.state [7] = 0x5be0cd19137e2179uLL;
+    state.hs.count [0] = 0;
+    state.hs.count [1] = (sizeof raddi::protocol::magic + sizeof raddi::timestamp_base + sizeof this->id + sizeof this->parent) << 3;
+
+    std::memcpy (&state.hs.buf [0], raddi::protocol::magic, sizeof raddi::protocol::magic);
+    std::memcpy (&state.hs.buf [8], &raddi::timestamp_base, sizeof raddi::timestamp_base);
+    std::memcpy (&state.hs.buf [16], &this->id, sizeof this->id + sizeof this->parent);
+
+    // the library takes over here
+
     crypto_sign_ed25519ph_update (&state, reinterpret_cast <const unsigned char *> (this->content ()), size - sizeof (entry));
     return state;
 }
