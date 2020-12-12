@@ -1,4 +1,5 @@
 #include"raddi_instance.h"
+#include"../common/platform.h"
 #include <cstdio>
 #include <cwchar>
 
@@ -58,8 +59,24 @@ bool raddi::instance::set (const wchar_t * name, unsigned int value) {
 bool raddi::instance::set (const wchar_t * name, const wchar_t * value) {
     return this->set (name, REG_SZ, value, sizeof (wchar_t) * (std::wcslen (value) + 1));
 }
+bool raddi::instance::set (const wchar_t * name, const char * string) {
+    std::wstring s;
+    if (string) {
+        auto n = MultiByteToWideChar (CP_ACP, 0, string, -1, NULL, 0) - 1;
+        if (n > 0) {
+            s.resize (n);
+            if (MultiByteToWideChar (CP_ACP, 0, string, -1, &s [0], n + 1) > 0) {
+                return this->set (name, s);
+            }
+        }
+    }
+    return false;
+}
 bool raddi::instance::set (const wchar_t * name, const std::wstring & value) {
     return this->set (name, REG_SZ, value.data (), sizeof (wchar_t) * (value.size () + 1));
+}
+bool raddi::instance::set (const wchar_t * name, const std::string & value) {
+    return this->set (name, value.c_str ());
 }
 bool raddi::instance::set (const wchar_t * name, DWORD type, const void * data, std::size_t size) {
     if (this->overview) {
@@ -243,5 +260,105 @@ raddi::instance::~instance () {
         }
         RegCloseKey (this->registry);
         this->registry = NULL;
+    }
+}
+
+std::map <unsigned int, raddi::instance::description> raddi::instance::enumerate () {
+    std::map <unsigned int, description> result;
+
+    enum_pids (HKEY_LOCAL_MACHINE, result, 3);
+    enum_pids (HKEY_CURRENT_USER, result, 0);
+    
+    wchar_t user [256];
+
+    DWORD i = 0;
+    DWORD n = sizeof user / sizeof user [0];
+    while (RegEnumKeyEx (HKEY_USERS, i++, user, &n, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+        n = sizeof user / sizeof user [0];
+
+        HKEY hUser;
+        if (RegOpenKeyEx (HKEY_USERS, user, 0, KEY_READ, &hUser) == ERROR_SUCCESS) {
+            enum_pids (hUser, result, 6);
+            RegCloseKey (hUser);
+        }
+    }
+    return result;
+}
+
+void raddi::instance::enum_pids (HKEY hBase, std::map <unsigned int, description> & results, unsigned char priority) {
+    HKEY hKey;
+    if (RegOpenKeyEx (hBase, L"SOFTWARE\\RADDI.net", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        
+        wchar_t process [40];
+
+        DWORD i = 0;
+        DWORD n = sizeof process / sizeof process [0];
+        while (RegEnumKeyEx (hKey, i++, process, &n, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+            n = sizeof process / sizeof process [0];
+
+            // app uuid
+
+            if (std::wcschr (process, L'-'))
+                continue;
+
+            // is that PID still alive?
+            //  - simply skip/ignore inaccessible instances
+
+            auto pid = std::wcstoul (process, nullptr, 10);
+            FILETIME ftStart = { 1, 2 };
+
+            if (auto handle = OpenProcess (PROCESS_QUERY_INFORMATION, FALSE, pid)) {
+                FILETIME ftExit, ftKernel, ftUser;
+                GetProcessTimes (handle, &ftStart, &ftExit, &ftKernel, &ftUser);
+                CloseHandle (handle);
+            } else
+                continue;
+
+            HKEY hInstance;
+            if (RegOpenKeyEx (hKey, process, 0, KEY_READ, &hInstance) == ERROR_SUCCESS) {
+
+                description instance;
+                instance.priority = priority;
+
+                if (!GetProcessSessionId (pid, &instance.session)) {
+                    instance.priority += 9;
+                }
+
+                // TODO: compare 'magic' with raddi::protocol::magic
+
+                // is this PID really the instance?
+                //  - if the start timestamps don't match, then PID was reused for other process
+
+                FILETIME ftInstance = { 0, 0 };
+                DWORD size = sizeof ftInstance;
+
+                if (RegQueryValueEx (hInstance, L"start", NULL, NULL, (BYTE *) &ftInstance, &size) == ERROR_SUCCESS
+                    && ftStart.dwLowDateTime == ftInstance.dwLowDateTime
+                    && ftStart.dwHighDateTime == ftInstance.dwHighDateTime) {
+
+                    instance.running = true;
+                } else {
+                    ++instance.priority;
+                }
+
+                DWORD value = 0;
+                size = sizeof value;
+
+                if (RegQueryValueEx (hInstance, L"broadcasting", NULL, NULL, (BYTE *) &value, &size) == ERROR_SUCCESS) {
+                    instance.broadcasting = !!value;
+                    instance.priority += !instance.broadcasting;
+                }
+
+                try {
+                    results.try_emplace (pid, instance);
+                    RegCloseKey (hInstance);
+                } catch (...) {
+                    RegCloseKey (hInstance);
+                    RegCloseKey (hKey);
+                    throw;
+                }
+            }
+        }
+        RegCloseKey (hKey);
     }
 }

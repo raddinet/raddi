@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <string>
+#include <map>
 #include "..\common\uuid.h"
 
 namespace raddi {
@@ -26,7 +27,7 @@ namespace raddi {
         public:
             // instance (bool)
             //  - creates information store (registry key) for current NODE instance (PID)
-            //    either in HKLM (true) or HKCU (false)
+            //    either in HKLM (true) or HKCU (false) - TODO: enum?
             //  - NODE instance store per-PID is volatile, data deleted on logoff/reboot
             // 
             explicit instance (bool global);
@@ -52,7 +53,9 @@ namespace raddi {
             //  - 
             //
             bool set (const wchar_t * name, const std::wstring & value);
+            bool set (const wchar_t * name, const std::string & value);
             bool set (const wchar_t * name, const wchar_t * value);
+            bool set (const wchar_t * name, const char * value);
             bool set (const wchar_t * name, unsigned long long value);
             bool set (const wchar_t * name, unsigned long value);
             bool set (const wchar_t * name, unsigned int value);
@@ -64,13 +67,23 @@ namespace raddi {
             //
             template <typename T> T get (const wchar_t * name) const;
 
+            // description
+            //  - 
+            //
+            struct description {
+                DWORD session = 0xFFFFFFFF;
+                bool  running = false; // false = crashed
+                bool  broadcasting = false;
+                unsigned char priority = 0; // lower value = higher priority
+            };
+
             // enumerate
             //  - 
             //
-            static bool enumerate ();
+            static std::map <unsigned int, description> enumerate ();
 
             // clean
-            //  - TODO: deletes all registry entries that remained after crashed processes
+            //  - TODO: deletes all registry entries that remain after crashed processes
             //
             static std::size_t clean ();
 
@@ -80,6 +93,8 @@ namespace raddi {
 
             HKEY find_pid (HKEY hBase);
             HKEY find_sub (HKEY hBase);
+            
+            static void enum_pids (HKEY hBase, std::map <unsigned int, description> &, unsigned char priority);
 
             instance (const instance &) = delete;
             instance & operator = (const instance &) = delete;
