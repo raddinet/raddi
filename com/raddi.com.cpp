@@ -470,7 +470,7 @@ int wmain (int argc, wchar_t ** argw) {
     raddi::log::event (0x01,
                        (unsigned long) HIWORD (version->dwProductVersionMS),
                        (unsigned long) LOWORD (version->dwProductVersionMS),
-                       ARCHITECTURE, BUILD_TIMESTAMP);
+                       ARCHITECTURE, BUILD_TIMESTAMP, _MSC_FULL_VER);
 
 	if (auto h = LoadLibrary (SQLITE3_DLL_NAME)) {
         // raddi.com does not use sqlite, but logs version number for sake of completeness
@@ -637,9 +637,23 @@ bool go () {
     }
 
     if (auto parameter = option (argc, argw, L"list")) {
-        /*if (!std::wcscmp (parameter, L"instances")) {
-            // TODO
-        }*/
+        if (!std::wcscmp (parameter, L"instances")) {
+            auto instances = raddi::instance::enumerate ();
+            if (!instances.empty ()) {
+                for (auto & [pid, description] : instances) {
+                    std::printf ("%5u (%u): %s; priority: %u\n", pid, description.session,
+                                 description.running
+                                 ? description.broadcasting
+                                 ? "broadcasting"
+                                 : "disconnected"
+                                 : "crashed",
+                                 description.priority);
+                }
+            } else {
+                std::printf ("no instances found\n");
+            }
+            return true;
+        }
         if (!std::wcscmp (parameter, L"identities")) {
             return list_identities ();
         }
@@ -772,6 +786,15 @@ bool go () {
             }
         }
     }// */
+
+    if (auto parameter = option (argc, argw, L"help")) {
+        std::printf ("heeeeelp\n");
+        // TODO: version - set log level
+        // TODO: see docs/parameters.txt
+        return true;
+    }
+
+
 
     return false;
 }
@@ -936,7 +959,7 @@ bool new_identity () {
 
     while (!quit) {
         std::uint8_t private_key [crypto_sign_ed25519_SEEDBYTES];
-        if (announcement.create (private_key)) {
+        if (announcement.create (private_key /*, timestamp*/)) {
 
             if (auto size = sign_and_validate <raddi::identity> (L"new:identity", announcement, description_size,
                                                                  private_key, announcement.public_key, announcement.default_requirements ())) {

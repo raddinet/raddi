@@ -223,6 +223,7 @@ RADDI.exe application optional parameters:
 		- designed to work as URI handler, i.e. "raddi.exe raddi://1234-5678..."
 
 RADDI.com utility functions:
+	- now
 	- timestamp
 	- timestamp:<N>
 		- 'timestamp' displays current timestamp as hexadecimal lowecase number
@@ -361,7 +362,15 @@ RADDI.com utility functions:
 			- author - if present, list only threads by that identity
 			- oldest - hexadecimal timestamp of oldest thread to list
 			- latest - hexadecimal timestamp of newest thread to list
-
+	- list:instances
+		- enumerates running instances of raddi daemon on the local system
+		- typically only single running instance is found, but multiple can run
+		  simultaneously under single or across multiple sessions
+		- currently the format is: "PID (SID): status; priority"
+			- PID - process ID to connect to
+			- SID - OS session ID (0 - services), 
+			- status - text: "broadcasting", "disconnected" or "crashed"
+			- priority - number (0..255), lower value = higher priority
 	- add:<IP>
 	- remove:<IP>
 	- ban:<IP>
