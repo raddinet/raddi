@@ -125,7 +125,6 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
     }
 
     // complexity and time requriements
-    //  - note that fall-throughs in the following switch are intentional
     //  - we also bail if time spent exceeds one second,
     //    better to try another hash than spinning on too hight difficulty
 
@@ -138,22 +137,26 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
+            [[ fallthrough ]];
         case 27:
             if (auto n = attempt <27> (hash, target, maximum, rq, cancel))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
+            [[ fallthrough ]];
         case 28:
             if (auto n = attempt <28> (hash, target, maximum, rq, cancel))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
+            [[ fallthrough ]];
         case 29:
             if (auto n = attempt <29> (hash, target, maximum, rq, cancel))
                 return n;
 
+            [[ fallthrough ]];
         default:
             return 0;
     }
