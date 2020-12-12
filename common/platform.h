@@ -60,6 +60,7 @@ static const char BUILD_TIMESTAMP [] = {
 
 DWORD GetLogicalProcessorCount ();
 DWORD GetCurrentProcessSessionId ();
+bool GetProcessSessionId (DWORD id, DWORD *);
 const VS_FIXEDFILEINFO * GetModuleVersionInfo (HMODULE);
 const VS_FIXEDFILEINFO * GetCurrentProcessVersionInfo ();
 bool IsWindowsBuildOrGreater (WORD wMajorVersion, WORD wMinorVersion, DWORD dwBuildNumber);
@@ -84,16 +85,16 @@ bool Symbol (HMODULE h, P & pointer, USHORT index) {
 }
 
 template <typename Return, typename... Parameters>
-Return Optional (const wchar_t * module, const char * name, Parameters... parameters) {
-    if (auto h = GetModuleHandle (module)) {
+Return Optional (const wchar_t * m, const char * name, Parameters... parameters) {
+    if (auto h = GetModuleHandle (m)) {
         if (auto p = reinterpret_cast <Return (WINAPI *) (Parameters...)> (GetProcAddress (h, name))) {
-            raddi::log::note (2, module, name);
+            raddi::log::note (2, m, name);
             return p (parameters...);
         } else {
-            raddi::log::error (2, module, name);
+            raddi::log::error (2, m, name);
         }
     } else {
-        raddi::log::error (1, module);
+        raddi::log::error (1, m);
     }
     return Return ();
 }

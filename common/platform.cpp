@@ -54,15 +54,21 @@ bool IsPathAbsolute (std::wstring_view path) {
         ;
 }
 
-DWORD GetCurrentProcessSessionId () {
+bool GetProcessSessionId (DWORD pid, DWORD * id) {
     if (auto hKernel32 = GetModuleHandle (L"KERNEL32")) {
         BOOL (WINAPI * ptrProcessIdToSessionId) (DWORD, DWORD *);
         if (Symbol (hKernel32, ptrProcessIdToSessionId, "ProcessIdToSessionId")) { // NT 5.2+
-            DWORD id = 0;
-            if (ptrProcessIdToSessionId (GetCurrentProcessId (), &id))
-                return id;
+            if (ptrProcessIdToSessionId (pid, id))
+                return true;
         }
     }
+    return false;
+}
+
+DWORD GetCurrentProcessSessionId () {
+    DWORD id;
+    if (GetProcessSessionId (GetCurrentProcessId (), &id))
+        return id;
 
 #if defined (_M_AMD64)
     return (DWORD) *reinterpret_cast <std::uint64_t *> (__readgsqword (0x60) + 0x02C0);
