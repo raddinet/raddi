@@ -196,7 +196,7 @@ namespace raddi {
             }
             static constexpr bool is_valid_size (std::size_t size) {
                 if (size < header_size)
-                    return size == :minimal_size;
+                    return size == minimal_size;
                 else
                     return (size <= request::max_payload - reduction)
                         && (size - header_size) % sizeof (struct span) == 0;

@@ -88,7 +88,7 @@ raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::pr
     sodium_memzero (trmscalarmul, sizeof trmscalarmul);
     
     cuckoo::hash <2, 4> hash;
-    hash.seed (peer->keys.inbound_key, (const std::uint8_t *) & raddi::protocol::magic [0], sizeof raddi::protocol::magic);
+    hash.seed (peer->keys.inbound_key, (const std::uint8_t *) &raddi::protocol::magic [0], sizeof raddi::protocol::magic);
 
     if (peer->checksum != hash (peer, sizeof (initial) - sizeof (initial::checksum))) {
         *failure = accept_fail_reason::checksum;
