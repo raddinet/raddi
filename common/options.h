@@ -6,38 +6,44 @@
 #include "uuid.h"
 
 template <typename F, std::size_t N>
+std::size_t option_nth (std::size_t i, unsigned long argc, wchar_t ** argw, const wchar_t (&name) [N], F f) {
+    const auto length = (sizeof name / sizeof name [0]) - 1;
+
+    auto skip = 0;
+    switch (argw [i][0]) {
+        case L'/':
+            skip = 1;
+            break;
+        case L'-':
+            while (argw [i][skip] == '-') {
+                ++skip;
+            }
+            break;
+    }
+
+    if (std::wcsncmp (&argw [i][skip], name, length) == 0) {
+        switch (argw [i][length + skip]) {
+            case L':':
+                raddi::log::note (raddi::component::main, 1, name, &argw [i][length + skip + 1]);
+                f (&argw [i][length + skip + 1]);
+                return true;
+
+            case L'\0':
+                raddi::log::note (raddi::component::main, 1, name, &argw [i][length + skip]);
+                f (&argw [i][length + skip]);
+                return true;
+        }
+    }
+    return false;
+}
+
+template <typename F, std::size_t N>
 std::size_t options (unsigned long argc, wchar_t ** argw, const wchar_t (&name) [N], F f) {
     std::size_t n = 0;
     const auto length = (sizeof name / sizeof name [0]) - 1;
     for (auto i = 1uL; i != argc; ++i) {
-
-        auto skip = 0;
-        switch (argw [i][0]) {
-            case L'/':
-                skip = 1;
-                break;
-            case L'-':
-                while (argw [i][skip] == '-') {
-                    ++skip;
-                }
-                break;
-        }
-
-        if (std::wcsncmp (&argw [i][skip], name, length) == 0)
-            switch (argw [i][length + skip]) {
-                case L':':
-                    raddi::log::note (raddi::component::main, 1, name, &argw [i][length + skip + 1]);
-                    f (&argw [i][length + skip + 1]);
-                    ++n;
-                    break;
-                case L'\0':
-                    raddi::log::note (raddi::component::main, 1, name, &argw [i][length + skip]);
-                    f (&argw [i][length + skip]);
-                    ++n;
-                    break;
-            }
+        n += option_nth (i, argc, argw, name, f);
     }
-
     return n;
 }
 

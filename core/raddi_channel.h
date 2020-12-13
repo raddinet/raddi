@@ -15,8 +15,10 @@ namespace raddi {
 
         // create
         //  - creates new announcement entry id
+        //  - 'timestamp' parameter is provided for special purposes, to override announcement creation timestamp
+        //     - do not override for regular use as nodes will likely completely refuse to accept the entry
         //
-        bool create (const raddi::iid & identity);
+        bool create (const raddi::iid & identity, std::uint32_t timestamp = raddi::now ());
 
         // max_description_size
         //  - maximum length of identity/channel description content following announcement header

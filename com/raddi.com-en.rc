@@ -47,6 +47,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | DATA  | 0x94 "error: {1} is not known channel"
     MAIN | DATA  | 0x95 "error: {1} is not valid identity identifier"
     MAIN | DATA  | 0x96 "error: {1} is not known identity"
+    MAIN | DATA  | 0x97 "warning: overriding timestamp exists for debugging; peers can reject your entry"
 
     MAIN | EVENT | 0x91 "sending {2} bytes through {1}"
     MAIN | ERROR | 0x90 "transmission file {1} creation failed, error {ERR}"

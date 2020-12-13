@@ -18,12 +18,14 @@ namespace raddi {
 
         // create
         //  - creates new identity announcement: ids, generates key and nonce
+        //  - 'timestamp' parameter is provided for special purposes, to override identity creation timestamp
+        //     - do not override for regular use as nodes might delay or completely refuse to accept such identity
         //  - stores public key in 'public_key' member
         //  - returns secret key in 'private_key' (seed only)
         //     - note that 'public_key' must be appended to 'private_key' in order to create complete
         //       and usable secret key (crypto_sign_ed25519_SECRETKEYBYTES bytes)
         //
-        bool create (std::uint8_t (&private_key) [crypto_sign_ed25519_SEEDBYTES]);
+        bool create (std::uint8_t (&private_key) [crypto_sign_ed25519_SEEDBYTES], std::uint32_t timestamp = raddi::now ());
 
         // verify
         //  - verifies that the new identity announcement entry is valid, i.e.:

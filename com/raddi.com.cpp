@@ -464,7 +464,7 @@ int wmain (int argc, wchar_t ** argw) {
 #ifdef NDEBUG
     raddi::log::display (L"data");
 #endif
-    raddi::log::display (option (argc, argw, L"display"));
+    raddi::log::display ((argc > 1) ? option (argc, argw, L"display") : L"event");
     raddi::log::initialize (option (argc, argw, L"log"), raddi::defaults::log_subdir, L"cmd", false);
 
     raddi::log::event (0x01,
@@ -553,6 +553,29 @@ bool erase_command (const wchar_t * what);
 bool peer_command (enum class raddi::command::type, const wchar_t * address);
 bool subscription_command (enum class raddi::command::type, const wchar_t * eid);
 
+std::uint32_t parse_timestamp (const wchar_t * parameter) {
+    if (parameter [0]) {
+        wchar_t * end = nullptr;
+        auto value = std::wcstoull (parameter, &end, 16);
+        if ((value <= 0xFFFFFFFF) && (*end == L'\0')) {
+            return (std::uint32_t) value;
+        } else {
+            raddi::log::error (0x1C, parameter);
+            return 0;
+        }
+    } else
+        return raddi::now ();
+}
+
+template <std::size_t N>
+const wchar_t * command (unsigned long argc, wchar_t ** argw, const wchar_t (&name) [N], const wchar_t * default_ = nullptr) {
+    if (argc > 1) {
+        option_nth (1, argc, argw, name,
+                    [&default_](const wchar_t * result) { default_ = result;  });
+    }
+    return default_;
+}
+
 bool go () {
 
     // parameters settings global configuration first
@@ -579,11 +602,11 @@ bool go () {
     //  - will show current time in raddi format (hexadecimal since 1.1.2018, see raddi_timestamp.h)
     //  - or converts timestamp to hierarchical datetime format: YYYY-MM-DD HH:MM:SS[.uuuuuu]
 
-    if (option (argc, argw, L"now")) {
+    if (command (argc, argw, L"now")) {
         std::printf ("%lx\n", raddi::now ());
         return true;
     }
-    if (auto timestamp = option (argc, argw, L"microtimestamp")) {
+    if (auto timestamp = command (argc, argw, L"microtimestamp")) {
         if (timestamp [0]) {
             wchar_t * end = nullptr;
             auto parameter = std::wcstoull (timestamp, &end, 16);
@@ -602,41 +625,32 @@ bool go () {
             return true;
         }
     }
-    if (auto timestamp = option (argc, argw, L"timestamp")) {
-        if (timestamp [0]) {
-            wchar_t * end = nullptr;
-            auto parameter = std::wcstoull (timestamp, &end, 16);
-            if ((parameter <= 0xFFFFFFFF) && (*end == L'\0')) {
-                auto time = raddi::time ((std::uint32_t) parameter);
-                std::printf ("%04d-%02d-%02d %02d:%02d:%02d\n",
-                             time.tm_year + 1900, time.tm_mon + 1, time.tm_mday,
-                             time.tm_hour, time.tm_min, time.tm_sec);
-                return true;
-            } else {
-                raddi::log::error (0x1C, timestamp);
-                return false;
-            }
-        } else {
-            std::printf ("%lx\n", raddi::now ());
+    if (auto parameter = command (argc, argw, L"timestamp")) {
+        if (auto timestamp = parse_timestamp (parameter)) {
+            auto time = raddi::time ((std::uint32_t) timestamp);
+            std::printf ("%04d-%02d-%02d %02d:%02d:%02d\n",
+                         time.tm_year + 1900, time.tm_mon + 1, time.tm_mday,
+                         time.tm_hour, time.tm_min, time.tm_sec);
             return true;
-        }
+        } else
+            return false;
     }
 
     // deepscan
     //  - this is very rough verification of the whole database
 
-    if (option (argc, argw, L"deepscan")) {
+    if (command (argc, argw, L"deepscan")) {
         return database_verification ();
     }
 
     // benchmark
     //  - measures how long it takes to find predetermined solution
 
-    if (option (argc, argw, L"benchmark")) {
+    if (command (argc, argw, L"benchmark")) {
         return benchmark ();
     }
 
-    if (auto parameter = option (argc, argw, L"list")) {
+    if (auto parameter = command (argc, argw, L"list")) {
         if (!std::wcscmp (parameter, L"instances")) {
             auto instances = raddi::instance::enumerate ();
             if (!instances.empty ()) {
@@ -672,7 +686,7 @@ bool go () {
         return list (parameter);
     }
 
-    if (auto parameter = option (argc, argw, L"new")) {
+    if (auto parameter = command (argc, argw, L"new")) {
         if (!std::wcscmp (parameter, L"identity")) {
             return new_identity ();
         }
@@ -687,14 +701,14 @@ bool go () {
         }
     }
 
-    if (auto parameter = option (argc, argw, L"reply")) {
+    if (auto parameter = command (argc, argw, L"reply")) {
         return reply (L"reply", parameter, false);
     }
 
-    if (auto parameter = option (argc, argw, L"get")) {
+    if (auto parameter = command (argc, argw, L"get")) {
         return get (parameter);
     }
-    if (auto parameter = option (argc, argw, L"analyze")) {
+    if (auto parameter = command (argc, argw, L"analyze")) {
         std::size_t size = 0;
         std::uint8_t data [raddi::entry::max_content_size];
 
@@ -719,7 +733,7 @@ bool go () {
 
     // TODO: document all below
 
-    if (auto parameter = option (argc, argw, L"echo")) {
+    if (auto parameter = command (argc, argw, L"echo")) {
         if (!std::wcscmp (parameter, L"connection")) {
 
             raddi::instance instance (option (argc, argw, L"instance"));
@@ -730,72 +744,55 @@ bool go () {
         }
     }
 
-    if (auto parameter = option (argc, argw, L"add")) {
+    if (auto parameter = command (argc, argw, L"add")) {
         bool core = false;
         option (argc, argw, L"core", core);
         return peer_command (core ? raddi::command::type::add_core_peer : raddi::command::type::add_peer, parameter);
     }
-    if (auto parameter = option (argc, argw, L"remove")) {
+    if (auto parameter = command (argc, argw, L"remove")) {
         return peer_command (raddi::command::type::rem_peer, parameter);
     }
-    if (auto parameter = option (argc, argw, L"ban")) {
+    if (auto parameter = command (argc, argw, L"ban")) {
         return peer_command (raddi::command::type::ban_peer, parameter);
     }
-    if (auto parameter = option (argc, argw, L"unban")) {
+    if (auto parameter = command (argc, argw, L"unban")) {
         return peer_command (raddi::command::type::unban_peer, parameter);
     }
-    if (auto parameter = option (argc, argw, L"connect")) {
+    if (auto parameter = command (argc, argw, L"connect")) {
         return peer_command (raddi::command::type::connect_peer, parameter);
     }
 
-    if (auto parameter = option (argc, argw, L"download")) {
+    if (auto parameter = command (argc, argw, L"download")) {
         return download_command (parameter);
     }
-    if (auto parameter = option (argc, argw, L"erase")) {
+    if (auto parameter = command (argc, argw, L"erase")) {
         return erase_command (parameter);
     }
 
-    if (auto parameter = option (argc, argw, L"subscribe")) {
+    if (auto parameter = command (argc, argw, L"subscribe")) {
         return subscription_command (raddi::command::type::subscribe, parameter);
     }
-    if (auto parameter = option (argc, argw, L"unsubscribe")) {
+    if (auto parameter = command (argc, argw, L"unsubscribe")) {
         return subscription_command (raddi::command::type::unsubscribe, parameter);
     }
-    if (auto parameter = option (argc, argw, L"blacklist")) {
+    if (auto parameter = command (argc, argw, L"blacklist")) {
         return subscription_command (raddi::command::type::blacklist, parameter);
     }
-    if (auto parameter = option (argc, argw, L"unblacklist")) { // TODO: better name?
+    if (auto parameter = command (argc, argw, L"unblacklist")) { // TODO: better name?
         return subscription_command (raddi::command::type::unblacklist, parameter);
     }
-    if (auto parameter = option (argc, argw, L"retain")) {
+    if (auto parameter = command (argc, argw, L"retain")) {
         return subscription_command (raddi::command::type::retain, parameter);
     }
-    if (auto parameter = option (argc, argw, L"unretain")) { // TODO: better name?
+    if (auto parameter = command (argc, argw, L"unretain")) { // TODO: better name?
         return subscription_command (raddi::command::type::unretain, parameter);
     }
-
-    /*if (auto parameter = option (argc, argw, L"test")) {
-        if (!std::wcscmp (parameter, L"content")) {
-
-            std::uint8_t buffer [65536];
-            while (!quit) {
-                const auto length = std::rand () % sizeof buffer;
-                randombytes_buf (buffer, length);
-
-                std::printf ("test [%5u]: %16llX\n", length, raddi::content::analyze (buffer, length).summarize ().raw);
-            }
-        }
-    }// */
-
-    if (auto parameter = option (argc, argw, L"help")) {
-        std::printf ("heeeeelp\n");
-        // TODO: version - set log level
-        // TODO: see docs/parameters.txt
-        return true;
-    }
-
-
-
+    
+    std::printf ("\n");
+    std::printf (">> https://www.raddi.net/\n");
+    std::printf (">> https://github.com/raddinet/\n");
+    std::printf ("\n");
+    std::printf ("See docs/parameters.txt for supported commands and parameters\n\n");
     return false;
 }
 
@@ -956,10 +953,19 @@ bool new_identity () {
     if (description_size > raddi::consensus::max_identity_name_size) {
         return raddi::log::error (0x1D, description_size, raddi::consensus::max_identity_name_size);
     }
+    if (auto parameter = option (argc, argw, L"timestamp")) {
+        raddi::log::data (0x97, parameter);
+    }
 
     while (!quit) {
         std::uint8_t private_key [crypto_sign_ed25519_SEEDBYTES];
-        if (announcement.create (private_key /*, timestamp*/)) {
+        
+        auto timestamp = raddi::now ();
+        if (auto parameter = option (argc, argw, L"timestamp")) {
+            if (!(timestamp = parse_timestamp (parameter)))
+                return false;
+        }
+        if (announcement.create (private_key, timestamp)) {
 
             if (auto size = sign_and_validate <raddi::identity> (L"new:identity", announcement, description_size,
                                                                  private_key, announcement.public_key, announcement.default_requirements ())) {
@@ -994,6 +1000,10 @@ bool new_channel () {
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
 
+    if (auto parameter = option (argc, argw, L"timestamp")) {
+        raddi::log::data (0x97, parameter);
+    }
+
     raddi::iid id;
     unsigned char key [crypto_sign_ed25519_SEEDBYTES];
 
@@ -1019,7 +1029,12 @@ bool new_channel () {
             }
 
             while (!quit) {
-                if (announcement.create (id)) {
+                auto timestamp = raddi::now ();
+                if (auto parameter = option (argc, argw, L"timestamp")) {
+                    if (!(timestamp = parse_timestamp (parameter)))
+                        return false;
+                }
+                if (announcement.create (id, timestamp)) {
                     if (auto size = sign_and_validate <raddi::channel> (L"new:channel", announcement, description_size,
                                                                         key, parent.public_key, announcement.default_requirements ())) {
                         if (send (instance, announcement, sizeof (raddi::channel) + size)) {
@@ -1047,6 +1062,10 @@ bool reply (const wchar_t * opname, const wchar_t * to, bool thread) {
     raddi::db database (file::access::read, instance.get <std::wstring> (L"database"));
     if (!database.connected ())
         return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
+
+    if (auto parameter = option (argc, argw, L"timestamp")) {
+        raddi::log::data (0x97, parameter);
+    }
 
     raddi::iid id;
     unsigned char key [crypto_sign_ed25519_SEEDBYTES];
@@ -1102,6 +1121,11 @@ bool reply (const wchar_t * opname, const wchar_t * to, bool thread) {
                 message.id.timestamp = raddi::now ();
                 message.id.identity = id;
                  
+                if (auto parameter = option (argc, argw, L"timestamp")) {
+                    if (!(message.id.timestamp = parse_timestamp (parameter)))
+                        return false;
+                }
+
                 if (auto size = sign_and_validate <raddi::entry> (opname, message, description_size,
                                                                   key, identity.public_key, rq)) {
                     if (send (instance, message, sizeof (raddi::entry) + size)) {

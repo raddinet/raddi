@@ -50,7 +50,7 @@ namespace {
     }
 }
 
-bool raddi::identity::create (std::uint8_t (&private_key) [crypto_sign_ed25519_SEEDBYTES]) {
+bool raddi::identity::create (std::uint8_t (&private_key) [crypto_sign_ed25519_SEEDBYTES], std::uint32_t timestamp) {
     unsigned char sk [crypto_sign_ed25519_SECRETKEYBYTES];
     if (crypto_sign_ed25519_keypair (this->public_key, sk) == 0) {
 
@@ -65,9 +65,9 @@ bool raddi::identity::create (std::uint8_t (&private_key) [crypto_sign_ed25519_S
         //  - using simplified siphash24 above, no security requirements
         //     - TODO: we also use simplified siphash in raddi::proof, consider merging
         
-        this->id.timestamp = raddi::now ();
-        this->id.identity.timestamp = this->id.timestamp;
-        this->id.identity.nonce = hash (this->id.identity.timestamp, this->public_key);
+        this->id.timestamp = timestamp;
+        this->id.identity.timestamp = timestamp;
+        this->id.identity.nonce = hash (timestamp, this->public_key);
         this->parent = this->id;
         return true;
     } else

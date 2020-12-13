@@ -2,6 +2,8 @@ Command-line parameters
 =======================
 
 Notes:
+	- parameters considered a primary command, especially to raddi.com, must be first
+	  on the command line, otherwise they may be considered to be optional argument
 	- parameters may be optionally introduced by '/' or any number of '-' characters,
 	  neither is necessary though
 	- parameters that take boolean value, usually denoted with <0|1|false|true> below
@@ -222,7 +224,7 @@ RADDI.exe application optional parameters:
 		- requests application to open one or more tabs with specified content
 		- designed to work as URI handler, i.e. "raddi.exe raddi://1234-5678..."
 
-RADDI.com utility functions:
+RADDI.com utility functions/commands:
 	- now
 	- timestamp
 	- timestamp:<N>
@@ -367,7 +369,7 @@ RADDI.com utility functions:
 		- typically only single running instance is found, but multiple can run
 		  simultaneously under single or across multiple sessions
 		- currently the format is: "PID (SID): status; priority"
-			- PID - process ID to connect to
+			- PID - process ID of the daemon/node
 			- SID - OS session ID (0 - services), 
 			- status - text: "broadcasting", "disconnected" or "crashed"
 			- priority - number (0..255), lower value = higher priority
@@ -468,7 +470,7 @@ RADDI.com utility additional and optional parameters to functions:
 	- quick:<0|1|false|true>
 		- setting to true for 'erase' function, the deletion will not be thorough
 		  i.e. only index entry is deleted; normally the content is overwritten
-		  with zero bytes
+		  with zero bytes to purge the content completely
 		- applies to:
 			- erase
 	- threshold:<timestamp>
@@ -485,6 +487,14 @@ RADDI.com utility additional and optional parameters to functions:
 		- generally defaults to 'true'
 		- applies to:
 			list:identities, list:channels, list:threads, list
+	- timestamp:<N>
+		- allows to override current time when creating certain types of entries
+		- for debugging purposes only; do not override in regular usage as nodes
+		  could delay and can completely refuse to accept unsynchronized entries
+		- N - hexadecimal timestamp value to overr
+		- NOTE: all times and timestamps are in UTC
+		- applies to:
+			new:identity, new:channel, new:thread, reply
 	- oldest:<hexadecimal>
 	- latest:<hexadecimal>
 		- 
