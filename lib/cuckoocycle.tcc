@@ -908,8 +908,8 @@ bool cuckoo::verify (unsigned complexity,
         if (cycle [n] >= (1uLL << complexity)) return false; // too large node
         if (n && cycle [n] <= cycle [n - 1]) return false; // not sorted
 
-        xor0 ^= uvs [2 * n + 0] = ((1u << complexity) - 1u) & generator (2 * cycle [n] + 0);
-        xor1 ^= uvs [2 * n + 1] = ((1u << complexity) - 1u) & generator (2 * cycle [n] + 1);
+        xor0 ^= uvs [2 * n + 0] = ((1uLL << complexity) - 1u) & generator (2 * cycle [n] + 0);
+        xor1 ^= uvs [2 * n + 1] = ((1uLL << complexity) - 1u) & generator (2 * cycle [n] + 1);
     }
     if (xor0 | xor1)
         return false;
