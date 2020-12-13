@@ -776,6 +776,7 @@ namespace {
             if (auto * end = std::wcsrchr (path, L'\\')) {
                 *(end + 1) = L'\0';
             }
+            // TODO: if it's not writable, find other place; same for log
         }
 
         if (option_database) {
@@ -826,7 +827,7 @@ namespace {
         raddi::log::event (0x01,
                            (unsigned long) HIWORD (version->dwProductVersionMS),
                            (unsigned long) LOWORD (version->dwProductVersionMS),
-                           ARCHITECTURE, BUILD_TIMESTAMP);
+                           ARCHITECTURE, BUILD_TIMESTAMP, _MSC_FULL_VER);
 
         if (auto h = LoadLibrary (SQLITE3_DLL_NAME)) {
             // node does not use sqlite, but logs version number for sake of completeness
@@ -910,6 +911,7 @@ namespace {
         if (overview.status != ERROR_SUCCESS) {
             raddi::log::error (3, overview.failure_point, raddi::log::api_error (overview.status));
         }
+        overview.set (L"magic", raddi::protocol::magic);
 
         // node settings
         

@@ -1,4 +1,5 @@
 #include"raddi_instance.h"
+#include"raddi_protocol.h"
 #include"../common/platform.h"
 #include <cstdio>
 #include <cwchar>
@@ -314,23 +315,39 @@ void raddi::instance::enum_pids (HKEY hBase, std::map <unsigned int, description
             } else
                 continue;
 
+            DWORD size;
+            DWORD type;
             HKEY hInstance;
+
             if (RegOpenKeyEx (hKey, process, 0, KEY_READ, &hInstance) == ERROR_SUCCESS) {
 
                 description instance;
                 instance.priority = priority;
 
                 if (!GetProcessSessionId (pid, &instance.session)) {
+                    // instance is probably inaccessible
                     instance.priority += 9;
                 }
 
-                // TODO: compare 'magic' with raddi::protocol::magic
+                // validate magic
+                //  - to distinguish from different running nodes, where this code was used in different software
+
+                char magic [12] = {};
+                size = sizeof magic;
+
+                if (RegQueryValueExA (hInstance, "magic", NULL, &type, (BYTE *) magic, &size) != ERROR_SUCCESS
+                    || type != REG_SZ
+                    || std::strcmp (magic, raddi::protocol::magic) != 0) {
+
+                    RegCloseKey (hInstance);
+                    continue;
+                }
 
                 // is this PID really the instance?
-                //  - if the start timestamps don't match, then PID was reused for other process
+                //  - if the start timestamps don't match, then PID was reused by other process
 
                 FILETIME ftInstance = { 0, 0 };
-                DWORD size = sizeof ftInstance;
+                size = sizeof ftInstance;
 
                 if (RegQueryValueEx (hInstance, L"start", NULL, NULL, (BYTE *) &ftInstance, &size) == ERROR_SUCCESS
                     && ftStart.dwLowDateTime == ftInstance.dwLowDateTime
@@ -338,7 +355,7 @@ void raddi::instance::enum_pids (HKEY hBase, std::map <unsigned int, description
 
                     instance.running = true;
                 } else {
-                    ++instance.priority;
+                    instance.priority += 10;
                 }
 
                 DWORD value = 0;
