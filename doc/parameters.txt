@@ -497,7 +497,7 @@ RADDI.com utility additional and optional parameters to functions:
 			new:identity, new:channel, new:thread, reply
 	- oldest:<hexadecimal>
 	- latest:<hexadecimal>
-		- 
+		- used to set limiting timestamps (upper and lower) for enumerations
 		- when omitted, no listing restriction takes place
 		- applies to:
 			list:identities, list:channels, list:threads
