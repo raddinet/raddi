@@ -21,6 +21,8 @@
 #include "../core/raddi_content.h"
 #include "../core/raddi_defaults.h"
 
+#pragma warning (disable:6262) // function stack size warning
+
 uuid app;
 wchar_t buffer [4*65536];
 volatile bool quit = false;
@@ -465,12 +467,12 @@ int wmain (int argc, wchar_t ** argw) {
     raddi::log::display (L"data");
 #endif
     raddi::log::display ((argc > 1) ? option (argc, argw, L"display") : L"event");
-    raddi::log::initialize (option (argc, argw, L"log"), raddi::defaults::log_subdir, L"cmd", false);
+    raddi::log::initialize (option (argc, argw, L"log"), raddi::defaults::log_subdir, L"cmd", raddi::log::scope::user);
 
     raddi::log::event (0x01,
                        (unsigned long) HIWORD (version->dwProductVersionMS),
                        (unsigned long) LOWORD (version->dwProductVersionMS),
-                       ARCHITECTURE, BUILD_TIMESTAMP, _MSC_FULL_VER);
+                       ARCHITECTURE, BUILD_TIMESTAMP, COMPILER);
 
 	if (auto h = LoadLibrary (SQLITE3_DLL_NAME)) {
         // raddi.com does not use sqlite, but logs version number for sake of completeness
@@ -515,7 +517,10 @@ int wmain (int argc, wchar_t ** argw) {
     }
 
     WSADATA wsa;
-    WSAStartup (0x0202, &wsa);
+    if (auto error = WSAStartup (0x0202, &wsa)) {
+        raddi::log::error (0xFF, raddi::log::api_error (error));
+        return error;
+    }
 
     SetLastError (0);
     if (go ()) {
@@ -590,9 +595,8 @@ bool go () {
         }
     }
 
-    // TODO: install / uninstall / start / stop ... (service)
+    // TODO: install / uninstall (service)
 
-    // TODO: list:instances
     // TODO: clear blacklist, list blacklist, ban:IP?
     // TODO: clear peers (all)
 
@@ -807,6 +811,8 @@ bool peer_command (enum class raddi::command::type cmd, const wchar_t * addr) {
     raddi::instance instance (option (argc, argw, L"instance"));
     if (instance.status != ERROR_SUCCESS)
         return raddi::log::data (0x91);
+
+    // TODO: DNS
 
     SOCKADDR_INET sa;
     if (!StringToAddress (sa, addr))

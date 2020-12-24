@@ -51,6 +51,16 @@ static const char BUILD_TIMESTAMP [] = {
 #define SQLITE3_DLL_TYPE L"dynamic"
 #endif
 
+#define STRINGIFY(S)    #S
+#define MAKESTRING(M,L) M(L)
+#define STRINGIZE(X)    MAKESTRING(STRINGIFY,X)
+
+#ifdef _MSC_FULL_VER
+#define COMPILER "MSVC++ " STRINGIZE(_MSC_FULL_VER)
+#else
+#define COMPILER ""
+#endif
+
 #ifdef _WIN32
 #include <windows.h>
 #include <string_view>

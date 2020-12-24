@@ -4,7 +4,7 @@
 STRINGTABLE
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 {
-    MAIN | EVENT | 0x01 "raddi.com {1}.{2} {3}, {4}"
+    MAIN | EVENT | 0x01 "raddi.com {1}.{2} {3}, {4}, {5}"
     MAIN | EVENT | 0x02 "first run, generated uuid {1}"
 
     MAIN | NOTE | 0x01  "using argument {1}: {2}"
@@ -38,7 +38,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
     MAIN | STOP  | 0x20 "{1} internal error, validation failed in {2}"
     MAIN | STOP  | 0x21 "database corruption, no proof-of-work in entry {1}"
-
 
     MAIN | DATA  | 0x90 "warning: instance {1} is not broadcasting at the moment"
     MAIN | DATA  | 0x91 "warning: no node instance available"

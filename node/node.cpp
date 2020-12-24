@@ -762,15 +762,13 @@ namespace {
         return true;
     }
 
-    std::wstring DetermineDatabaseDirectory (bool global, const wchar_t * option_database) {
- 
-        // CSIDL_COMMON_APPDATA = C:\\ProgramData == global
-        // CSIDL_LOCAL_APPDATA = C:\\Users\\<name>\\AppData\\Local == local
+    std::wstring DetermineDatabaseDirectory (raddi::log::scope scope, const wchar_t * option_database) {
 
         wchar_t path [32768];
-        if (SHGetFolderPath (NULL, global ? CSIDL_COMMON_APPDATA : CSIDL_LOCAL_APPDATA, NULL, 0, path) == S_OK) {
+        if (raddi::log::get_scope_path (scope, path)) {
             std::wcscat (path, raddi::defaults::data_subdir);
             CreateDirectory (path, NULL);
+
         } else {
             GetModuleFileName (NULL, path, sizeof path / sizeof path [0]);
             if (auto * end = std::wcsrchr (path, L'\\')) {
@@ -812,11 +810,18 @@ namespace {
         return ERROR_SUCCESS;
     }
 
+    raddi::log::scope scope_from_status () {
+        if (status.dwWin32ExitCode == NO_ERROR)
+            return raddi::log::scope::machine;
+        else
+            return raddi::log::scope::user;
+    }
+
     void WINAPI service (DWORD argc, LPWSTR * argw) {
-        const bool global = (status.dwWin32ExitCode == NO_ERROR);
+        const auto scope = scope_from_status ();
 
         raddi::log::display (option (argc, argw, L"display"));
-        raddi::log::initialize (option (argc, argw, L"log"), raddi::defaults::log_subdir, L"node", global);
+        raddi::log::initialize (option (argc, argw, L"log"), raddi::defaults::log_subdir, L"node", scope);
 
         if (version == nullptr) {
             raddi::log::stop (0x01);
@@ -827,7 +832,7 @@ namespace {
         raddi::log::event (0x01,
                            (unsigned long) HIWORD (version->dwProductVersionMS),
                            (unsigned long) LOWORD (version->dwProductVersionMS),
-                           ARCHITECTURE, BUILD_TIMESTAMP, _MSC_FULL_VER);
+                           ARCHITECTURE, BUILD_TIMESTAMP, COMPILER);
 
         if (auto h = LoadLibrary (SQLITE3_DLL_NAME)) {
             // node does not use sqlite, but logs version number for sake of completeness
@@ -898,7 +903,7 @@ namespace {
             status.dwWin32ExitCode = 0;
         }
 
-        if (!global) {
+        if (scope == raddi::log::scope::user) {
             DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS callback = { SuspendResumeCallbackRoutine, NULL };
             Optional <HPOWERNOTIFY, HANDLE, DWORD> (L"USER32", "RegisterSuspendResumeNotification", &callback, DEVICE_NOTIFY_CALLBACK);
         }
@@ -906,7 +911,7 @@ namespace {
         // overview
         //  - monitoring and control from other processes
         //
-        raddi::instance overview (global);
+        raddi::instance overview (scope);
 
         if (overview.status != ERROR_SUCCESS) {
             raddi::log::error (3, overview.failure_point, raddi::log::api_error (overview.status));
@@ -930,7 +935,7 @@ namespace {
         //  - discussion entries organized for fast search
         //
         raddi::db database (file::access::write,
-                            DetermineDatabaseDirectory (global, option (argc, argw, L"database")));
+                            DetermineDatabaseDirectory (scope, option (argc, argw, L"database")));
 
         if (database.connected ()) {
             overview.set (L"database", database.path);

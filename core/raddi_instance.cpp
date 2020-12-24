@@ -4,9 +4,9 @@
 #include <cstdio>
 #include <cwchar>
 
-raddi::instance::instance (bool global) {
+raddi::instance::instance (raddi::log::scope scope) {
     _snwprintf (this->pid, sizeof this->pid / sizeof this->pid [0], L"%u", GetCurrentProcessId ());
-    this->status = RegCreateKeyEx (global ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
+    this->status = RegCreateKeyEx ((scope == raddi::log::scope::machine) ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
                                    L"SOFTWARE\\RADDI.net", 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &this->registry, NULL);
     if (this->status != ERROR_SUCCESS) {
         this->failure_point = L"SOFTWARE\\RADDI.net";
@@ -27,7 +27,7 @@ raddi::instance::instance (bool global) {
     SetLastError (this->status);
 }
 
-raddi::instance::instance (uuid app) {
+/*raddi::instance::instance (uuid app) {
     this->pid [0] = L'\0';
     this->status = RegCreateKeyEx (HKEY_CURRENT_USER,
                                    L"SOFTWARE\\RADDI.net", 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &this->registry, NULL);
@@ -40,7 +40,7 @@ raddi::instance::instance (uuid app) {
         }
     }
     SetLastError (this->status);
-}
+}// */
 
 bool raddi::instance::set (const wchar_t * name, uuid value) {
     return this->set (name, REG_BINARY, &value, sizeof value);

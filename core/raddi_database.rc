@@ -54,7 +54,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     DATABASE | DATA | 0x23  "rejected coordination request {1}, invalid size {2}, expected {3}"
     DATABASE | DATA | 0x24  "rejected coordination request {1}, threshold {2} older than {4} days, threshold is {3}"
 
-    DATABASE | ERROR | 1    "database storage doesn't exist and unable to create new at {1}, error {ERR}"
+    DATABASE | ERROR | 1    "database storage doesn't exist and unable to create new at {1}, error {ERR}" // TODO: use 'database' parameter
     DATABASE | ERROR | 2    "access denied to data at {1}, error {ERR}"
     DATABASE | ERROR | 5    "won't process nor broadcast, unable to listen for files in {1} error {ERR}" // monitor and source both
     DATABASE | ERROR | 6    "listening stopped, failed with error {ERR}" // monitor

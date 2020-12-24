@@ -101,7 +101,7 @@ crypto_sign_ed25519ph_state raddi::entry::prehash (std::size_t size) const {
 
     // common initialization of Ed25519ph state
     //  - manually inlined pre-initialization to prevent multiple copies and unnecessary zeroing when calling the API
-    //  - the reason is that this might be quite hot function under hight traffic
+    //  - the reason is that this might be quite hot function under high traffic
     //
     state.hs.state [0] = 0x6a09e667f3bcc908uLL;
     state.hs.state [1] = 0xbb67ae8584caa73buLL;

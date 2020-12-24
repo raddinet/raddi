@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <string>
 #include <map>
+#include "..\common\log.h"
 #include "..\common\uuid.h"
 
 namespace raddi {
@@ -19,24 +20,23 @@ namespace raddi {
             wchar_t pid [14];
 
             // status/failure_point
-            //  - 
+            //  - set on failures, to be logged later
             //
             LONG status = ERROR_SUCCESS;
             const wchar_t * failure_point = nullptr;
 
         public:
-            // instance (bool)
+            // instance (scope)
             //  - creates information store (registry key) for current NODE instance (PID)
-            //    either in HKLM (true) or HKCU (false) - TODO: enum?
             //  - NODE instance store per-PID is volatile, data deleted on logoff/reboot
             // 
-            explicit instance (bool global);
+            explicit instance (raddi::log::scope);
 
             // instance (uuid)
             //  - connects to information store (registry key) for current APP instance (uuid)
             //  - APP instance data are not deleted on logoff/reboot
             // 
-            explicit instance (uuid app);
+            // explicit instance (uuid app);
 
             // instance (pid)
             //  - searches and connects to 'pid' instance or first available (if 'pid' is nullptr)
@@ -78,7 +78,8 @@ namespace raddi {
             };
 
             // enumerate
-            //  - 
+            //  - lists running and crashed instances on the current system
+            //  - map key is PID
             //
             static std::map <unsigned int, description> enumerate ();
 

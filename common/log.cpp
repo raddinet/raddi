@@ -112,8 +112,23 @@ namespace {
     }
 }
 
+bool raddi::log::get_scope_path (scope scope, wchar_t * buffer) {
+    
+    // CSIDL_COMMON_APPDATA = C:\\ProgramData == global
+    // CSIDL_LOCAL_APPDATA = C:\\Users\\<name>\\AppData\\Local == local
 
-bool raddi::log::initialize (const wchar_t * option, const wchar_t * subdir, const wchar_t * prefix, bool service) {
+    int csidl = 0;
+    switch (scope) {
+        case raddi::log::scope::user: csidl = CSIDL_LOCAL_APPDATA; break;
+        case raddi::log::scope::machine: csidl = CSIDL_COMMON_APPDATA; break;
+        default:
+            return false;
+    }
+
+    return SHGetFolderPath (NULL, csidl, NULL, 0, buffer) == S_OK;
+}
+
+bool raddi::log::initialize (const wchar_t * option, const wchar_t * subdir, const wchar_t * prefix, scope scope) {
     settings::level = parse_level (option, settings::level);
 
     api_error user_path_error;
@@ -145,7 +160,7 @@ bool raddi::log::initialize (const wchar_t * option, const wchar_t * subdir, con
     // same as (local) database
     if (logfile.closed ()) {
         path.resize (MAX_PATH);
-        if (SHGetFolderPath (NULL, service ? CSIDL_COMMON_APPDATA : CSIDL_LOCAL_APPDATA, NULL, 0, &path [0]) == S_OK) {
+        if (get_scope_path (scope, &path [0])) {
             path.resize (std::wcslen (&path [0]));
             create (path, subdir, filename);
         }

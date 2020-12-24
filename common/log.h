@@ -63,12 +63,26 @@ namespace raddi {
             extern log::level display;
         }
 
+        // scope
+        //  - distinguish different log paths, services run in machine scope, apps in user scope
+        //
+        enum class scope {
+            user = 0, // HKCU, current user
+            machine = 1, // HKLM, local machine (container)
+        };
+
         // initialize/display
         //  - parses string to determine log path and level
         //    for log file (initialize) or console output (display)
         //
-        bool initialize (const wchar_t *, const wchar_t * subdir, const wchar_t * prefix, bool service);
+        bool initialize (const wchar_t *, const wchar_t * subdir, const wchar_t * prefix, scope);
         void display (const wchar_t *);
+
+        // get_scope_path
+        //  - abstracts platform 
+        //  - 'buffer' must point to at least MAX_PATH (260) characters long buffer
+        //
+        bool get_scope_path (scope, wchar_t * buffer);
 
         // path
         //  - whenever 'initialize' succeeds then 'path' contains full path to the log file
