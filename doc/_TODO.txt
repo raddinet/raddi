@@ -40,6 +40,8 @@ commands: optimize
 commands: list:peers...
 raddi.com analyze/get/list -> support decompression
 raddi.com sign/verify -> file or text using identity
+raddi.com allow set offline database path for reading (not through 'instance')
+raddi.com simulated sends (for testing), send into local file, not to instance sink
 
 node operators message channel
  - ?
@@ -76,6 +78,8 @@ gut out OpenSSL, libbitcoin or something and make absolutely minimal library to 
 tables: test and fix shard splitting
 tables: add code for client app to process external changes, see 'process' member function
 tables: evaluate proper size limits so the index files fit exactly within whole multiples of a typical cluster size
+
+consider converting documentation into .md files
 
 perfect compression dictionary for english text
  - https://sourceforge.net/p/lzmautils/discussion/708858/thread/e40fbf99/
