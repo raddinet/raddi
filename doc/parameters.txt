@@ -42,6 +42,9 @@ Common parameters:
 			- default is: RADDI/1
 
 Node parameters:
+	- name:<name>
+		- overrides default service name "raddi" when run as Windows service
+		- use on executable path (command-line) when installing the service
 	- threads:<n>
 		- number of worker threads the node service should use
 		- when 0 (default) a 3 threads are started for each 2 logical processors
@@ -252,6 +255,16 @@ RADDI.com utility functions/commands:
 		  and validates their correctness and verifies their proof-of-work and
 		  signatures
 		- debugging feature, may disappear in the future
+	- install
+	- install:<name>
+	- uninstall
+	- uninstall:<name>
+		- installs or uninstalls node software executable as Windows service
+		  (raddi64.exe or raddi32.exe in the same directory as raddi.com)
+		- name
+			- service name, default is "raddi"
+		- optional parameters:
+			- path - override service executable path (command line)
 	- new:identity
 		- creates new identity announcement with specified content (text/content)
 		  and transmits it through active instance (specified, or first found)

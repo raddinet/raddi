@@ -546,6 +546,7 @@ bool new_identity ();
 bool new_channel ();
 bool reply (const wchar_t * opname, const wchar_t * to, bool thread = false);
 
+bool installer (const wchar_t * svcname, bool install);
 bool list_identities ();
 bool list_channels ();
 bool list_threads ();
@@ -595,12 +596,15 @@ bool go () {
         }
     }
 
-    // TODO: install / uninstall (service)
-
     // TODO: clear blacklist, list blacklist, ban:IP?
     // TODO: clear peers (all)
-
     // TODO: set-log-level, set-display-level -> raddi::command
+
+    // install/uninstall
+    //  - create or remove system service
+
+    if (auto parameter = command (argc, argw, L"install")) return installer (parameter, true);
+    if (auto parameter = command (argc, argw, L"uninstall")) return installer (parameter, false);
 
     // now/timestamp/microtimestamp
     //  - will show current time in raddi format (hexadecimal since 1.1.2018, see raddi_timestamp.h)
@@ -798,6 +802,59 @@ bool go () {
     std::printf ("\n");
     std::printf ("See docs/parameters.txt for supported commands and parameters\n\n");
     return false;
+}
+
+bool installer (const wchar_t * svcname, bool install) {
+    bool result = false;
+    if (auto scm = OpenSCManager (NULL, NULL, STANDARD_RIGHTS_WRITE | SC_MANAGER_CREATE_SERVICE)) {
+        
+        // unless overriden, use default service name
+
+        if (svcname [0] == L'\0') {
+            svcname = raddi::defaults::service_name; // "raddi"
+        }
+
+        // path
+        //  - if not provided, rewrite path/raddi.com (this executable) => path/raddi64.exe or path/raddi32.exe (node software)
+
+        const wchar_t * path = nullptr;
+        if (auto parameter = option (argc, argw, L"path")) {
+            if (parameter [0]) {
+                path = parameter;
+            } else
+                return false;
+        } else {
+            DWORD length = sizeof buffer / sizeof buffer [0];
+            if (QueryFullProcessImageName (GetCurrentProcess (), 0, buffer, &length)) {
+                if (auto dot = std::wcsrchr (buffer, L'.')) {
+                    *dot = L'\0';
+                }
+#ifdef _WIN64
+                std::wcscat (buffer, L"64.exe");
+#else
+                std::wcscat (buffer, L"32.exe");
+#endif
+                path = buffer;
+            } else
+                return false;
+        }
+
+        if (install) {
+            if (auto svc = CreateService (scm, svcname, raddi::defaults::service_title,
+                                          SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START,
+                                          SERVICE_ERROR_NORMAL, path, NULL, NULL, L"LanmanServer", NULL, NULL)) {
+                result = true;
+                CloseServiceHandle (svc);
+            }
+        } else {
+            if (auto svc = OpenService (scm, svcname, SERVICE_ALL_ACCESS)) {
+                result = DeleteService (svc);
+                CloseServiceHandle (svc);
+            }
+        }
+        CloseServiceHandle (scm);
+    }
+    return result;
 }
 
 bool StringToAddress (SOCKADDR_INET & address, const wchar_t * string) noexcept {
