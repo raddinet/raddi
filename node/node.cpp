@@ -64,9 +64,9 @@ namespace {
     HANDLE terminating = NULL;
     HANDLE disconnected = NULL;
 
-    const VS_FIXEDFILEINFO * const version = GetCurrentProcessVersionInfo ();
-    const SERVICE_TABLE_ENTRY services [] = {
-        { const_cast <LPWSTR> (TEXT ("raddi")), service },
+    const auto version = GetCurrentProcessVersionInfo ();
+    SERVICE_TABLE_ENTRY services [] = {
+        { const_cast <LPWSTR> (raddi::defaults::service_name), service },
         { NULL, NULL }
     };
     
@@ -109,6 +109,10 @@ int wmain (int argc, wchar_t ** argw) {
             status.dwControlsAccepted |= SERVICE_ACCEPT_LOWRESOURCES | SERVICE_ACCEPT_SYSTEMLOWRESOURCES;
         }
 
+        if (auto parameter = option (argc, argw, L"name")) {
+            services [0].lpServiceName = const_cast <LPWSTR> (parameter);
+        }
+
         if (!StartServiceCtrlDispatcher (services)) {
 
             status.dwWin32ExitCode = GetLastError ();
@@ -122,10 +126,6 @@ int wmain (int argc, wchar_t ** argw) {
 
         WSACleanup ();
 
-        if (handle) {
-            status.dwCurrentState = SERVICE_STOPPED;
-            SetServiceStatus (handle, &status);
-        }
         if (status.dwWin32ExitCode != NO_ERROR) {
             raddi::log::error (0xFF, raddi::log::api_error (status.dwWin32ExitCode));
         } else {
@@ -810,6 +810,15 @@ namespace {
         return ERROR_SUCCESS;
     }
 
+    struct report_service_stopped {
+        ~report_service_stopped () {
+            if (handle) {
+                status.dwCurrentState = SERVICE_STOPPED;
+                SetServiceStatus (handle, &status);
+            }
+        }
+    };
+
     raddi::log::scope scope_from_status () {
         if (status.dwWin32ExitCode == NO_ERROR)
             return raddi::log::scope::machine;
@@ -818,6 +827,7 @@ namespace {
     }
 
     void WINAPI service (DWORD argc, LPWSTR * argw) {
+        const auto onexit = report_service_stopped ();
         const auto scope = scope_from_status ();
 
         raddi::log::display (option (argc, argw, L"display"));
