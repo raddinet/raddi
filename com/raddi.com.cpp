@@ -854,6 +854,9 @@ bool installer (const wchar_t * svcname, bool install) {
         }
         CloseServiceHandle (scm);
     }
+    if (result) {
+        std::printf ("done.\n");
+    }
     return result;
 }
 
