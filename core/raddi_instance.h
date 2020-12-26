@@ -71,7 +71,7 @@ namespace raddi {
             //  - 
             //
             struct description {
-                DWORD session = 0xFFFFFFFF;
+                DWORD session = 0;
                 bool  running = false; // false = crashed
                 bool  broadcasting = false;
                 unsigned char priority = 0; // lower value = higher priority
