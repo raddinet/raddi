@@ -1,6 +1,8 @@
-#include"raddi_instance.h"
-#include"raddi_protocol.h"
-#include"../common/platform.h"
+#include "raddi_instance.h"
+#include "raddi_protocol.h"
+#include "raddi_timestamp.h"
+#include "../common/platform.h"
+#include <VersionHelpers.h>
 #include <cstdio>
 #include <cwchar>
 
@@ -154,15 +156,15 @@ raddi::instance::instance (const wchar_t * parameter) {
         this->pid [0] = L'\0';
     }
 
-    this->overview = this->find_sub (HKEY_LOCAL_MACHINE);
-    if (this->overview)
-        return;
-
     if (parameter == nullptr) {
         this->overview = this->find_sub (HKEY_CURRENT_USER);
         if (this->overview)
             return;
     }
+
+    this->overview = this->find_sub (HKEY_LOCAL_MACHINE);
+    if (this->overview)
+        return;
 
     DWORD i = 0;
     wchar_t user [256];
@@ -205,35 +207,25 @@ HKEY raddi::instance::find_pid (HKEY hBase) {
         if (std::wcschr (sub, L'-'))
             continue;
 
-        // is that PID still alive?
-        //  - TODO: completely rewrite to first enum all instances, then select the best
-
-        FILETIME ftStart = { 1, 2 };
-
-        if (auto handle = OpenProcess (PROCESS_QUERY_INFORMATION, FALSE, std::wcstoul (sub, nullptr, 10))) {
-            FILETIME ftExit, ftKernel, ftUser;
-            GetProcessTimes (handle, &ftStart, &ftExit, &ftKernel, &ftUser);
-            CloseHandle (handle);
-        } else
-            continue;
-
         if (RegOpenKeyEx (hBase, sub, 0, KEY_READ, &hInstance) == ERROR_SUCCESS) {
             std::wcsncpy (this->pid, sub, sizeof this->pid / sizeof this->pid [0]);
 
-            // is this PID really the instance?
+            // validate heartbeat
+            //  - if the heartbeat wasn't recently updated, we consider the instance crashed
+            //  - TODO: completely rewrite to first enum all instances, then select the best
 
-            FILETIME ftInstance = { 0, 0 };
-            DWORD size = sizeof ftInstance;
-            
-            if (RegQueryValueEx (hInstance, L"start", NULL, NULL, (BYTE *) &ftInstance, &size) != ERROR_SUCCESS
-                || ftStart.dwLowDateTime != ftInstance.dwLowDateTime
-                || ftStart.dwHighDateTime != ftInstance.dwHighDateTime) {
+            std::uint64_t heartbeat = 0;
+            DWORD size = sizeof heartbeat;
 
+            if ((RegQueryValueEx (hInstance, L"heartbeat", NULL, NULL, (BYTE *) &heartbeat, &size) == ERROR_SUCCESS)
+             && (raddi::microtimestamp () - heartbeat < 30'000'000)) {
+
+                return hInstance;
+
+            } else {
                 RegCloseKey (hInstance);
                 continue;
             }
-
-            return hInstance;
         }
     }
     return NULL;
@@ -267,8 +259,8 @@ raddi::instance::~instance () {
 std::map <unsigned int, raddi::instance::description> raddi::instance::enumerate () {
     std::map <unsigned int, description> result;
 
-    enum_pids (HKEY_LOCAL_MACHINE, result, 3);
     enum_pids (HKEY_CURRENT_USER, result, 0);
+    enum_pids (HKEY_LOCAL_MACHINE, result, 3);
     
     wchar_t user [256];
 
@@ -302,24 +294,12 @@ void raddi::instance::enum_pids (HKEY hBase, std::map <unsigned int, description
             if (std::wcschr (process, L'-'))
                 continue;
 
-            // is that PID still alive?
-            //  - simply skip/ignore inaccessible instances
-
-            auto pid = std::wcstoul (process, nullptr, 10);
-            FILETIME ftStart = { 1, 2 };
-
-            if (auto handle = OpenProcess (PROCESS_QUERY_INFORMATION, FALSE, pid)) {
-                FILETIME ftExit, ftKernel, ftUser;
-                GetProcessTimes (handle, &ftStart, &ftExit, &ftKernel, &ftUser);
-                CloseHandle (handle);
-            } else
-                continue;
-
             DWORD size;
             DWORD type;
             HKEY hInstance;
 
             if (RegOpenKeyEx (hKey, process, 0, KEY_READ, &hInstance) == ERROR_SUCCESS) {
+                auto pid = std::wcstoul (process, nullptr, 10);
 
                 description instance;
                 instance.priority = priority;
@@ -328,7 +308,7 @@ void raddi::instance::enum_pids (HKEY hBase, std::map <unsigned int, description
                     // instance is probably inaccessible
                     instance.priority += 9;
                 }
-
+                
                 // validate magic
                 //  - to distinguish from different running nodes, where this code was used in different software
 
@@ -343,19 +323,18 @@ void raddi::instance::enum_pids (HKEY hBase, std::map <unsigned int, description
                     continue;
                 }
 
-                // is this PID really the instance?
-                //  - if the start timestamps don't match, then PID was reused by other process
+                // validate heartbeat
+                //  - if the heartbeat wasn't recently updated, we consider the instance crashed
 
-                FILETIME ftInstance = { 0, 0 };
-                size = sizeof ftInstance;
+                std::uint64_t heartbeat = 0;
+                size = sizeof heartbeat;
 
-                if (RegQueryValueEx (hInstance, L"start", NULL, NULL, (BYTE *) &ftInstance, &size) == ERROR_SUCCESS
-                    && ftStart.dwLowDateTime == ftInstance.dwLowDateTime
-                    && ftStart.dwHighDateTime == ftInstance.dwHighDateTime) {
-
-                    instance.running = true;
-                } else {
-                    instance.priority += 10;
+                if (RegQueryValueEx (hInstance, L"heartbeat", NULL, NULL, (BYTE *) &heartbeat, &size) == ERROR_SUCCESS) {
+                    if (raddi::microtimestamp () - heartbeat < 30'000'000) {
+                        instance.running = true;
+                    } else {
+                        instance.priority += 10;
+                    }
                 }
 
                 DWORD value = 0;
