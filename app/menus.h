@@ -29,7 +29,7 @@ void EnableContextItem (Menu::ID m, wchar_t code, UINT base, int index);
 void DisableContextItem (Menu::ID m, wchar_t code, UINT base, int index);
 
 void UpdateListsSubMenu ();
-bool ResolveListsSubMenuItem (UINT id, std::intptr_t * list, std::intptr_t * group);
+bool ResolveListsSubMenuItem (UINT id, int * list, int * group);
 
 void TrackContextMenu (HWND hWnd, LONG x, LONG y, Menu::ID m, std::intptr_t parameter);
 

@@ -171,7 +171,7 @@ void UpdateListsSubMenu () {
     }
 }
 
-bool ResolveListsSubMenuItem (UINT id, std::intptr_t * list, std::intptr_t * group) {
+bool ResolveListsSubMenuItem (UINT id, int * list, int * group) {
     id -= Window::ID::LIST_SUBMENU_BASE;
     if (id < mappingListsGroups.size ()) {
         
