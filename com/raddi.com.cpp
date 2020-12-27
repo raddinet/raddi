@@ -37,40 +37,36 @@ wchar_t ** argw;
 // TODO: add support for entering data in Base64 (sodium_base642bin)
 // TODO: use 'nstring' here to abstract Windows stuff out
 
+template <typename T> struct hexadecimal_char_traits {};
+template <> struct hexadecimal_char_traits <char> {
+    static int is (char c) { return std::isxdigit (c); }
+    static int scan (const char * input, unsigned int * value, int * offset) {
+        return std::sscanf (input, "%2x%n", value, offset);
+    }
+};
+template <> struct hexadecimal_char_traits <wchar_t> {
+    static int is (wchar_t c) { return std::iswxdigit (c); }
+    static int scan (const wchar_t * input, unsigned int * value, int * offset) {
+        return std::swscanf (input, L"%2x%n", value, offset);
+    }
+};
+
 // hexadecimal
 //  - parses string of two-character hexadecimal values
 //    optionally separated by any non-hexadecimal character
 //  - returns number of bytes written to 'content'
 //
-std::size_t hexadecimal (const wchar_t * p, std::uint8_t * content, std::size_t maximum) {
+template <typename C>
+std::size_t hexadecimal (const C * p, std::uint8_t * content, std::size_t maximum) {
     std::size_t n = 0;
-    std::size_t offset;
-    unsigned int value;
 
     while (*p && maximum) {
-        while (*p && !std::iswxdigit (*p)) {
+        while (*p && !hexadecimal_char_traits <C>::is (*p)) {
             ++p;
         }
-        if (std::swscanf (p, L"%2x%zn", &value, &offset) == 1) {
-            p += offset;
-            *content++ = value;
-            --maximum;
-            ++n;
-        } else
-            break;
-    }
-    return n;
-}
-std::size_t hexadecimal (const char * p, std::uint8_t * content, std::size_t maximum) {
-    std::size_t n = 0;
-    std::size_t offset;
-    unsigned int value;
-
-    while (*p && maximum) {
-        while (*p && !std::iswdigit (*p)) {
-            ++p;
-        }
-        if (std::sscanf (p, "%2x%zn", &value, &offset) == 1) {
+        int offset;
+        unsigned int value;
+        if (hexadecimal_char_traits <C>::scan (p, &value, &offset) == 1) {
             p += offset;
             *content++ = value;
             --maximum;
@@ -1847,9 +1843,15 @@ bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::si
             }
             std::wprintf (L"%s", ws.c_str ());
         }
+        std::printf ("\n");
     }
 
     color (7);
+
+    if (analysis.padding) {
+        std::printf ("%sPADDING: %zu\n", indent, analysis.padding);
+    }
+
     return true;
 }
 
