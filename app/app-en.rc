@@ -70,7 +70,7 @@ STRINGTABLE {
     0x77    "Rename"
 
 
-    MAIN | EVENT | 0x01 "raddi.net {1}.{2} {3}, {4}"
+    MAIN | EVENT | 0x01 "raddi.net {1}.{2} {3}, {4}, {5}"
     MAIN | EVENT | 0x02 "generated uuid {1}"
     MAIN | EVENT | 0x03 "database file: {1}"
 

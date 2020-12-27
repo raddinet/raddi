@@ -69,7 +69,7 @@ int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR
     }
         
     raddi::log::display (L"all"); // TODO: redirect display to internal history window
-    raddi::log::initialize (option (__argc, __wargv, L"log"), raddi::defaults::log_subdir, L"app", false);
+    raddi::log::initialize (option (__argc, __wargv, L"log"), raddi::defaults::log_subdir, L"app", raddi::log::scope::user);
     
     if (version == nullptr) {
         SetLastError (ERROR_FILE_CORRUPT);
@@ -79,7 +79,7 @@ int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR
     raddi::log::event (0x01,
                        HIWORD (version->dwProductVersionMS),
                        LOWORD (version->dwProductVersionMS),
-                       ARCHITECTURE, BUILD_TIMESTAMP);
+                       ARCHITECTURE, BUILD_TIMESTAMP, COMPILER);
 
     raddi::log::note (0x05, "sqlite3", sqlite3_libversion (), GetModuleHandle (SQLITE3_DLL_NAME) ? SQLITE3_DLL_TYPE : L"static");
     raddi::log::note (0x05, "liblzma", lzma_version_string (), GetModuleHandle (L"liblzma") ? L"dynamic" : L"static");
