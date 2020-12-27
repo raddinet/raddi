@@ -147,10 +147,6 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
             return raddi::db::required;
 
         case raddi::entry::not_an_announcement:
-            union {
-                raddi::db::row r;
-                raddi::db::trow tr;
-            };
             if (this->channels->get (entry->parent)
                     || ((entry->parent.timestamp == entry->parent.identity.timestamp) && this->identities->get (entry->parent.identity))) {
 
@@ -160,24 +156,28 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
                 *level = assessed_level::thread;
                 return raddi::db::classify;
 
-            } else
-            if (this->threads->get (entry->parent, &tr)) {
+            } else {
+                raddi::db::trow tr;
+                if (this->threads->get (entry->parent, &tr)) {
 
-                // parent is thread: entry is a top level comment within a thread (or vote on the thread)
-                top->channel = tr.parent;
-                top->thread = entry->parent;
-                *level = assessed_level::reply;
-                return raddi::db::classify;
+                    // parent is thread: entry is a top level comment within a thread (or vote on the thread)
+                    top->channel = tr.parent;
+                    top->thread = entry->parent;
+                    *level = assessed_level::reply;
+                    return raddi::db::classify;
 
-            } else
-            if (this->data->get (entry->parent, &r)) {
+                } else {
+                    raddi::db::row r;
+                    if (this->data->get (entry->parent, &r)) {
 
-                // parent is normal entry: nested comment, vote or stuff
-                *top = r.top ();
-                *level = assessed_level::nested;
-                return raddi::db::classify;
-            } else
-                return raddi::db::detached;
+                        // parent is normal entry: nested comment, vote or stuff
+                        *top = r.top ();
+                        *level = assessed_level::nested;
+                        return raddi::db::classify;
+                    } else
+                        return raddi::db::detached;
+                }
+            }
     }
     return raddi::db::rejected; // unreachable
 }
