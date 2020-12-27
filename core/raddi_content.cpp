@@ -21,6 +21,7 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
 
                 case 0x00: // NOP, too early, 'length' should not include PoW, still we are done
                     finish_text ();
+                    analysis.padding = length;
                     return analysis;
 
                 case 0x09: // TAB, used in text formatting
@@ -187,8 +188,8 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                             break;
                     }
 
-                    content += stamp.size + 1;
-                    length -= stamp.size + 1;
+                    content += std::size_t (stamp.size) + 1;
+                    length -= std::size_t (stamp.size) + 1;
                 } else {
                     // special case when stamp byte is last, then code 0x00 is assumed
                     switch (stamp.type) {
@@ -351,8 +352,8 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
                             analysis.attachments.push_back (attachment);
                     }
 
-                    content += attachment.size + 2;
-                    length -= attachment.size + 2;
+                    content += std::size_t (attachment.size) + 2;
+                    length -= std::size_t (attachment.size) + 2;
                 }
                 break;
         }
@@ -362,24 +363,6 @@ raddi::content::analysis raddi::content::analyze (const std::uint8_t * content, 
     }
     finish_text ();
     return analysis;
-}
-
-namespace {
-    template <typename T, std::size_t N>
-    std::size_t parse_and_consume_prefixed_id (const char * data, std::size_t size, const char (&prefix) [N], T & value) {
-        if (size >= (N - 1) + T::min_length) {
-            if (std::strncmp (data, prefix, N - 1) == 0) {
-                return value.parse (prefix + (N - 1));
-            }
-        }
-        return 0;
-    }
-
-    template <typename T, std::size_t N>
-    bool validate_prefixed_id (const char * data, std::size_t size, const char (&prefix) [N]) {
-        T temporary;
-        return parse_and_consume_prefixed_id (data, size, prefix, temporary) == size - (N - 1);
-    }
 }
 
 raddi::content::summary raddi::content::analysis::summarize (summary summary) const {

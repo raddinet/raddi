@@ -125,7 +125,7 @@ namespace raddi {
 
                 std::uint64_t remaining_available_bits : 30;
             };
-            std::uint64_t raw;
+            std::uint64_t raw = 0;
 
         public:
             summary & operator |= (const summary & other) {
@@ -170,7 +170,7 @@ namespace raddi {
 
     // analysis
     //  - first step in between binary data and resulting 'content' structure
-    //  - note that attachments of 0xFC (compressed) are NOT uncomrpessed and included in analysis
+    //  - note that attachments of 0xFC (compressed) are NOT uncompressed and included in analysis
     //
     struct content::analysis {
 
@@ -228,6 +228,8 @@ namespace raddi {
         std::vector <token>     tokens; // ETX, BEL, BS
         std::vector <stamp>     stamps; // SYN, EM
         std::vector <attachment> attachments;
+
+        std::size_t             padding = 0; // number of bytes remaining after early NUL (including)
 
     public:
         // summarize
