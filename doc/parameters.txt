@@ -265,6 +265,10 @@ RADDI.com utility functions/commands:
 			- service name, default is "raddi"
 		- optional parameters:
 			- path - override service executable path (command line)
+	- set-log-level:<level>
+	- set-display-level:<level>
+		- requests the instance to change current log/display level
+		- see 'log' parameter above for list of supported levels
 	- new:identity
 		- creates new identity announcement with specified content (text/content)
 		  and transmits it through active instance (specified, or first found)

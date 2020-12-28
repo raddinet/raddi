@@ -550,6 +550,8 @@ bool list (const wchar_t * parent);
 bool get (const wchar_t * eid);
 bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::size_t nesting = 0);
 
+bool set_log_level (const wchar_t * level);
+bool set_display_level (const wchar_t * level);
 bool download_command (const wchar_t * what);
 bool erase_command (const wchar_t * what);
 bool peer_command (enum class raddi::command::type, const wchar_t * address);
@@ -688,6 +690,13 @@ bool go () {
         // TODO: subscriptions/blacklisted/retained
 
         return list (parameter);
+    }
+
+    if (auto parameter = command (argc, argw, L"set-log-level")) {
+        return set_log_level (parameter);
+    }
+    if (auto parameter = command (argc, argw, L"set-display-level")) {
+        return set_display_level (parameter);
     }
 
     if (auto parameter = command (argc, argw, L"new")) {
@@ -861,6 +870,29 @@ bool StringToAddress (SOCKADDR_INET & address, const wchar_t * string) noexcept 
     INT length = sizeof address;
     return WSAStringToAddress (const_cast <wchar_t *> (string), AF_INET6, NULL, reinterpret_cast <SOCKADDR *> (&address.Ipv6), &length) == 0
         || WSAStringToAddress (const_cast <wchar_t *> (string), AF_INET, NULL, reinterpret_cast <SOCKADDR *> (&address.Ipv4), &length) == 0;
+}
+
+bool set_log_level (const wchar_t * parameter) {
+    raddi::instance instance (option (argc, argw, L"instance"));
+    if (instance.status != ERROR_SUCCESS)
+        return raddi::log::data (0x91);
+
+    raddi::log::level level;
+    if (raddi::log::parse_level (parameter, &level)) {
+        return send (instance, raddi::command::type::set_log_level, level);
+    } else
+        return false;
+}
+bool set_display_level (const wchar_t * parameter) {
+    raddi::instance instance (option (argc, argw, L"instance"));
+    if (instance.status != ERROR_SUCCESS)
+        return raddi::log::data (0x91);
+
+    raddi::log::level level;
+    if (raddi::log::parse_level (parameter, &level)) {
+        return send (instance, raddi::command::type::set_display_level, level);
+    } else
+        return false;
 }
 
 bool peer_command (enum class raddi::command::type cmd, const wchar_t * addr) {

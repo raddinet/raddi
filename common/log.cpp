@@ -31,31 +31,6 @@ namespace {
         return !std::wcsncmp (string, prefix, length)
             && !std::iswalnum (string [length]);
     }
-
-    raddi::log::level parse_level (const wchar_t * string, raddi::log::level default_) {
-        if (string) {
-            static const struct {
-                const wchar_t * prefix;
-                raddi::log::level level;
-            } map [] = {
-                { L"all", raddi::log::level::all },
-                { L"everything", raddi::log::level::all },
-                { L"event", raddi::log::level::event },
-                { L"events", raddi::log::level::event },
-                { L"data", raddi::log::level::data },
-                { L"error", raddi::log::level::error },
-                { L"errors", raddi::log::level::error },
-                { L"stop", raddi::log::level::stop },
-                { L"stops", raddi::log::level::stop },
-                { L"disable", raddi::log::level::disabled },
-                { L"disabled", raddi::log::level::disabled },
-            };
-            for (const auto & mapping : map)
-                if (compare_prefix (string, mapping.prefix))
-                    return mapping.level;
-        }
-        return default_;
-    }
     const wchar_t * component_name (raddi::component c) {
         switch (c) {
             case raddi::component::main: return L"main";
@@ -128,8 +103,44 @@ bool raddi::log::get_scope_path (scope scope, wchar_t * buffer) {
     return SHGetFolderPath (NULL, csidl, NULL, 0, buffer) == S_OK;
 }
 
+bool raddi::log::parse_level (const wchar_t * string, raddi::log::level * level) {
+    if (string) {
+        static const struct {
+            const wchar_t * prefix;
+            raddi::log::level level;
+        } map [] = {
+            { L"all", raddi::log::level::all },
+            { L"everything", raddi::log::level::all },
+            { L"event", raddi::log::level::event },
+            { L"events", raddi::log::level::event },
+            { L"data", raddi::log::level::data },
+            { L"error", raddi::log::level::error },
+            { L"errors", raddi::log::level::error },
+            { L"stop", raddi::log::level::stop },
+            { L"stops", raddi::log::level::stop },
+            { L"disable", raddi::log::level::disabled },
+            { L"disabled", raddi::log::level::disabled },
+        };
+        for (const auto & mapping : map)
+            if (compare_prefix (string, mapping.prefix)) {
+                if (level) {
+                    *level = mapping.level;
+                }
+                return true;
+            }
+    }
+    return false;
+}
+
+namespace {
+    raddi::log::level get_proper_level (const wchar_t * string, raddi::log::level level) {
+        raddi::log::parse_level (string, &level);
+        return level;
+    }
+}
+
 bool raddi::log::initialize (const wchar_t * option, const wchar_t * subdir, const wchar_t * prefix, scope scope) {
-    settings::level = parse_level (option, settings::level);
+    settings::level = get_proper_level (option, settings::level);
 
     api_error user_path_error;
     std::wstring user_path;
@@ -196,7 +207,7 @@ bool raddi::log::initialize (const wchar_t * option, const wchar_t * subdir, con
 }
 
 void raddi::log::display (const wchar_t * option) {
-    settings::display = parse_level (option, settings::display);
+    settings::display = get_proper_level (option, settings::display);
 
     if (settings::display != log::level::disabled) {
         output = GetStdHandle (STD_OUTPUT_HANDLE);

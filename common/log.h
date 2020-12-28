@@ -84,6 +84,12 @@ namespace raddi {
         //
         bool get_scope_path (scope, wchar_t * buffer);
 
+        // parse_level
+        //  - parses 'string' for known log level, writes it into 'level', if not null
+        //  - returns true for recognized string, false otherwise ('level' is unchanged)
+        //
+        bool parse_level (const wchar_t * string, raddi::log::level * level);
+
         // path
         //  - whenever 'initialize' succeeds then 'path' contains full path to the log file
         //
