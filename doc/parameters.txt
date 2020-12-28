@@ -407,8 +407,8 @@ RADDI.com utility additional and optional parameters to functions:
 	- instance:<pid>
 		- specifies active instance, identified by PID number, to operate on
 		- otherwise first instance found is used, searched in following order:
-			1) raddi node service
-			2) raddi node running under same user account
+			1) raddi node running under same user account
+			2) raddi node service
 			3) raddi node running under other user account
 		- applies to every function, except:
 			- timestamp, microtimestamp, benchmark
