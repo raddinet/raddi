@@ -390,6 +390,21 @@ RADDI.com utility functions/commands:
 			- SID - OS session ID (0 - services), 
 			- status - text: "broadcasting", "disconnected" or "crashed"
 			- priority - number (0..255), lower value = higher priority
+	- list:core
+		- enumerates core node IP addresses stored in the database
+		- is special variant of "list:peers" command
+	- list:peers
+		- enumerates peers IP addresses stored in the database, preceeding with
+		  label describing the type, which is one of following:
+			- core - nodes bootstrapped or relayed by other core nodes
+			- established - nodes that we have connected to repeatedly
+			- validated - nodes that we successfully connected to
+			- announced - nodes relayed by other nodes, not yet validated
+		- assessment value follows each address, enclosed in parentheses
+	- list:blacklist
+		- enumerates IP addresses of blacklisted peers
+		- after each address, enclosed in parentheses, number of days after which
+		  the blacklisting is removed follows
 	- add:<IP>
 	- remove:<IP>
 	- ban:<IP>

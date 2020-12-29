@@ -20,6 +20,8 @@
 #include "../core/raddi_request.h"
 #include "../core/raddi_content.h"
 #include "../core/raddi_defaults.h"
+#include "../core/raddi_peer_levels.h"
+#include "../core/raddi_database_peerset.h"
 
 #pragma warning (disable:6262) // function stack size warning
 
@@ -546,6 +548,7 @@ bool installer (const wchar_t * svcname, bool install);
 bool list_identities ();
 bool list_channels ();
 bool list_threads ();
+bool list_peers (raddi::level);
 bool list (const wchar_t * parent);
 bool get (const wchar_t * eid);
 bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::size_t nesting = 0);
@@ -596,7 +599,6 @@ bool go () {
 
     // TODO: clear blacklist, list blacklist, ban:IP?
     // TODO: clear peers (all)
-    // TODO: set-log-level, set-display-level -> raddi::command
 
     // install/uninstall
     //  - create or remove system service
@@ -657,7 +659,7 @@ bool go () {
     }
 
     if (auto parameter = command (argc, argw, L"list")) {
-        if (!std::wcscmp (parameter, L"instances")) {
+        if (std::wcscmp (parameter, L"instances") == 0) {
             auto instances = raddi::instance::enumerate ();
             if (!instances.empty ()) {
                 for (auto & [pid, description] : instances) {
@@ -674,18 +676,29 @@ bool go () {
             }
             return true;
         }
-        if (!std::wcscmp (parameter, L"identities")) {
+        if (std::wcscmp (parameter, L"identities") == 0) {
             return list_identities ();
         }
-        if (!std::wcscmp (parameter, L"channels")) {
+        if (std::wcscmp (parameter, L"channels") == 0) {
             return list_channels ();
         }
-        if (!std::wcscmp (parameter, L"threads")) {
+        if (std::wcscmp (parameter, L"threads") == 0) {
             return list_threads ();
         }
+        if (std::wcscmp (parameter, L"peers") == 0) {
+            return list_peers (raddi::level::core_nodes)
+                && list_peers (raddi::level::established_nodes)
+                && list_peers (raddi::level::validated_nodes)
+                && list_peers (raddi::level::announced_nodes) // ???
+                ;
+        }
+        if (std::wcscmp (parameter, L"core") == 0) {
+            return list_peers (raddi::level::core_nodes);
+        }
+        if (std::wcscmp (parameter, L"blacklist") == 0) {
+            return list_peers (raddi::level::blacklisted_nodes);
+        }
 
-        // TODO: core nodes
-        // TODO: bans
         // TODO: rejected
         // TODO: subscriptions/blacklisted/retained
 
@@ -747,7 +760,7 @@ bool go () {
     // TODO: document all below
 
     if (auto parameter = command (argc, argw, L"echo")) {
-        if (!std::wcscmp (parameter, L"connection")) {
+        if (std::wcscmp (parameter, L"connection") == 0) {
 
             raddi::instance instance (option (argc, argw, L"instance"));
             if (instance.status != ERROR_SUCCESS)
@@ -1521,6 +1534,44 @@ bool list_threads () {
                                     return channel == row.top ().channel;
                                 });
     }
+}
+bool list_peers (raddi::level level) {
+    raddi::instance instance (option (argc, argw, L"instance"));
+    if (instance.status != ERROR_SUCCESS)
+        return raddi::log::data (0x91);
+
+    raddi::db database (file::access::read, instance.get <std::wstring> (L"database"));
+    if (!database.connected ())
+        return raddi::log::error (0x92, instance.get <std::wstring> (L"database"));
+
+    try {
+        std::wprintf (L"%s:\n", raddi::translate (level, std::wstring ()).c_str ());
+
+        database.peers [level]->load (database.path + L"\\network", AF_INET, level);
+        database.peers [level]->load (database.path + L"\\network", AF_INET6, level);
+
+        if (!database.peers [level]->enumerate ([](const raddi::address & a, std::uint16_t assessment) {
+            auto base = 5;
+            switch (a.family) {
+                case AF_INET: base = 21; break;
+                case AF_INET6: base = 47; break;
+            }
+            auto padding = 0;
+            padding += (a.port < 10000u);
+            padding += (a.port < 1000u);
+            padding += (a.port < 100u);
+            padding += (a.port < 10u);
+            padding += 2 * (a.port == 0u);
+
+            std::wprintf (L"%*s%*s (%u)\n", base - padding, raddi::translate (a, std::wstring ()).c_str (), padding, L"", assessment);
+        })) {
+            std::printf ("-\n");
+        }
+        return true;
+    } catch (const std::bad_alloc &) {
+        raddi::log::error (raddi::component::database, 20);
+    }
+    return false;
 }
 
 bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::size_t nesting) {

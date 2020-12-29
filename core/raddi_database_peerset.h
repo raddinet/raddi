@@ -51,6 +51,15 @@ public:
     bool empty () const;
     bool count (const address & a) const;
     bool count_ip (const address & a) const;
+
+    template <typename F>
+    std::size_t enumerate (F f) const {
+        immutability guard (this->lock);
+        for (auto & [address, assessment] : this->addresses) {
+            f (address, assessment);
+        }
+        return this->addresses.size ();
+    }
 };
 
 #endif
