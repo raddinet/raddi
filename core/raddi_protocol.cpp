@@ -189,13 +189,13 @@ std::size_t raddi::protocol::xchacha20poly1305::encode (unsigned char * message,
                                                         const unsigned char * data, std::size_t size) {
     if ((size <= raddi::protocol::max_payload) && (size + raddi::protocol::frame_overhead <= max)) {
 
-        auto length = size + crypto_aead_chacha20poly1305_ietf_ABYTES;
+        auto length = size + crypto_aead_xchacha20poly1305_ietf_ABYTES;
         message [0] = (length >> 0) & 0xFF;
         message [1] = (length >> 8) & 0xFF;
 
         sodium_increment (this->outbound_nonce, sizeof this->outbound_nonce);
-        if (crypto_aead_chacha20poly1305_ietf_encrypt (&message [2], nullptr, data, size, &message [0], 2,
-                                                       nullptr, this->outbound_nonce, this->outbound_key) == 0)
+        if (crypto_aead_xchacha20poly1305_ietf_encrypt (&message [2], nullptr, data, size, &message [0], 2,
+                                                        nullptr, this->outbound_nonce, this->outbound_key) == 0)
             return length + sizeof (std::uint16_t);
     }
     return 0;
@@ -232,9 +232,9 @@ std::size_t raddi::protocol::xchacha20poly1305::decode (unsigned char * message,
     if ((size >= raddi::protocol::frame_overhead) && (size - raddi::protocol::frame_overhead <= max)) {
         unsigned long long length;
         sodium_increment (this->inbound_nonce, sizeof this->inbound_nonce);
-        if (crypto_aead_chacha20poly1305_ietf_decrypt (message, &length, nullptr,
-                                                       &data [2], size - 2, &data [0], 2,
-                                                       this->inbound_nonce, this->inbound_key) == 0)
+        if (crypto_aead_xchacha20poly1305_ietf_decrypt (message, &length, nullptr,
+                                                        &data [2], size - 2, &data [0], 2,
+                                                        this->inbound_nonce, this->inbound_key) == 0)
             return (std::size_t) length;
     }
     return 0;
