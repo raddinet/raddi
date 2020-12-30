@@ -37,7 +37,7 @@ namespace cuckoo {
     //
     template <unsigned N1, unsigned N2>
     class hash {
-        std::uint64_t base [4];
+        std::uint64_t base [4] = {};
 
     public:
         // type

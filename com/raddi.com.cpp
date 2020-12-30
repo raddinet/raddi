@@ -9,6 +9,7 @@
 
 #include <sodium.h>
 #include <lzma.h>
+#include "../lib/cuckoocycle.h"
 
 #include "../common/log.h"
 #include "../common/lock.h"
@@ -26,7 +27,10 @@
 #pragma warning (disable:6262) // function stack size warning
 
 uuid app;
-wchar_t buffer [4*65536];
+static union {
+    wchar_t         buffer [4 * 65536];
+    std::uint8_t rawbuffer [8 * 65536];
+};
 volatile bool quit = false;
 
 alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/1";
@@ -169,6 +173,7 @@ const wchar_t * userfile (wchar_t * path, std::uintmax_t * offset, std::uintmax_
 // userfilecontent
 //  - parses user file path (see above) and according to the parameter reads part of the file
 //    into the provided content buffer
+//  - TODO: warning when 'maximum' is exceeded
 //
 std::size_t userfilecontent (wchar_t * path, std::uint8_t * content, std::size_t maximum) {
     file f;
@@ -211,6 +216,7 @@ std::size_t userfilecontent (wchar_t * path, std::uint8_t * content, std::size_t
 //  - parses command-line 'text' and 'content' parameters and builds an entry content
 //  - parameters are concatenated in order in which they appear on command-line
 //  - returns gathered content size
+//  - TODO: rewrite to support streaming content (e.g. 'hash' command and large files)
 //
 std::size_t gather (std::uint8_t * content, std::size_t maximum) {
     const auto content_begin = content;
@@ -539,6 +545,7 @@ int wmain (int argc, wchar_t ** argw) {
 
 bool benchmark ();
 bool database_verification ();
+bool hash (const wchar_t *);
 
 bool new_identity ();
 bool new_channel ();
@@ -656,6 +663,10 @@ bool go () {
 
     if (command (argc, argw, L"benchmark")) {
         return benchmark ();
+    }
+
+    if (auto parameter = command (argc, argw, L"hash")) {
+        return hash (parameter);
     }
 
     if (auto parameter = command (argc, argw, L"list")) {
@@ -1761,6 +1772,7 @@ bool analyze (const std::uint8_t * data, std::size_t size, bool compact, std::si
                         switch (stamp.code) {
                             case 0x10: std::printf ("%sPARENT CRC-16 CCITT", indent_extra); break;
                             case 0x20: std::printf ("%sPARENT CRC-32", indent_extra); break;
+                            case 0x30: std::printf ("%sPARENT CRC-64", indent_extra); break;
                             case 0x51: std::printf ("%sPARENT BLAKE2b (16B)", indent_extra); break;
                             case 0x61: std::printf ("%sPARENT BLAKE2b (32B)", indent_extra); break;
                             case 0x71: std::printf ("%sPARENT BLAKE2b (64B)", indent_extra); break;
@@ -2137,6 +2149,121 @@ bool database_verification () {
         [] (const auto &, const auto & detail, std::uint8_t *) {});
 
     return true;
+}
+
+std::string simplify_hash_name (const wchar_t * s) {
+    std::string result;
+    for (; *s; ++s) {
+        switch (*s) {
+            case L'-':
+            case L'_':
+            case L':':
+                break;
+            default:
+                if (std::iswalpha (*s)) {
+                    result.push_back (char (std::towlower (*s)));
+                } else
+                if (std::iswdigit (*s)) {
+                    result.push_back (char (*s));
+                } else
+                    return result;
+        }
+    }
+    return result;
+}
+
+namespace {
+    std::uint16_t crc16 (const std::uint8_t * data, std::size_t size, std::uint16_t r) {
+        while (size--) {
+            r ^= *data++;
+
+            for (auto bit = 0u; bit != 8; ++bit) {
+                if (r & 0x0001) {
+                    r >>= 1;
+                    r ^= 0x8408u; // CCITT
+                } else {
+                    r >>= 1;
+                }
+            }
+        }
+        return r;
+    }
+}
+
+bool hash (const wchar_t * function_) {
+    const auto function = simplify_hash_name (function_);
+    const auto datasize = gather (rawbuffer, sizeof rawbuffer);
+
+    auto n = 0u;
+    std::uint8_t result [64];
+
+    if (function == "crc16") {
+        auto crc = crc16 (rawbuffer, datasize, 0);
+        n = sizeof crc;
+        std::memcpy (result, &crc, n);
+    }
+    if (function == "crc32") {
+        auto crc = lzma_crc32 (rawbuffer, datasize, 0); // IEEE 802.3
+        n = sizeof crc;
+        std::memcpy (result, &crc, n);
+    }
+    if (function == "crc64") {
+        auto crc = lzma_crc64 (rawbuffer, datasize, 0); // ECMA-182
+        n = sizeof crc;
+        std::memcpy (result, &crc, n);
+    }
+
+    if (function.starts_with ("blake2b")) {
+        try {
+            n = std::stoul (function.substr (7));
+            if (n >= 16 && n <= 64) {
+                crypto_generichash_blake2b (result, n, rawbuffer, datasize, nullptr, 0);
+            } else
+                return false;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    if (function == "siphash03raddi") {
+        std::uint8_t seed [32] = { 0 };
+        cuckoo::hash <0, 3> hash;
+
+        hash.seed (seed);
+        auto h = hash (rawbuffer, datasize);
+        
+        n = sizeof h;
+        std::memcpy (result, &h, n);
+    }
+
+    if (function == "siphash24") {
+        n = crypto_shorthash_siphash24_BYTES;
+        std::uint8_t blank [crypto_shorthash_siphash24_KEYBYTES] = { 0 };
+        crypto_shorthash_siphash24 (result, rawbuffer, datasize, blank);
+    }
+    if (function == "siphashx24") {
+        n = crypto_shorthash_siphashx24_BYTES;
+        std::uint8_t blank [crypto_shorthash_siphashx24_KEYBYTES] = { 0 };
+        crypto_shorthash_siphashx24 (result, rawbuffer, datasize, blank);
+    }
+
+    if (function == "sha256") {
+        n = crypto_hash_sha256_BYTES;
+        crypto_hash_sha256 (result, rawbuffer, datasize);
+    }
+    if (function == "sha512") {
+        n = crypto_hash_sha512_BYTES;
+        crypto_hash_sha512 (result, rawbuffer, datasize);
+    }
+
+    if (n) {
+        for (auto i = 0u; i != n; ++i) {
+            std::printf ("%02x", result [i]);
+        }
+        std::printf ("\n");
+        return true;
+    } else
+        return false;
 }
 
 bool benchmark () {

@@ -245,6 +245,21 @@ RADDI.com utility functions/commands:
 			- optional
 			- hexadecimal timestamp to decode, e.g.:
 			  'microtimestamp:87544f12f84' shows '2018-04-18 15:16:00.852868'
+	- hash:<function>
+		- computes hash of an input provided in 'text' and 'content' parameters
+		- maximum supported data length is 512 kB
+		- function - name of hash function, case insensitive; dash, colon and
+		  underscore characters are ignored
+			- "CRC-16" - CCITT polynomial
+			- "CRC-32" - IEEE 802.3 polynomial, courtesy of lzma library
+			- "CRC-64" - ECMA-182 polynomial, courtesy of lzma library
+			- "Blake2B<N>" - where N is output size in range 16..64
+			- "SHA-256" - courtesy of libsodium
+			- "SHA-512" - courtesy of libsodium
+			- "SipHash24" - courtesy of libsodium
+			- "SipHashX24" - courtesy of libsodium
+			- "SipHash03-RADDI" - special variation of siphash used by RADDI
+			  Cuckoo Cycle PoW algorithm
 	- benchmark
 		- proof-of-work (cuckoo cycle) benchmark
 		- attempts to generate proof-of-work of all supported complexities on

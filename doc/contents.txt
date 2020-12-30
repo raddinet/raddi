@@ -205,6 +205,7 @@ Leading bytes:
 		- defined type codes:
 			- 0x10 - CRC-16 CCITT
 			- 0x20 - CRC-32
+			- 0x30 - CRC-64
 			- 0x51, 0x61 and 0x71 - BLAKE2b
 			- 0x32 - SipHash24
 			- 0x52 - SipHashx24
