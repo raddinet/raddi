@@ -18,7 +18,7 @@ Nonces are incremented every time a frame is sent/received in particular directi
 Different amount of bytes is used for different supported protocols:
  - 32 bytes for AEGIS-256
  - 12 bytes for AES256-GCM
- - 24 bytes for ChaCha20-Poly1305
+ - 24 bytes for XChaCha20-Poly1305
 
 FLAGS signalize optional protocol features and requirements.
 Unknown SOFT FLAGS are ignored by the node. Their purpose is to enable optional features.
@@ -69,7 +69,7 @@ FRAMING
 | 2B | 16B | ...
 
 CB - amount of data, in bytes, following the two CB bytes
-AES - authentication tag of ChaCha20-Poly1305, AES256-GCM or AEGIS-256
+AES - authentication tag of XChaCha20-Poly1305, AES256-GCM or AEGIS-256
 
 The additional authenticated data for AEAD construction are the two CB bytes. The rest of
 the frame is encrypted using the keys/nonces generated in the initial handshake. Nonce is
