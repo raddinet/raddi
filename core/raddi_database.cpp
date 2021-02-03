@@ -32,7 +32,7 @@ raddi::db::db (file::access mode, const std::wstring & path)
         this->peers [i] .reset (new peerset ((level) i));
     }
 
-    if (directory::create (path.c_str ())) {
+    if (directory::create_full_path (path.c_str ())) {
         if (this->lock.open (path + L"\\.lock", file::mode::always,
                              mode, (mode == file::access::read) ? file::share::full : file::share::read,
                              file::buffer::none)) {
