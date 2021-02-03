@@ -29,14 +29,14 @@ directory::create_result directory::create (const wchar_t * path) noexcept {
 }
 
 namespace {
-    bool step (const wchar_t *);
+    bool create_full_path_step (wchar_t *);
 }
 
 directory::create_result directory::create_full_path (const wchar_t * path) noexcept {
     wchar_t full [32768u];
     if (GetFullPathName (path, sizeof full / sizeof full [0], full, nullptr)) {
 
-        if (step (full))
+        if (create_full_path_step (full))
             return directory::created;
 
         if (GetLastError () == ERROR_ALREADY_EXISTS) {
@@ -50,16 +50,16 @@ directory::create_result directory::create_full_path (const wchar_t * path) noex
 }
 
 namespace {
-    bool step (const wchar_t * path) {
+    bool create_full_path_step (wchar_t * path) {
 
         if (CreateDirectory (path, NULL))
             return true;
 
         if (GetLastError () == ERROR_PATH_NOT_FOUND) {
-            if (wchar_t * slash = (wchar_t *) std::wcsrchr (path, L'\\')) {
+            if (wchar_t * slash = std::wcsrchr (path, L'\\')) {
 
                 *slash = L'\0';
-                if (step (path)) {
+                if (create_full_path_step (path)) {
                     *slash = L'\\';
 
                     if (CreateDirectory (path, NULL)) {
