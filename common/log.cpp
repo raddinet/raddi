@@ -100,7 +100,19 @@ bool raddi::log::get_scope_path (scope scope, wchar_t * buffer) {
             return false;
     }
 
-    return SHGetFolderPath (NULL, csidl, NULL, 0, buffer) == S_OK;
+    if (SHGetFolderPath (NULL, csidl, NULL, 0, buffer) == S_OK)
+        return true;
+
+    // user-scope fallback in case shell api fails
+    //  - env variable AppData (LOCALAPPDATA is not available on XP)
+
+    switch (scope) {
+        case raddi::log::scope::user:
+            return GetEnvironmentVariable (L"LOCALAPPDATA", buffer, MAX_PATH)
+                || GetEnvironmentVariable (L"APPDATA", buffer, MAX_PATH);
+        default:
+            return false;
+    }
 }
 
 bool raddi::log::parse_level (const wchar_t * string, raddi::log::level * level) {
@@ -192,6 +204,13 @@ bool raddi::log::initialize (const wchar_t * option, const wchar_t * subdir, con
         }
     }
     
+    // use local temp as a general fallback
+    if (logfile.closed ()) {
+        if (GetTempPath (MAX_PATH, &path [0])) {
+            create (path, subdir, filename);
+        }
+    }
+
     // report error (screen only, obviously)
     if (logfile.closed ()) {
         raddi::log::report (raddi::component::main, raddi::log::level::error, 0xF1, path);
