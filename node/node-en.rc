@@ -125,7 +125,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     SOURCE | ERROR | 8  "unable to start, error {ERR}"
     SOURCE | ERROR | 9  "won't process nor broadcast file {1}, truncated"
 
-    SERVER | NOTE | 1       "{1}, {2} B pending, {3}s idle; RCV {4}: msgs {5}, k/a {6}; TRM {7}: delayed {8}"
+    SERVER | NOTE | 1       "{1}, {2} B pending, {3}s idle; RCV {4}: MSG {5}, K/A {6}; TRM {7}: DLY {8}"
     SERVER | NOTE | 2       "currently connected to {1} nodes ({2} core nodes)"
     SERVER | NOTE | 3       "reflected connection dropped"
     SERVER | NOTE | 4       "connecting through SOCKS5t proxy {1}"
