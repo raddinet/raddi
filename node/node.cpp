@@ -41,6 +41,7 @@
 #include "../core/raddi_instance.h"
 
 #pragma warning (disable:28112) // interlocked warnings
+#pragma warning (disable:26812) // unscoped enum warning
 #pragma warning (disable:6262) // stack usage warning
 
 namespace {
@@ -843,6 +844,11 @@ namespace {
                            (unsigned long) HIWORD (version->dwProductVersionMS),
                            (unsigned long) LOWORD (version->dwProductVersionMS),
                            ARCHITECTURE, BUILD_TIMESTAMP, COMPILER);
+
+        // load wininet.dll for error message table
+        //  - while we use winhttp.dll the error messages are only in wininet.dll
+        
+        LoadLibrary (L"WININET");
 
         if (auto h = LoadLibrary (SQLITE3_DLL_NAME)) {
             // node does not use sqlite, but logs version number for sake of completeness
