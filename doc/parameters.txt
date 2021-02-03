@@ -29,7 +29,10 @@ Common parameters:
 				- only when 'path' parameter is present and does not
 				  specify full path
 			2) user local app data path (not roaming)
+				- on Shell API failure (e.g.: in Nano Server container),
+				  the environment variable %LOCALAPPDATA% is consulted
 			3) application directory
+			4) temp directory, as provided by OS
 	- display:<default|all|everything|event(s)|data|error(s)|stop(s)|disable(d)>
 		- selects events displayed to console when started as application
 		- parameter is same as log level
