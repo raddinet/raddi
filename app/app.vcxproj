@@ -212,7 +212,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;SQLITE_API=__declspec(dllimport);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;SQLITE_API=__declspec(dllimport);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ControlFlowGuard>false</ControlFlowGuard>
@@ -256,7 +256,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;USING_WINSQLITE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;USING_WINSQLITE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ControlFlowGuard>false</ControlFlowGuard>
@@ -276,7 +276,8 @@
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
-      <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
+      <MinimumRequiredVersion>
+      </MinimumRequiredVersion>
       <SwapRunFromCD>true</SwapRunFromCD>
       <SwapRunFromNET>true</SwapRunFromNET>
       <LargeAddressAware>true</LargeAddressAware>
@@ -301,7 +302,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ControlFlowGuard>false</ControlFlowGuard>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -345,7 +346,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ControlFlowGuard>false</ControlFlowGuard>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -364,7 +365,8 @@
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
-      <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
+      <MinimumRequiredVersion>
+      </MinimumRequiredVersion>
       <SwapRunFromCD>true</SwapRunFromCD>
       <SwapRunFromNET>true</SwapRunFromNET>
       <LargeAddressAware>true</LargeAddressAware>
@@ -385,7 +387,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -415,7 +417,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -445,7 +447,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -457,7 +459,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
-      <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
+      <MinimumRequiredVersion>
+      </MinimumRequiredVersion>
       <SwapRunFromCD>true</SwapRunFromCD>
       <SwapRunFromNET>true</SwapRunFromNET>
       <AdditionalOptions>/STUB:..\tools\stub.exe %(AdditionalOptions)</AdditionalOptions>
@@ -479,7 +482,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;SQLITE_API=__declspec(dllimport);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;SQLITE_API=__declspec(dllimport);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ControlFlowGuard>false</ControlFlowGuard>
@@ -522,7 +525,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;SQLITE_OMIT_AUTOINIT;SQLITE_WIN32_MALLOC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ControlFlowGuard>false</ControlFlowGuard>
       <BufferSecurityCheck>false</BufferSecurityCheck>

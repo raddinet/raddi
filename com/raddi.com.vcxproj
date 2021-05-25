@@ -224,16 +224,17 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;psapi.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <SwapRunFromCD>true</SwapRunFromCD>
@@ -254,16 +255,18 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>/d2FH4 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;psapi.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
       <SwapRunFromCD>true</SwapRunFromCD>
@@ -284,18 +287,20 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;psapi.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
-      <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
+      <MinimumRequiredVersion>
+      </MinimumRequiredVersion>
       <SwapRunFromCD>true</SwapRunFromCD>
       <SwapRunFromNET>true</SwapRunFromNET>
       <SetChecksum>false</SetChecksum>
@@ -316,7 +321,7 @@
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>SECURITY_WIN32;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -327,13 +332,14 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ConformanceMode>true</ConformanceMode>
       <BasicRuntimeChecks />
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;psapi.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
@@ -359,7 +365,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -370,13 +376,14 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ConformanceMode>true</ConformanceMode>
       <BasicRuntimeChecks />
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;psapi.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
@@ -402,7 +409,7 @@
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>SECURITY_WIN32;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>false</ControlFlowGuard>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
@@ -414,13 +421,15 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ConformanceMode>true</ConformanceMode>
       <BasicRuntimeChecks />
+      <AdditionalOptions>/d2FH4 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;psapi.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
@@ -446,7 +455,7 @@
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>SECURITY_WIN32;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;NDEBUG;_CONSOLE;USING_WINSQLITE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;SECURITY_WIN32;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;NDEBUG;_CONSOLE;USING_WINSQLITE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>false</ControlFlowGuard>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
@@ -459,16 +468,18 @@
       <ConformanceMode>true</ConformanceMode>
       <BasicRuntimeChecks>
       </BasicRuntimeChecks>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;psapi.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
-      <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
+      <MinimumRequiredVersion>
+      </MinimumRequiredVersion>
       <SwapRunFromCD>true</SwapRunFromCD>
       <SwapRunFromNET>true</SwapRunFromNET>
       <SetChecksum>true</SetChecksum>
@@ -491,7 +502,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>false</ControlFlowGuard>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
@@ -503,13 +514,15 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ConformanceMode>true</ConformanceMode>
       <BasicRuntimeChecks />
+      <AdditionalOptions>/d2FH4 %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;psapi.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
@@ -535,7 +548,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=1;CRT_STATIC="$(VCToolsVersion)";SECURITY_WIN32;LZMA_API_STATIC;SODIUM_STATIC;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>false</ControlFlowGuard>
       <AdditionalIncludeDirectories>$(SolutionDir)lib\include</AdditionalIncludeDirectories>
@@ -548,16 +561,18 @@
       <ConformanceMode>true</ConformanceMode>
       <BasicRuntimeChecks>
       </BasicRuntimeChecks>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;secur32.lib;user32.lib;shell32.lib;psapi.lib;rpcrt4.lib;ole32.lib;liblzma.lib;libsodium.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
-      <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
+      <MinimumRequiredVersion>
+      </MinimumRequiredVersion>
       <SwapRunFromCD>true</SwapRunFromCD>
       <SwapRunFromNET>true</SwapRunFromNET>
       <SetChecksum>true</SetChecksum>
@@ -584,6 +599,7 @@
     <ClCompile Include="..\core\raddi_command.cpp" />
     <ClCompile Include="..\core\raddi_content.cpp" />
     <ClCompile Include="..\core\raddi_database.cpp" />
+    <ClCompile Include="..\core\raddi_database_peerset.cpp" />
     <ClCompile Include="..\core\raddi_database_shard.cpp" />
     <ClCompile Include="..\core\raddi_database_table.cpp" />
     <ClCompile Include="..\core\raddi_eid.cpp" />
@@ -620,6 +636,7 @@
     <ClInclude Include="..\core\raddi_consensus.h" />
     <ClInclude Include="..\core\raddi_content.h" />
     <ClInclude Include="..\core\raddi_database.h" />
+    <ClInclude Include="..\core\raddi_database_peerset.h" />
     <ClInclude Include="..\core\raddi_database_row.h" />
     <ClInclude Include="..\core\raddi_database_shard.h" />
     <ClInclude Include="..\core\raddi_database_table.h" />
