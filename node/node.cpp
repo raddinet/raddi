@@ -1031,7 +1031,7 @@ namespace {
 
         option (argc, argw, L"threads", workers);
         if (workers == 0) {
-            workers = (GetLogicalProcessorCount () * 15 + 5) / 10;
+            workers = ((std::size_t) GetLogicalProcessorCount () * 15 + 5) / 10;
             if (auto limit = (coordinator.settings.max_connections / 8 + coordinator.settings.connections) / 32) {
                 if (workers > limit) {
                     workers = limit;
@@ -1506,9 +1506,9 @@ namespace {
         ReleaseSemaphore (workclock, 1, NULL);
 
         BOOL         success;
-        DWORD        n;
-        ULONG_PTR    key;
-        OVERLAPPED * overlapped;
+        DWORD        n = 0;
+        ULONG_PTR    key = NULL;
+        OVERLAPPED * overlapped = NULL;
 
         do {
             success = GetQueuedCompletionStatus (iocp, &n, &key, &overlapped, INFINITE);
