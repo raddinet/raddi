@@ -980,11 +980,16 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
     }
 
     // fill with background
+    //  - using standard algorithm, but WM_CTLCOLORBTN returns DC_NULL and actually fills the bg by itself
+    //  - we also rely on DC_BRUSH being set to design background color when IsThemeBackgroundPartiallyTransparent for tabs is TRUE
+    //     - Windows 11+ and only with DWM
 
     auto hPreviousFont = SelectObject (hDC, this->font);
 
     FillRect (hDC, &rc, (HBRUSH) SendMessage (GetParent (hWnd), WM_CTLCOLORBTN, (WPARAM) hDC, (LPARAM) hWnd));
     SetBkMode (hDC, TRANSPARENT);
+
+    auto background = GetDCBrushColor (hDC);
 
     // line on classic
 
@@ -1019,6 +1024,11 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
                 if (!stack.right) r.right += 2;
 
                 r.bottom += 1;
+
+                if (IsThemeBackgroundPartiallyTransparent (this->theme, part, state)) {
+                    SetDCBrushColor (hDC, background);
+                    FillRect (hDC, &stack.r, (HBRUSH) GetStockObject (DC_BRUSH));
+                }
                 DrawThemeBackground (this->theme, hDC, part, state, &r, &stack.r);
 
             } else {
