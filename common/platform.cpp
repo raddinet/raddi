@@ -55,6 +55,9 @@ bool IsPathAbsolute (std::wstring_view path) {
 }
 
 bool GetProcessSessionId (DWORD pid, DWORD * id) {
+#if defined (_M_ARM64)
+    return ProcessIdToSessionId (pid, id);
+#else
     if (auto hKernel32 = GetModuleHandle (L"KERNEL32")) {
         BOOL (WINAPI * ptrProcessIdToSessionId) (DWORD, DWORD *);
         if (Symbol (hKernel32, ptrProcessIdToSessionId, "ProcessIdToSessionId")) { // NT 5.2+
@@ -62,6 +65,7 @@ bool GetProcessSessionId (DWORD pid, DWORD * id) {
                 return true;
         }
     }
+#endif
     return false;
 }
 
