@@ -20,6 +20,8 @@
 
 #include "sodium.h"
 
+#pragma warning (disable:26812) // unscoped enum warning
+
 raddi::db::db (file::access mode, const std::wstring & path)
     : mode (mode)
     , path (path)
