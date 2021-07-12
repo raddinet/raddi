@@ -20,10 +20,22 @@
 #include "../common/node.h"
 #include "resolver.h"
 
+#pragma warning (disable:4996) // GetVersion() warning
+#pragma warning (disable:28159) // GetVersion() warning
+
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 extern Design design;
 extern Cursors cursor;
+
+struct DesignOverride {
+    bool outline = true; // Windows 11, outline only
+    bool acrylic = false; // Windows 11, acrylic/mica background, experimental (same issues as Vista glass)
+    DWM_WINDOW_CORNER_PREFERENCE corners = DWMWCP_DEFAULT; // Windows 11
+
+    // TODO: foreground/background color overrides
+    // TODO: load from db
+} design_override;
 
 namespace {
     void DeferWindowPos (HDWP & hDwp, HWND hCtrl, const RECT & r, UINT flags = 0) {
@@ -46,12 +58,10 @@ namespace {
         return GetChildRect (hParent, GetDlgItem (hParent, id), rcCtrl);
     }
     bool IsWindowsVista () {
-        return IsWindowsVistaOrGreater ()
-            && !IsWindows7OrGreater ();
+        return LOWORD (GetVersion ()) == 0x0006;
     }
     bool IsWindows7 () {
-        return IsWindows7OrGreater ()
-            && !IsWindows8OrGreater ();
+        return LOWORD (GetVersion ()) == 0x0106;
     }
 }
 
@@ -227,8 +237,8 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
                 auto hStatusBar = GetDlgItem (hWnd, ID::STATUSBAR);
                 auto yStatusBar = UpdateStatusBar (hStatusBar, dpi, client);
                 if (design.nice) {
-                    client.bottom -= metrics [SM_CYCAPTION] + metrics [SM_CYFRAME];
-                    yStatusBar = 0;
+                    // client.bottom -= metrics [SM_CYCAPTION] + metrics [SM_CYFRAME];
+                    // yStatusBar = 0;
                 }
 
                 if (HDWP hDwp = BeginDeferWindowPos ((int) (16 + this->tabs.views->tabs.size () + this->tabs.lists->tabs.size ()))) {
@@ -252,6 +262,10 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
                         DeferWindowPos (hDwp, hStatusBar, { 0,0,0,0 }, SWP_HIDEWINDOW);
                     }
 
+                    if (design.nice) {
+                        client.bottom -= metrics [SM_CYCAPTION] + metrics [SM_CYFRAME];
+                    }
+
                     this->UpdateViewsPosition (hDwp, client);
                     this->UpdateListsPosition (hDwp, client, rListTabs);
                     this->UpdateFeedsPosition (hDwp, client, rFeedsTabs);
@@ -271,6 +285,13 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
                     InvalidateRect (hWnd, NULL, TRUE);
                 }
             }
+        }
+
+        if (design.composited && design_override.acrylic) {
+            AccentPolicy policy = { 4, 0x01E0, 0xAA000000, 0 };
+            CompositionAttributeData data = { WCA_ACCENT_POLICY, &policy, sizeof policy };
+
+            ptrSetWindowCompositionAttribute (this->hWnd, &data);
         }
 
         if (!design.composited && (this->tabs.views != nullptr)) {
@@ -337,14 +358,28 @@ LRESULT Window::OnVisualEnvironmentChange () {
     if (ptrAllowDarkModeForWindow) {
         ptrAllowDarkModeForWindow (hWnd, true);
 
+        if (IsWindowsBuildOrGreater (10, 0, 22000)) {
+            if (design_override.outline) {
+                COLORREF clr = design.colorization.inactive;
+                if (design_override.acrylic) {
+                    clr = 0x00000000;
+                }
+                ptrDwmSetWindowAttribute (hWnd, DWMWA_CAPTION_COLOR, &clr, sizeof clr);
+            }
+            if (design_override.corners) {
+                ptrDwmSetWindowAttribute (hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, &design_override.corners, sizeof design_override.corners);
+            }
+        }
+
         LONG dark = !design.light;
         if (IsWindowsBuildOrGreater (10, 0, 20161)) {
-            ptrDwmSetWindowAttribute (hWnd, 20, &dark, sizeof dark); // DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+            ptrDwmSetWindowAttribute (hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof dark);
         } else
         if (IsWindowsBuildOrGreater (10, 0, 18875)) {
             CompositionAttributeData attr = { WCA_USEDARKMODECOLORS, &dark, sizeof dark };
             ptrSetWindowCompositionAttribute (hWnd, &attr);
-        } else {
+        } else
+        if (IsWindowsBuildOrGreater (10, 0, 14393)) {
             ptrDwmSetWindowAttribute (hWnd, 0x13, &dark, sizeof dark);
         }
     }
@@ -634,10 +669,16 @@ void Window::BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, 
         if (margins->cxRightWidth) { RECT r = { face.right, top, rcClip->right, rcClip->bottom }; FillRect (hDC, &r, transparent); }
         if (margins->cyBottomHeight) { RECT r = { rcClip->left, face.bottom, rcClip->right, rcClip->bottom }; FillRect (hDC, &r, transparent); }
 
-        if (this->active) {
-            SetDCBrushColor (hDC, design.colorization.active & 0x00FFFFFF);
+        // NOTE: our TabControl expects composited design background color to be left in DC Brush
+
+        if (design_override.acrylic) {
+            SetDCBrushColor (hDC, 0x00000000);
         } else {
-            SetDCBrushColor (hDC, design.colorization.inactive & 0x00FFFFFF);
+            if (this->active && !design_override.outline) {
+                SetDCBrushColor (hDC, design.colorization.active & 0x00FFFFFF);
+            } else {
+                SetDCBrushColor (hDC, design.colorization.inactive & 0x00FFFFFF);
+            }
         }
 
         IntersectRect (&face, &face, rcClip);

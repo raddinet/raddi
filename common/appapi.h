@@ -41,6 +41,13 @@ struct CompositionAttributeData {
     ULONG size;
 };
 
+struct AccentPolicy {
+    DWORD state;
+    DWORD flags;
+    COLORREF gradient;
+    DWORD animation;
+};
+
 struct DrawCompositedTextOptions {
     HTHEME  theme = NULL;
     HFONT   font = NULL;
