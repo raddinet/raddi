@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <psapi.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -463,7 +464,7 @@ int wmain (int argc, wchar_t ** argw) {
     std::signal (SIGINT, [](int) { ::quit = true; });
 
     sodium_init ();
-
+    
     ::argc = argc;
     ::argw = argw;
 
@@ -853,8 +854,7 @@ bool installer (const wchar_t * svcname, bool install) {
             } else
                 return false;
         } else {
-            DWORD length = sizeof buffer / sizeof buffer [0];
-            if (QueryFullProcessImageName (GetCurrentProcess (), 0, buffer, &length)) {
+            if (GetModuleFileName (NULL, buffer, sizeof buffer / sizeof buffer [0])) {
                 if (auto dot = std::wcsrchr (buffer, L'.')) {
                     *dot = L'\0';
                 }
