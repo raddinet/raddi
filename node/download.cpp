@@ -168,6 +168,8 @@ void Download::Context::HttpHandler (HINTERNET request, DWORD code, char * data,
                     }
                 }
 
+                [[ fallthrough ]];
+
         case WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE:
                 if (WinHttpReadData (request, buffer, sizeof buffer - 1, NULL))
                     return;
