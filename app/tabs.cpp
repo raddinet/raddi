@@ -900,6 +900,8 @@ void TabControlState::update_visual_representation () {
             };
             if (IsAppThemed ()) {
                 data.border -= 1;
+            } else {
+                data.size.cy -= 2;
             }
 
             EnumChildWindows (this->hWnd,
@@ -1044,7 +1046,8 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
                     rFill.bottom -= 1;
                 }
 
-                FillRect (hDC, &rFill, GetSysColorBrush ((i == this->current_stack) ? COLOR_WINDOW : COLOR_BTNFACE));
+                // FillRect (hDC, &rFill, GetSysColorBrush ((i == this->current_stack) ? COLOR_WINDOW : COLOR_BTNFACE)); // TODO: option
+                FillRect (hDC, &rFill, GetSysColorBrush (COLOR_BTNFACE));
                 DrawEdge (hDC, &rEdge, BDR_RAISED, edge);
             }
 
