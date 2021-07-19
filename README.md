@@ -16,3 +16,5 @@ Those are needed only for *release* builds. For *portable* builds everything nec
 * https://github.com/tromp/cuckoo - adapted to [/lib/cuckoocycle.h](https://github.com/raddinet/raddi/blob/master/lib/cuckoocycle.h) ([.tcc](https://github.com/raddinet/raddi/blob/master/lib/cuckoocycle.tcc))
 * https://tukaani.org/xz
 * https://sqlite.org/ - client application
+
+For instructions how to integrate and build libraries in order to build the project, see [/lib/README.md](https://github.com/raddinet/lib/README.md).
