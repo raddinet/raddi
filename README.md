@@ -17,4 +17,4 @@ Those are needed only for *release* builds. For *portable* builds everything nec
 * https://tukaani.org/xz
 * https://sqlite.org/ - client application
 
-For instructions how to integrate and build libraries in order to build the project, see [/lib/README.md](https://github.com/raddinet/lib/README.md).
+For instructions how to integrate and build libraries in order to build the project, see [/lib/README.md](lib/README.md).
