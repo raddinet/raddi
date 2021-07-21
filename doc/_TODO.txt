@@ -35,7 +35,6 @@ revocation code for identity: when received, all further messages by that identi
  - content code, 0xF8 plus fixed predefine block of content??
  - node support (list of revoked IIDs)
 
-commands: loglevels
 commands: optimize
 commands: list:peers...
 raddi.com analyze/get/list -> support decompression
