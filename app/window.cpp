@@ -31,6 +31,7 @@ extern Resolver resolver;
 
 namespace {
     LRESULT CALLBACK DisableWheelSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);
+    LRESULT CALLBACK ColorFwdSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);
     LRESULT CALLBACK AlphaSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);
 }
 
@@ -157,9 +158,16 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
             InvalidateRect (hWnd, NULL, TRUE);
             break;
 
-        case WM_CTLCOLORSTATIC:
-            SetBkMode ((HDC) wParam, TRANSPARENT);
-            [[ fallthrough ]];
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORLISTBOX:
+            if (!design.light) { // dark
+                SetBkColor ((HDC) wParam, design.colorization.background);
+                SetTextColor ((HDC) wParam, design.colorization.text);
+                SetDCBrushColor ((HDC) wParam, design.colorization.background);
+                return (WPARAM) GetStockObject (DC_BRUSH);
+            } else
+                break;
+        
         case WM_CTLCOLORBTN:
             return OnControlPrePaint ((HDC) wParam, (HWND) lParam);
 
@@ -510,8 +518,8 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
     }
 
     if (auto hIdentities = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"COMBOBOX", L"",
-                                            WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-                                            0, 0, 0, 0, hWnd, (HMENU) ID::IDENTITIES, cs->hInstance, NULL)) {
+                                           WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
+                                           0, 0, 0, 0, hWnd, (HMENU) ID::IDENTITIES, cs->hInstance, NULL)) {
             
         // database.identities.list
         SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"TEST TEST TEST");
@@ -521,6 +529,16 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
             SetWindowSubclass (hIdentities, AlphaSubclassProcedure, 0, 2);
         }
         SetWindowSubclass (hIdentities, DisableWheelSubclassProcedure, 0, 0);
+        
+        /*COMBOBOXINFO info;
+        info.cbSize = sizeof info;
+
+        if (GetComboBoxInfo (hIdentities, &info)) {
+            if (info.hwndItem) {
+                SetWindowSubclass (hIdentities, ColorFwdSubclassProcedure, 0, 0);
+            }
+        }// */
+
         this->AssignHint (hIdentities, 0x40);
     }
 
@@ -551,6 +569,7 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
         // TODO: min/max width, badge numbers draws tabcontrol (special property of tab) (leaves 3 spaces before close button?)
 
         SendMessage (hStatusBar, CCM_DPISCALE, TRUE, 0);
+        SendMessage (hStatusBar, SB_SETTEXT, 0, (LPARAM) L"TEST");
     }
 
     SetWindowText (hWnd, L"RADDI"); // LoadString(1) or VERSIONINFO
@@ -1530,6 +1549,19 @@ namespace {
         ptrEndBufferedPaint (hBuffered, TRUE);
         return 0;
     };
+
+    LRESULT CALLBACK ColorFwdSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
+                                                UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+        switch (message) {
+            case WM_CTLCOLORBTN:
+            case WM_CTLCOLOREDIT:
+            case WM_CTLCOLORSTATIC:
+            case WM_CTLCOLORLISTBOX:
+                return SendMessage(GetAncestor (hWnd, GA_PARENT), message, wParam, lParam);
+            default:
+                return DefSubclassProc (hWnd, message, wParam, lParam);
+        }
+    }// */
 
     LRESULT CALLBACK AlphaSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
                                              UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {

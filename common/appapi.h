@@ -78,6 +78,9 @@ struct Design {
         DWORD accent = 0xFFFFFF;
         DWORD active = 0xFFFFFF;
         DWORD inactive = 0xFFFFFF;
+
+        DWORD text = 0;
+        DWORD background = 0xFFFFFF;
     } colorization;
 
     UINT colorset = 0;

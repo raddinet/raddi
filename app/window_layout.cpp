@@ -331,6 +331,26 @@ LRESULT Window::OnDpiChange (WPARAM dpi, const RECT * r) {
 BOOL WINAPI UpdateWindowTreeTheme (HWND hCtrl, LPARAM param) {
     EnumChildWindows (hCtrl, UpdateWindowTreeTheme, param);
     SetWindowTheme (hCtrl, design.light ? NULL : L"DarkMode_Explorer", NULL);
+
+    /*wchar_t classname [256];
+    if (GetClassName (hCtrl, classname, sizeof classname / sizeof classname [0])) {
+        if (wcsicmp (classname, L"COMBOBOX") == 0) {
+            COMBOBOXINFO info;
+            info.cbSize = sizeof info;
+
+            if (GetComboBoxInfo (hCtrl, &info)) {
+
+                if (info.hwndItem) {
+                    SetWindowTheme (info.hwndItem, design.light ? NULL : L"DarkMode_Explorer", NULL);
+                }
+                if (info.hwndList) {
+                    auto parameters = (UpdateThemeParameters *) param;
+                    SetWindowTheme (info.hwndList, design.light ? NULL : L"DarkMode_Explorer", NULL);
+                    // SendMessage (hCtrl, CB_ADDSTRING, 0, (LPARAM) L"HEY");
+                }
+            }
+        }
+    }// */
     return TRUE;
 }
 
@@ -348,13 +368,17 @@ LRESULT Window::OnVisualEnvironmentChange () {
     this->fonts.underlined.make_underlined = true;
     this->fonts.underlined.Update (hTheme, dpi, dpiNULL, TMT_MSGBOXFONT);
 
-
     // TODO: Wingdings for some
 
     if (hTheme) {
         CloseThemeData (hTheme);
     }
     
+    if (!IsWindowsBuildOrGreater (10, 0, 22000)) { // TODO: move to one time initialization
+        design_override.outline = false;
+        design_override.acrylic = false;
+    }
+
     if (ptrAllowDarkModeForWindow) {
         ptrAllowDarkModeForWindow (hWnd, true);
 
@@ -385,20 +409,12 @@ LRESULT Window::OnVisualEnvironmentChange () {
     }
 
     // SetProp (hWnd, L"UseImmersiveDarkModeColors", (HANDLE) !design.light); // ???
-    EnumChildWindows (this->hWnd, UpdateWindowTreeTheme, 0);
+    EnumChildWindows (this->hWnd, UpdateWindowTreeTheme, (LPARAM) 0);
     SetWindowTheme (this->hToolTip, design.light ? NULL : L"DarkMode_Explorer", NULL);
 
-    COLORREF clrListBack = 0x212223;
-    COLORREF clrListText = 0xEEEEEE;
-
-    if (design.light) {
-        clrListBack = GetSysColor (COLOR_WINDOW);
-        clrListText = GetSysColor (COLOR_WINDOWTEXT);
-    }
-
     for (auto tab : this->tabs.lists->tabs) {
-        ListView_SetBkColor (tab.second.content, clrListBack);
-        ListView_SetTextColor (tab.second.content, clrListText);
+        ListView_SetBkColor (tab.second.content, design.colorization.background);
+        ListView_SetTextColor (tab.second.content, design.colorization.text);
         ListView_SetTextBkColor (tab.second.content, CLR_NONE);
     }
 
@@ -680,7 +696,7 @@ void Window::BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, 
                 SetDCBrushColor (hDC, design.colorization.inactive & 0x00FFFFFF);
             }
         }
-
+        
         IntersectRect (&face, &face, rcClip);
         FillRect (hDC, &face, (HBRUSH) GetStockObject (DC_BRUSH));
     } else {

@@ -556,4 +556,13 @@ void Design::update () {
             RegCloseKey (hKey);
         }
     }
+
+    if (this->light) {
+        this->colorization.background = GetSysColor (COLOR_WINDOW);
+        this->colorization.text = GetSysColor (COLOR_WINDOWTEXT);
+    } else {
+        this->colorization.background = 0x101112;// 0x212223; // TODO: retrieve from theme if possible?
+        this->colorization.text = 0xEEEEEE;
+    }
+
 }
