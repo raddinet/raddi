@@ -126,6 +126,7 @@ private:
     LRESULT OnNcCalcSize (WPARAM, RECT *);
     LRESULT OnGetMinMaxInfo (MINMAXINFO *);
     LRESULT OnPaint ();
+    LRESULT OnDrawItem (WPARAM id, DRAWITEMSTRUCT *);
     LRESULT OnControlPrePaint (HDC hDC, HWND hControl);
     LRESULT OnDpiChange (WPARAM dpi, const RECT * target);
     LRESULT OnNodeConnectionUpdate (WPARAM information, LPARAM parameter);

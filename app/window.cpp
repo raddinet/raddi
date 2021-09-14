@@ -30,9 +30,8 @@ extern Cursors cursor;
 extern Resolver resolver;
 
 namespace {
-    LRESULT CALLBACK DisableWheelSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);
-    LRESULT CALLBACK ColorFwdSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);
     LRESULT CALLBACK AlphaSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);
+    LRESULT CALLBACK ProperBgSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);    
 }
 
 LPCTSTR Window::Initialize (HINSTANCE hInstance) {
@@ -157,6 +156,9 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
             this->OnVisualEnvironmentChange ();
             InvalidateRect (hWnd, NULL, TRUE);
             break;
+
+        case WM_DRAWITEM:
+            return this->OnDrawItem (wParam, reinterpret_cast <DRAWITEMSTRUCT *> (lParam));
 
         case WM_CTLCOLOREDIT:
         case WM_CTLCOLORLISTBOX:
@@ -520,24 +522,14 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
     if (auto hIdentities = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"COMBOBOX", L"",
                                            WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
                                            0, 0, 0, 0, hWnd, (HMENU) ID::IDENTITIES, cs->hInstance, NULL)) {
-            
         // database.identities.list
+        SendMessage (hIdentities, CB_SETEXTENDEDUI, TRUE, 0);
         SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"TEST TEST TEST");
         SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"AAA");
         SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"BBBBB");
         if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
             SetWindowSubclass (hIdentities, AlphaSubclassProcedure, 0, 2);
         }
-        SetWindowSubclass (hIdentities, DisableWheelSubclassProcedure, 0, 0);
-        
-        /*COMBOBOXINFO info;
-        info.cbSize = sizeof info;
-
-        if (GetComboBoxInfo (hIdentities, &info)) {
-            if (info.hwndItem) {
-                SetWindowSubclass (hIdentities, ColorFwdSubclassProcedure, 0, 0);
-            }
-        }// */
 
         this->AssignHint (hIdentities, 0x40);
     }
@@ -568,8 +560,21 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
         // TODO: symbols where available, text where not? try Wingdings?
         // TODO: min/max width, badge numbers draws tabcontrol (special property of tab) (leaves 3 spaces before close button?)
 
+        SetWindowSubclass (hStatusBar, ProperBgSubclassProcedure, 0, 0);
+
         SendMessage (hStatusBar, CCM_DPISCALE, TRUE, 0);
-        SendMessage (hStatusBar, SB_SETTEXT, 0, (LPARAM) L"TEST");
+        SendMessage (hStatusBar, SB_SIMPLE, FALSE, 0);
+
+        int tmp [4] = { 100,200,300,800 };
+        SendMessage (hStatusBar, SB_SETPARTS, 4, (LPARAM) tmp);
+        SendMessage (hStatusBar, SB_SETTEXT, 0 | SBT_OWNERDRAW, (LPARAM) L"TEST");
+        SendMessage (hStatusBar, SB_SETTEXT, 1 | SBT_OWNERDRAW, (LPARAM) L"TEST 1"); // SBT_OWNERDRAW needed for color, only if !design.nice
+        SendMessage (hStatusBar, SB_SETTEXT, 2 | SBT_OWNERDRAW, (LPARAM) L"TEST 2");
+        SendMessage (hStatusBar, SB_SETTEXT, 3 | SBT_OWNERDRAW, (LPARAM) L"TEST 3");
+
+        SendMessage (hStatusBar, SB_SETICON, 2,
+                     (LPARAM) LoadImage (reinterpret_cast <HMODULE> (&__ImageBase), MAKEINTRESOURCE (1),
+                                         IMAGE_ICON, this->metrics [SM_CXSMICON], this->metrics [SM_CYSMICON], 0));
     }
 
     SetWindowText (hWnd, L"RADDI"); // LoadString(1) or VERSIONINFO
@@ -1362,7 +1367,7 @@ LONG Window::UpdateStatusBar (HWND hStatusBar, UINT dpi, const RECT & rParent) {
     SendMessage (hStatusBar, WM_SIZE, 0, MAKELPARAM (rParent.right, rParent.bottom));
     if (GetClientRect (hStatusBar, &rStatus)) {
 
-        static const short widths [] = { 32, 128/*, 128, 128*/ };
+        static const short widths [] = { 32, 128, 128, 128 };
         static const auto  n = sizeof widths / sizeof widths [0];
 
         int scaled [n + 1];
@@ -1550,7 +1555,7 @@ namespace {
         return 0;
     };
 
-    LRESULT CALLBACK ColorFwdSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
+    /*LRESULT CALLBACK ColorFwdSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
                                                 UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
         switch (message) {
             case WM_CTLCOLORBTN:
@@ -1594,10 +1599,14 @@ namespace {
         return DefSubclassProc (hWnd, message, wParam, lParam);
     }
 
-    LRESULT CALLBACK DisableWheelSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR) {
+    LRESULT CALLBACK ProperBgSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
+                                                UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
         switch (message) {
-            case WM_MOUSEWHEEL:
-                return 0;
+            case WM_ERASEBKGND:
+                if (design.nice) {
+                    return SendMessage (GetParent (hWnd), WM_CTLCOLORBTN, wParam, (LPARAM) hWnd);
+                } else
+                    break;// */
         }
         return DefSubclassProc (hWnd, message, wParam, lParam);
     }

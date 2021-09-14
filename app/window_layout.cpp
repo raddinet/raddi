@@ -926,6 +926,32 @@ RECT Window::GetTabControlClipRect (RECT r) {
     return r;
 }
 
+LRESULT Window::OnDrawItem (WPARAM id, DRAWITEMSTRUCT * draw) {
+    switch (id) {
+        case ID::STATUSBAR:
+            DrawCompositedTextOptions options;
+            options.font = this->fonts.text.handle;
+            options.theme = GetWindowTheme (draw->hwndItem);
+
+            this->GetCaptionTextColor (options.color, options.glow);
+
+            if (!design.composited) {
+                options.glow = 0;
+            }
+
+            draw->rcItem.top += 1;
+            draw->rcItem.left += this->metrics [SM_CXPADDEDBORDER];
+            if (SendMessage (draw->hwndItem, SB_GETICON, draw->itemID, 0)) {
+                draw->rcItem.left += this->metrics [SM_CXSMICON] + this->metrics [SM_CXFIXEDFRAME];
+            }
+
+            SetBkMode (draw->hDC, TRANSPARENT);
+            DrawCompositedText (draw->hDC, (LPWSTR) draw->itemData, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS, draw->rcItem, &options);
+            return TRUE;
+    }
+    return FALSE;
+}
+
 LRESULT Window::OnControlPrePaint (HDC hDC, HWND hControl) {
     RECT rWindow;
     RECT rControl;
@@ -1026,7 +1052,6 @@ LRESULT Window::OnPaint () {
 
         // TODO: draw horizontal splitter grips
         // TODO: draw bottom right size grip
-        // TODO: draw status bar text/icon parts if "design.nice"
         if (design.nice) {
 
         }

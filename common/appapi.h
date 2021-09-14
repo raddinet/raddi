@@ -52,7 +52,7 @@ struct DrawCompositedTextOptions {
     HTHEME  theme = NULL;
     HFONT   font = NULL;
     COLORREF color = 0x000000;
-    LONG    glow = 0;
+    UINT    glow = 0;
     //struct {
     //    LONG size = 0;
     //    POINT offset = { 0, 0 };
