@@ -111,7 +111,7 @@ int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR
     if (!InteractiveAppDataInitialization ()) {
         return GetLastError ();
     }
-
+    
     ::gui = GetCurrentThreadId ();
     
     // TODO: if portable installation, check database for option to run own local instance

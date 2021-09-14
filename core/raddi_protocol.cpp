@@ -65,7 +65,7 @@ void raddi::protocol::proposal::propose (initial * head) {
 
     head->flags.hard.encode (0);
     head->flags.soft.encode (aes);
-    head->timestamp = raddi::microtimestamp ();
+    head->timestamp = raddi::microtimestamp (); // TODO: obscure by xoring with something: ^ *reinterpret_cast <std::uint64_t *> (this->inbound_key);
     
     cuckoo::hash <2,4> hash;
     hash.seed (head->keys.inbound_key, (const std::uint8_t *) &raddi::protocol::magic [0], sizeof raddi::protocol::magic);
