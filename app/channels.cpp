@@ -63,7 +63,7 @@ namespace {
 
 ListOfChannels::ListOfChannels (const Window * parent, UINT id, Node::table table)
     : hWnd (CreateWindowEx (WS_EX_NOPARENTNOTIFY, WC_LISTVIEW, L"",
-                            WS_CHILD | WS_CLIPSIBLINGS | LVS_REPORT | LVS_EDITLABELS | LVS_SHAREIMAGELISTS | LVS_OWNERDATA,
+                            WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | LVS_REPORT | LVS_EDITLABELS | LVS_SHAREIMAGELISTS | LVS_OWNERDATA,
                             0, 0, 0, 0, parent->hWnd, ( HMENU) (std::uintptr_t) id, NULL, NULL))
     , parent (parent)
     , table (table) {

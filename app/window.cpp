@@ -466,7 +466,9 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
         if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
             for (auto & tab : tc->tabs) {
                 SetWindowSubclass (tab.second.content, AlphaSubclassProcedure, 0, 0);
-                // SetWindowSubclass (ListView_GetHeader (tab.second.content), AlphaSubclassProcedure, 0, 0);
+                if (auto header = ListView_GetHeader (tab.second.content)) {
+                    SetWindowSubclass (header, AlphaSubclassProcedure, 0, 0);
+                }
             }
         }
         for (auto & tab : tc->tabs) {
