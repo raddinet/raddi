@@ -921,6 +921,7 @@ LRESULT Window::OnDrawItem (WPARAM id, DRAWITEMSTRUCT * draw) {
 
             draw->rcItem.top += 1;
             draw->rcItem.left += this->metrics [SM_CXPADDEDBORDER];
+            draw->rcItem.right -= this->metrics [SM_CXFIXEDFRAME];
             if (SendMessage (draw->hwndItem, SB_GETICON, draw->itemID, 0)) {
                 draw->rcItem.left += this->metrics [SM_CXSMICON] + this->metrics [SM_CXFIXEDFRAME];
             }
