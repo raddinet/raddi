@@ -331,26 +331,6 @@ LRESULT Window::OnDpiChange (WPARAM dpi, const RECT * r) {
 BOOL WINAPI UpdateWindowTreeTheme (HWND hCtrl, LPARAM param) {
     EnumChildWindows (hCtrl, UpdateWindowTreeTheme, param);
     SetWindowTheme (hCtrl, design.light ? NULL : L"DarkMode_Explorer", NULL);
-
-    /*wchar_t classname [256];
-    if (GetClassName (hCtrl, classname, sizeof classname / sizeof classname [0])) {
-        if (wcsicmp (classname, L"COMBOBOX") == 0) {
-            COMBOBOXINFO info;
-            info.cbSize = sizeof info;
-
-            if (GetComboBoxInfo (hCtrl, &info)) {
-
-                if (info.hwndItem) {
-                    SetWindowTheme (info.hwndItem, design.light ? NULL : L"DarkMode_Explorer", NULL);
-                }
-                if (info.hwndList) {
-                    auto parameters = (UpdateThemeParameters *) param;
-                    SetWindowTheme (info.hwndList, design.light ? NULL : L"DarkMode_Explorer", NULL);
-                    // SendMessage (hCtrl, CB_ADDSTRING, 0, (LPARAM) L"HEY");
-                }
-            }
-        }
-    }// */
     return TRUE;
 }
 
