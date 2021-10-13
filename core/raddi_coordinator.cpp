@@ -1279,25 +1279,57 @@ void raddi::coordinator::announce_random_peers (connection * c) {
     std::size_t i = 0;
     for (int level = core_nodes; level != blacklisted_nodes; ++level) {
         if (!this->database.peers [level]->empty ()) {
+
+            // 1/4 is core nodes, 2/4 is established nodes, rest is validated_nodes
+            //  - the algorithm chooses as: [1..N] * size / N
+
             while (i < ((level + 1) * this->settings.announcement_sample_size / blacklisted_nodes)) {
 
-                std::uint16_t assessment;
-                address addr = this->database.peers [level]->select (this->random_distribution (this->random_generator), &assessment);
+                // 1 out of 3 peer IP addresses is fake
+                //  - this is to ensure plausible deniability of someone's IP existing on the network
+                //     - TODO: strength?
 
-                // distribute private addresses only to other peers on local network
-                //  - 'allow_null_port' because peer.port is 0 for inbound connections
-                
-                if (addr.accessible () || !c->peer.accessible (address::validation::allow_null_port)) {
+                if ((this->random_distribution (this->random_generator) % 3) == 0) {
 
-                    // do not announce localhost addresses (peers won't accept them)
+                    // generate fake peer IP
+                    //  - use default port number, but make 1 of 4 ports other random number
+                    //  - generate random IP addresses until they are valid
 
-                    if (!this->is_local (addr)) {
+                    address fake;
+                    fake.family = AF_INET;
 
-                        // only insert addresses that are fresh or already validated
-                        //  - this should prevent endless re-sharing addresses of long dead peers
+                    if ((this->random_distribution (this->random_generator) % 4) == 0) {
+                        fake.port = 1024 + this->random_distribution (this->random_generator) % (65536 - 1024);
+                    } else {
+                        fake.port = raddi::defaults::coordinator_listening_port;
+                    }
+                    do {
+                        fake.address4.S_un.S_addr = (ULONG) this->random_distribution (this->random_generator);
+                    } while (!fake.valid ());
 
-                        if (assessment >= db::peerset::new_record_assessment) {
-                            sample.insert (addr);
+                    sample.insert (fake);
+                } else {
+
+                    // choose real random peer
+
+                    std::uint16_t assessment;
+                    address addr = this->database.peers [level]->select (this->random_distribution (this->random_generator), &assessment);
+
+                    // distribute private addresses only to other peers on local network
+                    //  - 'allow_null_port' because peer.port is 0 for inbound connections
+
+                    if (addr.accessible () || !c->peer.accessible (address::validation::allow_null_port)) {
+
+                        // do not announce localhost addresses (peers won't accept them)
+
+                        if (!this->is_local (addr)) {
+
+                            // only insert addresses that are fresh or already validated
+                            //  - this should prevent endless re-sharing addresses of long dead peers
+
+                            if (assessment >= db::peerset::new_record_assessment) {
+                                sample.insert (addr);
+                            }
                         }
                     }
                 }
