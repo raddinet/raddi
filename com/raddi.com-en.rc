@@ -35,6 +35,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 0x20 "invalid offset {3} exceeds size of file {1} which is {2} bytes"
     MAIN | ERROR | 0x21 "invalid offset/length, specification {3}+{4}={5} exceeds size of file {1} which is {2} bytes"
     MAIN | ERROR | 0x22 "channel required"
+    MAIN | ERROR | 0x23 "requested benchmark complexity {1} out of supported range {2}...{3}"
 
     MAIN | STOP  | 0x20 "{1} internal error, validation failed in {2}"
     MAIN | STOP  | 0x21 "database corruption, no proof-of-work in entry {1}"

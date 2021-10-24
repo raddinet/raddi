@@ -264,10 +264,13 @@ RADDI.com utility functions/commands:
 			- "SipHash03-RADDI" - special variation of siphash used by RADDI
 			  Cuckoo Cycle PoW algorithm
 	- benchmark
+	- benchmark:<complexity>
 		- proof-of-work (cuckoo cycle) benchmark
 		- attempts to generate proof-of-work of all supported complexities on
 		  predefined input, verifies that the results are as expected and reports
 		  time it took to generate them
+		- complexity
+			- number; requests to benchmark for only <complexity> complexity
 	- deepscan
 		- performs revalidation of the entire database; enumerates all entries
 		  and validates their correctness and verifies their proof-of-work and

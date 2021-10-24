@@ -544,7 +544,7 @@ int wmain (int argc, wchar_t ** argw) {
     }
 }
 
-bool benchmark ();
+bool benchmark (const wchar_t *);
 bool database_verification ();
 bool hash (const wchar_t *);
 
@@ -662,8 +662,8 @@ bool go () {
     // benchmark
     //  - measures how long it takes to find predetermined solution
 
-    if (command (argc, argw, L"benchmark")) {
-        return benchmark ();
+    if (auto parameter = command (argc, argw, L"benchmark")) {
+        return benchmark (parameter);
     }
 
     if (auto parameter = command (argc, argw, L"hash")) {
@@ -2266,7 +2266,7 @@ bool hash (const wchar_t * function_) {
         return false;
 }
 
-bool benchmark () {
+bool benchmark (const wchar_t * parameter) {
     std::uint8_t hash [crypto_hash_sha512_BYTES];
     std::uint8_t buffer [raddi::proof::max_size];
     
@@ -2305,10 +2305,23 @@ bool benchmark () {
         }
     };
 
+    auto requested_complexity = std::wcstoul (parameter, nullptr, 0);
+    if (requested_complexity) {
+        if (requested_complexity < raddi::proof::min_complexity || requested_complexity > raddi::proof::max_complexity) {
+            raddi::log::error (0x23, requested_complexity, raddi::proof::min_complexity, raddi::proof::max_complexity);
+            return false;
+        }
+    }
+
     for (auto i = 0u; i != sizeof hash; ++i) {
         hash [i] = (i << 2) ^ i ;
     }
     for (auto complexity = raddi::proof::min_complexity; (complexity != raddi::proof::max_complexity + 1) && !quit; ++complexity) {
+        if (requested_complexity) {
+            if (complexity != requested_complexity)
+                continue;
+        }
+
         printf ("benchmarking complexity %u: ", complexity);
         try {
             auto t0 = raddi::microtimestamp ();
