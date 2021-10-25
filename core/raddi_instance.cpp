@@ -317,7 +317,8 @@ void raddi::instance::enum_pids (HKEY hBase, std::map <unsigned int, description
 
                 if (RegQueryValueExA (hInstance, "magic", NULL, &type, (BYTE *) magic, &size) != ERROR_SUCCESS
                     || type != REG_SZ
-                    || std::strcmp (magic, raddi::protocol::magic) != 0) {
+                    || size > sizeof raddi::protocol::magic
+                    || std::strncmp (magic, raddi::protocol::magic, sizeof raddi::protocol::magic) != 0) {
 
                     RegCloseKey (hInstance);
                     continue;
