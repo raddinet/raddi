@@ -174,6 +174,7 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
     }
 
     // split workload into threads
+    //  - 64 threads for complexity 26 and 27, 128 threads for complexity 28 and 29
 
     for (auto i = 0; i != this->threads.size (); ++i) {
         this->threads [i].solver = this;
