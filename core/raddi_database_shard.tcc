@@ -170,7 +170,7 @@ bool raddi::db::shard <Key>::unsynchronized_advance (const db::table <Key> * tab
 
     try {
         const auto size = this->index.size ();
-        const auto n = size / sizeof (Key);
+        const auto n = std::size_t (size / sizeof (Key));
 
         if (n == this->cache.size ())
             return true;
@@ -184,8 +184,6 @@ bool raddi::db::shard <Key>::unsynchronized_advance (const db::table <Key> * tab
                             (n * sizeof (Key)) / (1024 * 1024));
                 throw std::bad_alloc ();
             }
-            // shadow 'n' to suppress integer type conversion warnings since the condition above makes sure it will always fit
-            std::size_t n ((std::size_t) n);
 #endif
             if (opened && (table->db.mode == file::access::write)) {
                 // reserve some extra space, a little for old shards, more for recent
