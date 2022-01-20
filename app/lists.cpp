@@ -145,7 +145,7 @@ HWND Lists::Create (const Window * parent, TabControlInterface * tc, std::intptr
 }
 
 HWND Lists::Internal::Create (HWND hParent, HWND hToolTip, std::intptr_t id, const std::vector <std::wstring> & columns) {
-    static constexpr auto style = WS_CHILD | WS_CLIPSIBLINGS | LVS_REPORT | LVS_EDITLABELS | LVS_SHAREIMAGELISTS;// | LVS_NOCOLUMNHEADER;
+    static constexpr auto style = WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | LVS_REPORT | LVS_EDITLABELS | LVS_SHAREIMAGELISTS;// | LVS_NOCOLUMNHEADER;
     static constexpr auto extra = LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER;
 
     if (auto h = CreateWindowEx (WS_EX_NOPARENTNOTIFY, WC_LISTVIEW, L"", style,
