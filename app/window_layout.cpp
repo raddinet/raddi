@@ -838,9 +838,6 @@ RECT Window::GetListsFrame (const RECT * rcArea, const RECT & rListTabs) {
         }
         if (design.composited && !IsWindows10OrGreater ()) {
             r.bottom += metrics [SM_CYFRAME] + metrics [SM_CYEDGE] + 1;
-            if (!IsWindows8OrGreater ()) {
-                r.bottom += 1;
-            }
         }
     } else {
         r.top -= 1;
@@ -884,9 +881,6 @@ RECT Window::GetFeedsFrame (const RECT * rcArea, const RECT & rFeedsTabs) {
         }
         if (design.composited && !IsWindows10OrGreater ()) {
             r.bottom += metrics [SM_CYFRAME] + metrics [SM_CYEDGE] + 1;
-            if (!IsWindows8OrGreater ()) {
-                r.bottom += 1;
-            }
         }
     } else {
         r.top -= 1;
