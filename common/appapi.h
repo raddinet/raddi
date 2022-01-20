@@ -3,6 +3,8 @@
 
 #include <windows.h>
 #include <uxtheme.h>
+#include <dwmapi.h>
+
 #include <string_view>
 #include <string>
 
@@ -76,6 +78,12 @@ struct Design {
 
     bool may_need_fix_alpha = true; // TODO: Vista, 7 or 11
     bool fix_alpha = false; // need to fix alpha on glass
+
+    struct {
+        bool outline = true; // Windows 11, outline only
+        bool acrylic = true; // Windows 11, acrylic/mica background, experimental (same issues as Vista glass)
+        DWM_WINDOW_CORNER_PREFERENCE corners = DWMWCP_DEFAULT; // Windows 11
+    } override;
 
     struct {
         DWORD accent = 0xFFFFFF;

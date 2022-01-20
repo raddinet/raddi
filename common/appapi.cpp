@@ -514,9 +514,18 @@ void Design::update () {
         ptrDwmIsCompositionEnabled (&compositionEnabled);
     }
 
+    bool Windows11 = IsWindowsBuildOrGreater (10, 0, 22000);
+    if (!Windows11) {
+        this->override.outline = false;
+        this->override.acrylic = false;
+    }
+
     this->composited = compositionEnabled;
     this->nice = (this->composited || (IsAppThemed () && IsWindowsVistaOrGreater ()));
-    this->fix_alpha = this->composited && !IsWindows10OrGreater ();
+    
+    this->may_need_fix_alpha = (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) // Vista, 7 or 8(.1)
+                            || Windows11;
+    this->fix_alpha = (this->composited && !IsWindows10OrGreater ()) || this->override.acrylic;
 
     if (ptrDwmGetColorizationColor) {
         BOOL opaque = TRUE;

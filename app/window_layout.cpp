@@ -28,15 +28,6 @@ extern "C" IMAGE_DOS_HEADER __ImageBase;
 extern Design design;
 extern Cursors cursor;
 
-struct DesignOverride {
-    bool outline = true; // Windows 11, outline only
-    bool acrylic = false; // Windows 11, acrylic/mica background, experimental (same issues as Vista glass)
-    DWM_WINDOW_CORNER_PREFERENCE corners = DWMWCP_DEFAULT; // Windows 11
-
-    // TODO: foreground/background color overrides
-    // TODO: load from db
-} design_override;
-
 namespace {
     void DeferWindowPos (HDWP & hDwp, HWND hCtrl, const RECT & r, UINT flags = 0) {
         hDwp = DeferWindowPos (hDwp, hCtrl, NULL, r.left, r.top, r.right, r.bottom, SWP_NOACTIVATE | SWP_NOZORDER | flags);
@@ -287,8 +278,12 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
             }
         }
 
-        if (design.composited && design_override.acrylic) {
-            AccentPolicy policy = { 4, 0x01E0, 0xAA000000, 0 };
+        // TODO: different maximized/inactive colors
+        if (design.composited && design.override.acrylic) {
+            AccentPolicy policy = { 4, 0x01E0, 0x88221100 /* 0x7FFFAA00 */, 0 };
+            if (design.light) {
+                policy.gradient = 0xAAFFFFFF;
+            }
             CompositionAttributeData data = { WCA_ACCENT_POLICY, &policy, sizeof policy };
 
             ptrSetWindowCompositionAttribute (this->hWnd, &data);
@@ -354,24 +349,23 @@ LRESULT Window::OnVisualEnvironmentChange () {
         CloseThemeData (hTheme);
     }
     
-    if (!IsWindowsBuildOrGreater (10, 0, 22000)) { // TODO: move to one time initialization
-        design_override.outline = false;
-        design_override.acrylic = false;
-    }
-
     if (ptrAllowDarkModeForWindow) {
         ptrAllowDarkModeForWindow (hWnd, true);
 
         if (IsWindowsBuildOrGreater (10, 0, 22000)) {
-            if (design_override.outline) {
+            if (design.override.outline) {
                 COLORREF clr = design.colorization.inactive;
-                if (design_override.acrylic) {
-                    clr = 0x00000000;
+                if (design.override.acrylic) {
+                    if (design.light) {
+                        clr = 0x00FFFFFF;
+                    } else {
+                        clr = 0x00000000;
+                    }
                 }
                 ptrDwmSetWindowAttribute (hWnd, DWMWA_CAPTION_COLOR, &clr, sizeof clr);
             }
-            if (design_override.corners) {
-                ptrDwmSetWindowAttribute (hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, &design_override.corners, sizeof design_override.corners);
+            if (design.override.corners) {
+                ptrDwmSetWindowAttribute (hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, &design.override.corners, sizeof design.override.corners);
             }
         }
 
@@ -667,10 +661,10 @@ void Window::BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, 
 
         // NOTE: our TabControl expects composited design background color to be left in DC Brush
 
-        if (design_override.acrylic) {
+        if (design.override.acrylic) {
             SetDCBrushColor (hDC, 0x00000000);
         } else {
-            if (this->active && !design_override.outline) {
+            if (this->active && !design.override.outline) {
                 SetDCBrushColor (hDC, design.colorization.active & 0x00FFFFFF);
             } else {
                 SetDCBrushColor (hDC, design.colorization.inactive & 0x00FFFFFF);
