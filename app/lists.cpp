@@ -15,6 +15,7 @@
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 extern Data database;
 extern Resolver resolver;
+extern Design design;
 
 ListPart ListView_OnContextMenu (const WindowEnvironment * parent, HWND hListView, LONG & x, LONG & y, int * id) {
     *id = 0;
@@ -252,6 +253,14 @@ LRESULT Lists::OnNotify (const Window * parent, NMHDR * nm) {
     } cache;
 
     switch (nm->code) {
+        case LVN_BEGINLABELEDIT:
+            if (auto hEdit = ListView_GetEditControl (nm->hwndFrom)) {
+                if (design.may_need_fix_alpha) {
+                    SetWindowSubclass (hEdit, AlphaSubclassProcedure, 0, 0);
+                }
+            }
+            return FALSE;
+
         case LVN_GETDISPINFO:
             if (auto info = reinterpret_cast <NMLVDISPINFO *> (nm)) {
                 cache.update (nm, info->item.lParam);

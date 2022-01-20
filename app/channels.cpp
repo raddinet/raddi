@@ -16,6 +16,7 @@
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 extern Node connection;
 extern Data database;
+extern Design design;
 
 namespace {
 
@@ -159,6 +160,9 @@ LRESULT ListOfChannels::OnNotify (NMHDR * nm) {
             break;
 
         case NM_CUSTOMDRAW:
+            break;
+
+            // why this all?
             if (auto draw = reinterpret_cast <NMLVCUSTOMDRAW *> (nm)) {
                 switch (draw->nmcd.dwDrawStage) {
                     case CDDS_PREPAINT:
@@ -167,8 +171,11 @@ LRESULT ListOfChannels::OnNotify (NMHDR * nm) {
                         return CDRF_NOTIFYSUBITEMDRAW;
 
                     case CDDS_ITEMPREPAINT | CDDS_SUBITEM:
-                        static bool reset_font = false; // can be static, GUI is single threaded
-                        switch (draw->iSubItem) {
+
+                        // return CDRF_DODEFAULT;
+
+                        // static bool reset_font = false; // can be static, GUI is single threaded
+                        /*switch (draw->iSubItem) {
                             default:
                                 if (reset_font) {
                                     reset_font = false;
@@ -186,8 +193,36 @@ LRESULT ListOfChannels::OnNotify (NMHDR * nm) {
                                         return CDRF_NEWFONT;
                                     }
                                 }
+                        }*/
+
+                        // TODO: fetch text from LVN_GETDISPINFO
+
+                        DrawCompositedTextOptions options;
+                        options.font = parent->fonts.text.handle;
+                        options.theme = GetWindowTheme (nm->hwndFrom);
+                        options.color = draw->clrText;
+
+                        switch (draw->iSubItem) {
+                            default:
+                                break;
+
+                            case 0:
+                                auto found = this->cache.find ((int) draw->nmcd.dwItemSpec);
+                                if (found != this->cache.end ()) {
+                                    if (database.names.is.query <int> (SQLite::Blob (found->second.id))) {
+                                        options.font = parent->fonts.italic.handle;
+                                    }
+                                }
                         }
-                        return CDRF_DODEFAULT;
+
+                        // TODO: background color
+                        if (draw->nmcd.uItemState & CDIS_SELECTED) { // etc...
+                            SetDCBrushColor (draw->nmcd.hdc, 0x00004F);
+                            FillRect (draw->nmcd.hdc, &draw->nmcd.rc, (HBRUSH) GetStockObject (DC_BRUSH));
+                        }
+
+                        DrawCompositedText (draw->nmcd.hdc, (LPWSTR) L"ABCD", DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS, draw->nmcd.rc, &options);
+                        return CDRF_SKIPDEFAULT;
                 }
             }
             break;
@@ -308,6 +343,14 @@ LRESULT ListOfChannels::OnNotify (NMHDR * nm) {
                 // TODO: display floating searchbox
             }
             return -1; // not found
+
+        case LVN_BEGINLABELEDIT:
+            if (auto hEdit = ListView_GetEditControl (nm->hwndFrom)) {
+                if (design.may_need_fix_alpha) {
+                    SetWindowSubclass (hEdit, AlphaSubclassProcedure, 0, 0);
+                }
+            }
+            return FALSE;
 
         case LVN_ENDLABELEDIT:
             if (auto edited = reinterpret_cast <NMLVDISPINFO *> (nm)) {

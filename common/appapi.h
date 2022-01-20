@@ -74,7 +74,7 @@ struct Design {
     bool prevalence = true;
     bool contrast = false;
 
-    bool may_need_fix_alpha = false; // TODO: Vista, 7 or 11
+    bool may_need_fix_alpha = true; // TODO: Vista, 7 or 11
     bool fix_alpha = false; // need to fix alpha on glass
 
     struct {
