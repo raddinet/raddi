@@ -441,6 +441,59 @@ HRESULT BufferedPaintPremultiply (HPAINTBUFFER hBuffer, const RECT & r, UCHAR al
     return E_NOTIMPL;
 }
 
+
+namespace {
+    LRESULT OnSubclassPaint (HWND hWnd, HDC _hDC, RECT, DWORD_PTR dwRefData) {
+        RECT rc;
+        GetClientRect (hWnd, &rc);
+
+        HDC hDC = NULL;
+        HANDLE hBuffered = ptrBeginBufferedPaint (_hDC, &rc, BPBF_TOPDOWNDIB, NULL, &hDC);
+
+        SendMessage (hWnd, WM_ERASEBKGND, (WPARAM) hDC, 0);
+        SendMessage (hWnd, WM_PRINTCLIENT, (WPARAM) hDC, 0);
+
+        InflateRect (&rc, -(int) dwRefData, -(int) dwRefData);
+        ptrBufferedPaintSetAlpha (hBuffered, &rc, 0xFF);
+        ptrEndBufferedPaint (hBuffered, TRUE);
+        return 0;
+    };
+}
+
+LRESULT CALLBACK AlphaSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
+                                         UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    switch (message) {
+        case WM_MOUSEMOVE: // ????
+            if (!wParam)
+                break;
+
+            [[ fallthrough ]];
+
+        case WM_ACTIVATE:
+        case WM_VSCROLL:
+        case WM_HSCROLL:
+        case WM_LBUTTONDOWN: // ????
+        case WM_KEYDOWN: // ????
+            InvalidateRect (hWnd, NULL, FALSE);
+            break;
+
+        case WM_PAINT:
+            extern Design design; // ???
+
+            if (design.fix_alpha) {
+                PAINTSTRUCT ps;
+                if (HDC hDC = BeginPaint (hWnd, &ps)) {
+                    OnSubclassPaint (hWnd, hDC, ps.rcPaint, dwRefData);
+                }
+                EndPaint (hWnd, &ps);
+                return 0;
+            } else
+                break;
+    }
+    return DefSubclassProc (hWnd, message, wParam, lParam);
+}
+
+
 void Cursors::update () {
     this->wait = LoadCursor (NULL, IDC_WAIT);
     this->arrow = LoadCursor (NULL, IDC_ARROW);
@@ -463,7 +516,7 @@ void Design::update () {
 
     this->composited = compositionEnabled;
     this->nice = (this->composited || (IsAppThemed () && IsWindowsVistaOrGreater ()));
-    this->alpha = this->composited && !IsWindows10OrGreater ();
+    this->fix_alpha = this->composited && !IsWindows10OrGreater ();
 
     if (ptrDwmGetColorizationColor) {
         BOOL opaque = TRUE;
@@ -478,7 +531,7 @@ void Design::update () {
 
     if (ptrGetImmersiveUserColorSetPreference) {
         this->colorset = ptrGetImmersiveUserColorSetPreference (FALSE, FALSE);
-        
+
         /*for (auto i = 0; auto name = ptrGetImmersiveColorNamedTypeByIndex (i); ++i) {
 
             auto type = ptrGetImmersiveColorTypeFromName ((L"Immersive" + std::wstring (*name)).c_str ());
@@ -495,6 +548,8 @@ void Design::update () {
     hc.cbSize = sizeof hc;
     if (SystemParametersInfo (SPI_GETHIGHCONTRAST, sizeof hc, &hc, 0)) {
         this->contrast = hc.dwFlags & HCF_HIGHCONTRASTON;
+    } else {
+        this->contrast = false;
     }
 
     wchar_t filename [MAX_PATH];

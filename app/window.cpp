@@ -30,7 +30,6 @@ extern Cursors cursor;
 extern Resolver resolver;
 
 namespace {
-    LRESULT CALLBACK AlphaSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);
     LRESULT CALLBACK ProperBgSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);    
 }
 
@@ -463,6 +462,7 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
             return -1;
         }
 
+        // if (design.may_need_fix_alpha) {
         if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
             for (auto & tab : tc->tabs) {
                 SetWindowSubclass (tab.second.content, AlphaSubclassProcedure, 0, 0);
@@ -1541,22 +1541,6 @@ void Window::FinishCommandInAllWindows (LPARAM command) const {
 }
 
 namespace {
-    LRESULT OnSubclassPaint (HWND hWnd, HDC _hDC, RECT, DWORD_PTR dwRefData) {
-        RECT rc;
-        GetClientRect (hWnd, &rc);
-
-        HDC hDC = NULL;
-        HANDLE hBuffered = ptrBeginBufferedPaint (_hDC, &rc, BPBF_TOPDOWNDIB, NULL, &hDC);
-
-        SendMessage (hWnd, WM_ERASEBKGND, (WPARAM) hDC, 0);
-        SendMessage (hWnd, WM_PRINTCLIENT, (WPARAM) hDC, 0);
-
-        InflateRect (&rc, -(int) dwRefData, -(int) dwRefData);
-        ptrBufferedPaintSetAlpha (hBuffered, &rc, 0xFF);
-        ptrEndBufferedPaint (hBuffered, TRUE);
-        return 0;
-    };
-
     /*LRESULT CALLBACK ColorFwdSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
                                                 UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
         switch (message) {
@@ -1569,37 +1553,6 @@ namespace {
                 return DefSubclassProc (hWnd, message, wParam, lParam);
         }
     }// */
-
-    LRESULT CALLBACK AlphaSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
-                                             UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-        switch (message) {
-            case WM_MOUSEMOVE: // ????
-                if (!wParam)
-                    break;
-
-                [[ fallthrough ]];
-
-            case WM_ACTIVATE:
-            case WM_VSCROLL:
-            case WM_HSCROLL:
-            case WM_LBUTTONDOWN: // ????
-            case WM_KEYDOWN: // ????
-                InvalidateRect (hWnd, NULL, FALSE);
-                break;
-
-            case WM_PAINT:
-                if (design.alpha) {
-                    PAINTSTRUCT ps;
-                    if (HDC hDC = BeginPaint (hWnd, &ps)) {
-                        OnSubclassPaint (hWnd, hDC, ps.rcPaint, dwRefData);
-                    }
-                    EndPaint (hWnd, &ps);
-                    return 0;
-                } else
-                    break;
-        }
-        return DefSubclassProc (hWnd, message, wParam, lParam);
-    }
 
     LRESULT CALLBACK ProperBgSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
                                                 UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {

@@ -65,6 +65,7 @@ struct DrawCompositedTextOptions {
 HRESULT DrawCompositedTextDIB (HDC, HTHEME, HFONT, LPCWSTR, int, DWORD, RECT, COLORREF, UINT);
 HRESULT DrawCompositedText (HDC, std::wstring_view, DWORD, RECT, const DrawCompositedTextOptions * = NULL);
 HRESULT BufferedPaintPremultiply (HPAINTBUFFER hBuffer, const RECT & r, UCHAR alpha, UCHAR saturation = 255);
+LRESULT CALLBACK AlphaSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);
 
 struct Design {
     bool composited = true; // DWM composition is enabled
@@ -72,7 +73,9 @@ struct Design {
     bool light = true;
     bool prevalence = true;
     bool contrast = false;
-    bool alpha = false; // need to fix alpha on glass
+
+    bool may_need_fix_alpha = false; // TODO: Vista, 7 or 11
+    bool fix_alpha = false; // need to fix alpha on glass
 
     struct {
         DWORD accent = 0xFFFFFF;
