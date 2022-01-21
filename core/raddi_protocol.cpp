@@ -65,7 +65,7 @@ void raddi::protocol::proposal::propose (initial * head) {
 
     head->flags.hard.encode (0);
     head->flags.soft.encode (aes);
-    head->timestamp = raddi::microtimestamp (); // TODO: obscure by xoring with something: ^ *reinterpret_cast <std::uint64_t *> (this->inbound_key);
+    head->timestamp = raddi::microtimestamp () ^ *reinterpret_cast <std::uint64_t *> (this->inbound_key);
     
     cuckoo::hash <2,4> hash;
     hash.seed (head->keys.inbound_key, (const std::uint8_t *) &raddi::protocol::magic [0], sizeof raddi::protocol::magic);
@@ -95,7 +95,8 @@ raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::pr
         return nullptr;
     }
 
-    if (std::abs ((std::int64_t) (peer->timestamp - raddi::microtimestamp ())) > (1000'000 * raddi::consensus::max_entry_skew_allowed)) {
+    auto peertime = peer->timestamp ^ *reinterpret_cast <std::uint64_t *> (this->inbound_key);
+    if (std::abs ((std::int64_t) (peertime - raddi::microtimestamp ())) > (1000'000 * raddi::consensus::max_entry_skew_allowed)) {
         *failure = accept_fail_reason::time;
         return nullptr;
     }
