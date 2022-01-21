@@ -22,6 +22,8 @@
 #include "resolver.h"
 #include "prompts.h"
 
+#pragma warning (disable:26812) // unscopen enum warning
+
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 extern "C" const IID IID_IImageList;
 
@@ -276,7 +278,7 @@ int Window::CreateTab (const raddi::eid & entry, const std::wstring & text, int 
 
     try {
         wchar_t szTmp [16];
-        szTmp [std::swprintf (szTmp, 15, L"[%d] ", id)] = 0;
+        std::swprintf (szTmp, 16, L"[%d] ", id);
 
         this->tabs.views->tabs [id].text = szTmp + text;
         this->tabs.views->tabs [id].icon = NULL; // TODO: loading animating ICO and EID in title
@@ -462,8 +464,7 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
             return -1;
         }
 
-        // if (design.may_need_fix_alpha) {
-        if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
+        if (design.may_need_fix_alpha) {
             for (auto & tab : tc->tabs) {
                 SetWindowSubclass (tab.second.content, AlphaSubclassProcedure, 0, 0);
                 if (auto header = ListView_GetHeader (tab.second.content)) {
@@ -503,7 +504,7 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
                                                 WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, (HMENU) ID::FEED_TWEETS,
                                                 cs->hInstance, NULL);
 
-        if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
+        if (design.may_need_fix_alpha) {
             for (auto & tab : tc->tabs) {
                 SetWindowSubclass (tab.second.content, AlphaSubclassProcedure, 0, 0);
             }
@@ -529,7 +530,7 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
         SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"TEST TEST TEST");
         SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"AAA");
         SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"BBBBB");
-        if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
+        if (design.may_need_fix_alpha) {
             SetWindowSubclass (hIdentities, AlphaSubclassProcedure, 0, 2);
         }
 
@@ -547,7 +548,7 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
 
         // LVS_EX_DOUBLEBUFFER
         // LVS_EX_TRANSPARENTBKGND ??
-        if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
+        if (design.may_need_fix_alpha) {
             SetWindowSubclass (hFilters, AlphaSubclassProcedure, 0, 0);
         }
 
