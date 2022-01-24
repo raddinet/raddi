@@ -572,8 +572,11 @@ void Design::update () {
         this->colorization.active = GetSysColor (COLOR_ACTIVECAPTION);
         this->colorization.inactive = GetSysColor (COLOR_INACTIVECAPTION);
         this->prevalence = true;
+        this->override.outline = false;
+        this->override.acrylic = false;
     } else
     if (IsWindows10OrGreater ()) {
+        this->light = true;
         this->prevalence = false;
         this->colorization.active = 0xFFFFFF;
 
