@@ -179,7 +179,7 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
             if (WindowFromDC ((HDC) wParam) != hWnd) {
                 RECT client;
                 if (GetClientRect (hWnd, &client)) {
-                    BackgroundFill ((HDC) wParam, &client, &client, false);
+                    BackgroundFill ((HDC) wParam, client, &client, false);
                 }
                 return true;
             } else

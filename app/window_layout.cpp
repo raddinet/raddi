@@ -56,13 +56,14 @@ namespace {
     }
 }
 
-bool Window::GetCaptionTextColor (COLORREF & color, UINT & glow) const {
+bool Window::GetCaptionTextColor (HTHEME hTheme, COLORREF & color, UINT & glow) const {
     glow = 2 * this->metrics [SM_CXFRAME] / 2;
-    color = GetSysColor (COLOR_WINDOWTEXT);
-        
+    // color = GetSysColor (COLOR_WINDOWTEXT);
+    color = GetSysColor (COLOR_CAPTIONTEXT);
+    
     bool dark = !design.light
              || (IsWindowsVista () && IsZoomed (this->hWnd))
-             || (!IsWindows7 () && design.prevalence && IsColorDark (design.colorization.active));
+             || (!IsWindows7 () && (design.prevalence && !design.override.outline) && IsColorDark (design.colorization.active));
 
     if (this->active) {
         if (dark) {
@@ -72,7 +73,9 @@ bool Window::GetCaptionTextColor (COLORREF & color, UINT & glow) const {
             }
         }
     } else {
-        if (!IsWindows7 ()) {
+        if (design.contrast) {
+            color = GetSysColor (COLOR_INACTIVECAPTIONTEXT);
+        } else {
             color = GetSysColor (COLOR_GRAYTEXT);
         }
     }
@@ -147,7 +150,7 @@ void Window::UpdateFeedsPosition (HDWP & hDwp, const RECT & client, const RECT &
     auto r = this->GetTabControlContentRect (this->GetFeedsFrame (&client, rFeedsTabs));
     r.right -= r.left;
     r.bottom -= r.top;
-
+    
     for (const auto & tab : this->tabs.feeds->tabs) {
         if (tab.second.content)
             DeferWindowPos (hDwp, tab.second.content, r, 0);
@@ -172,16 +175,16 @@ RECT Window::GetListsTabRect () {
         r.left = 2;
     }
 
-    r.right = dividers.left - r.left - (metrics [SM_CXFRAME] + metrics [SM_CXPADDEDBORDER]);
+    r.right = dividers.left - r.left - (metrics [SM_CXFRAME] + metrics [SM_CXPADDEDBORDER] / 2);
     r.bottom = this->tabs.lists->minimum.cy + 1;
     return r;
 }
 
-RECT Window::GetFeedsTabRect (const RECT & rRightFrame) {
+RECT Window::GetFeedsTabRect (const RECT * rRightFrame) {
     RECT r;
     r.top = metrics [SM_CYFRAME] + metrics [SM_CXPADDEDBORDER] + LONG (dividers.feeds);
-    r.left = rRightFrame.left;
-    r.right = rRightFrame.right;
+    r.left = rRightFrame->left;
+    r.right = rRightFrame->right;
     r.bottom = this->tabs.feeds->minimum.cy;
 
     if (!IsAppThemed ()) {
@@ -227,15 +230,11 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
 
                 auto hStatusBar = GetDlgItem (hWnd, ID::STATUSBAR);
                 auto yStatusBar = UpdateStatusBar (hStatusBar, dpi, client);
-                if (design.nice) {
-                    // client.bottom -= metrics [SM_CYCAPTION] + metrics [SM_CYFRAME];
-                    // yStatusBar = 0;
-                }
 
                 if (HDWP hDwp = BeginDeferWindowPos ((int) (16 + this->tabs.views->tabs.size () + this->tabs.lists->tabs.size ()))) {
                     auto rListTabs = this->GetListsTabRect ();
-                    auto rRightPane = this->GetRightPane (client, rListTabs);
-                    auto rFeedsTabs = this->GetFeedsTabRect (rRightPane);
+                    auto rRightPane = this->GetRightPane (&client, rListTabs);
+                    auto rFeedsTabs = this->GetFeedsTabRect (&rRightPane);
                     auto rFilters = this->GetFiltersRect (&client, rRightPane);
                     auto rIdentities = rRightPane;
 
@@ -246,12 +245,7 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
                     DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::TABS_VIEWS), tabs);
                     DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::TABS_LISTS), rListTabs);
                     DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::TABS_FEEDS), rFeedsTabs);
-
-                    if (yStatusBar) {
-                        DeferWindowPos (hDwp, hStatusBar, { 0, client.bottom - yStatusBar, client.right, yStatusBar }, SWP_SHOWWINDOW);
-                    } else {
-                        DeferWindowPos (hDwp, hStatusBar, { 0,0,0,0 }, SWP_HIDEWINDOW);
-                    }
+                    DeferWindowPos (hDwp, hStatusBar, { 0, client.bottom - yStatusBar, client.right, yStatusBar }, SWP_SHOWWINDOW);
 
                     if (design.nice) {
                         client.bottom -= metrics [SM_CYCAPTION] + metrics [SM_CYFRAME];
@@ -280,9 +274,10 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
 
         // TODO: different maximized/inactive colors
         if (design.composited && design.override.acrylic) {
-            AccentPolicy policy = { 4, 0x01E0, 0x88221100 /* 0x7FFFAA00 */, 0 };
+            AccentPolicy policy = { 4, 0x01E0, 0x88232221 /* 0x7FFFAA00 */, 0 };
             if (design.light) {
-                policy.gradient = 0xAAFFFFFF;
+                policy.gradient = 0xCCE5E5E5;
+                // policy.gradient = 0xAAFFFFFF;
             }
             CompositionAttributeData data = { WCA_ACCENT_POLICY, &policy, sizeof policy };
 
@@ -641,17 +636,17 @@ LRESULT Window::OnMouse (UINT message, WPARAM modifiers, LONG x, LONG y) {
 //       it might be nice to split into virtual classes simply switched on wm_themechange
 //       (at least windows version really doesn't need to be checked dozen times per redraw)
 
-void Window::BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, bool caption) {
+void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fromControl) {
     if (design.composited) {
 
         auto margins = this->GetDwmMargins ();
         RECT face = {
-            rcArea->left + margins->cxLeftWidth,
-            rcArea->top + margins->cyTopHeight,
-            rcArea->right - margins->cxRightWidth,
-            rcArea->bottom - margins->cyBottomHeight,
+            rcArea.left + margins->cxLeftWidth,
+            rcArea.top + margins->cyTopHeight,
+            rcArea.right - margins->cxRightWidth,
+            rcArea.bottom - margins->cyBottomHeight,
         };
-        auto top = rcArea->top;
+        auto top = rcArea.top;
         auto transparent = (HBRUSH) GetStockObject (BLACK_BRUSH);
 
         if (margins->cyTopHeight) { RECT r = { rcClip->left, top, rcClip->right, face.top }; FillRect (hDC, &r, transparent); }
@@ -659,35 +654,46 @@ void Window::BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, 
         if (margins->cxRightWidth) { RECT r = { face.right, top, rcClip->right, rcClip->bottom }; FillRect (hDC, &r, transparent); }
         if (margins->cyBottomHeight) { RECT r = { rcClip->left, face.bottom, rcClip->right, rcClip->bottom }; FillRect (hDC, &r, transparent); }
 
-        // NOTE: our TabControl expects composited design background color to be left in DC Brush
+        IntersectRect (&face, &face, rcClip);
 
         if (design.override.acrylic) {
-            SetDCBrushColor (hDC, 0x00000000);
+            FillRect (hDC, &face, transparent);
         } else {
             if (this->active && !design.override.outline) {
                 SetDCBrushColor (hDC, design.colorization.active & 0x00FFFFFF);
             } else {
                 SetDCBrushColor (hDC, design.colorization.inactive & 0x00FFFFFF);
             }
+            FillRect (hDC, &face, (HBRUSH) GetStockObject (DC_BRUSH));
         }
-        
-        IntersectRect (&face, &face, rcClip);
-        FillRect (hDC, &face, (HBRUSH) GetStockObject (DC_BRUSH));
+
+        // our TabControl expects composited design background color to be left in DC Brush
+        //  - currently only present on Windows 11 where, for some reason, the 0x00000000 isn't
+        //    painting transparent, so as temporary fix I use the outline color of tabs which
+        //    draws them not-rounded again; TODO: fix
+
+        if (design.override.acrylic) {
+            if (design.light) {
+                SetDCBrushColor (hDC, 0x00E5E5E5);
+            } else {
+                SetDCBrushColor (hDC, 0x00232221);
+            }
+        }
     } else {
         if (HANDLE hTheme = OpenThemeData (hWnd, VSCLASS_WINDOW)) {
             UINT type = this->active ? FS_ACTIVE : FS_INACTIVE;
 
             RECT rcLeft = {
-                rcArea->left - metrics [SM_CXFRAME],
-                rcArea->top + metrics [SM_CYFRAME] + metrics [SM_CYCAPTION],
-                rcArea->left + dividers.left,
-                rcArea->bottom
+                rcArea.left - metrics [SM_CXFRAME],
+                rcArea.top + metrics [SM_CYFRAME] + metrics [SM_CYCAPTION],
+                rcArea.left + dividers.left,
+                rcArea.bottom
             };
             RECT rcRight = {
-                rcArea->left + dividers.left,
-                rcArea->top + metrics [SM_CYFRAME] + metrics [SM_CYCAPTION],
-                rcArea->right + metrics [SM_CXFRAME],
-                rcArea->bottom
+                rcArea.left + dividers.left,
+                rcArea.top + metrics [SM_CYFRAME] + metrics [SM_CYCAPTION],
+                rcArea.right + metrics [SM_CXFRAME],
+                rcArea.bottom
             };
             if (IsWindowsVistaOrGreater ()) {
                 DrawThemeBackground (hTheme, hDC, WP_FRAMELEFT, type, &rcLeft, rcClip);
@@ -697,8 +703,8 @@ void Window::BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, 
                 FillRect (hDC, &rcRight, GetSysColorBrush (COLOR_3DFACE));
             }
 
-            if (caption) {
-                RECT rcCaption = *rcArea;
+            if (fromControl) {
+                RECT rcCaption = rcArea;
                 rcCaption.bottom = rcCaption.top + metrics [SM_CYFRAME] + metrics [SM_CYCAPTION];
                 rcCaption.left -= metrics [SM_CXFRAME];
                 rcCaption.right += metrics [SM_CXFRAME];
@@ -712,8 +718,8 @@ void Window::BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, 
 
             CloseThemeData (hTheme);
         } else {
-            RECT rcFill = *rcArea;
-            if (!caption) {
+            RECT rcFill = rcArea;
+            if (!fromControl) {
                 rcFill.top = metrics [SM_CYCAPTION] + metrics [SM_CYFRAME];
             }
 
@@ -722,7 +728,7 @@ void Window::BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, 
                 FillRect (hDC, &rcIntersection, GetSysColorBrush (COLOR_BTNFACE));
             }
 
-            RECT rcCaption = *rcArea;
+            RECT rcCaption = rcArea;
             rcCaption.top += metrics [SM_CYFRAME];
             rcCaption.bottom = rcCaption.top + metrics [SM_CYCAPTION];
 
@@ -750,15 +756,19 @@ void Window::BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, 
         }
     }
 
+    if (fromControl) {
+        rcArea.bottom -= metrics [SM_CYFRAME];
+    }
+
     auto rListTabs = this->GetListsTabRect ();
-    auto rList = GetListsFrame (rcArea, rListTabs);
-    auto rRight = GetRightPane (*rcArea, rListTabs);
-    auto rFeeds = GetFeedsFrame (rcArea, this->GetFeedsTabRect (rRight));
-    auto rFilters = GetFiltersRect (rcArea, rRight);
+    auto rList = GetListsFrame (&rcArea, rListTabs);
+    auto rRight = GetRightPane (&rcArea, rListTabs);
+    auto rFeeds = GetFeedsFrame (&rcArea, this->GetFeedsTabRect (&rRight));
+    auto rFilters = GetFiltersRect (&rcArea, rRight);
 
     if (HANDLE hTheme = OpenThemeData (hWnd, VSCLASS_TAB)) {
         if (IsWindows10OrGreater () || !design.composited) {
-            auto rPane = GetViewsFrame (rcArea);
+            auto rPane = GetViewsFrame (&rcArea);
             auto rPaneClip = GetTabControlClipRect (rPane);
             DrawThemeBackground (hTheme, hDC, TABP_PANE, 0, &rPane, &rPaneClip);
         }
@@ -771,7 +781,7 @@ void Window::BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, 
         DrawThemeBackground (hTheme, hDC, TABP_PANE, 0, &rFilters, &rFiltersClip);
         CloseThemeData (hTheme);
     } else {
-        auto rPane = GetViewsFrame (rcArea);
+        auto rPane = GetViewsFrame (&rcArea);
 
         DrawEdge (hDC, &rPane, BDR_SUNKEN, BF_RECT);
         DrawEdge (hDC, &rList, BDR_SUNKEN, BF_RECT);
@@ -797,6 +807,13 @@ RECT Window::GetViewsFrame (const RECT * rcArea) {
         }
         if (design.nice) {
             r.bottom -= metrics [SM_CYFRAME];
+
+            if (IsWindows10OrGreater () && !design.contrast) {
+                r.bottom += metrics [SM_CYFRAME];
+            }
+            if (IsWindows7 () && !design.composited) {
+                r.bottom += metrics [SM_CYFRAME];
+            }
         }
     } else {
         r.top -= 1;
@@ -833,6 +850,31 @@ RECT Window::GetListsFrame (const RECT * rcArea, const RECT & rListTabs) {
         if (design.composited && !IsWindows10OrGreater ()) {
             r.bottom += metrics [SM_CYFRAME] + metrics [SM_CYEDGE] + 1;
         }
+        if (IsWindows10OrGreater () && !design.contrast) {
+            r.bottom += metrics [SM_CYFRAME];
+        }
+        if (IsWindows7 () && design.nice && !design.composited) {
+            r.bottom += metrics [SM_CYFRAME];
+        }
+
+        // TODO: rewrite as...
+        /*
+        if (design.nice) {
+            r.bottom -= metrics [SM_CYFRAME];
+        }
+        if (IsWindows10OrGreater ()) {
+            if (!design.contrast) {
+                r.bottom += metrics [SM_CYFRAME];
+            }
+        } else {
+            if (design.composited) {
+                r.bottom += metrics [SM_CYFRAME] + metrics [SM_CYEDGE] + 1;
+            } else {
+                if (design.nice && IsWindows7 ()) {
+                    r.bottom += metrics [SM_CYFRAME];
+                }
+            }
+        }// */
     } else {
         r.top -= 1;
         r.left -= 2;
@@ -840,10 +882,10 @@ RECT Window::GetListsFrame (const RECT * rcArea, const RECT & rListTabs) {
     return r;
 }
 
-RECT Window::GetRightPane (const RECT & client, const RECT & rListTabs) {
+RECT Window::GetRightPane (const RECT * client, const RECT & rListTabs) {
     RECT r = rListTabs;
-    r.left = (client.right - client.left) - dividers.right + metrics [SM_CXFRAME] + metrics [SM_CXPADDEDBORDER];
-    r.right = (client.right - client.left) - r.left;
+    r.left = (client->right - client->left) - dividers.right + metrics [SM_CXFRAME] + metrics [SM_CXPADDEDBORDER] / 2;
+    r.right = (client->right - client->left) - r.left;
     if (!IsZoomed (hWnd)) {
         r.right -= metrics [SM_CXPADDEDBORDER];
     }
@@ -876,6 +918,12 @@ RECT Window::GetFeedsFrame (const RECT * rcArea, const RECT & rFeedsTabs) {
         if (design.composited && !IsWindows10OrGreater ()) {
             r.bottom += metrics [SM_CYFRAME] + metrics [SM_CYEDGE] + 1;
         }
+        if (IsWindows10OrGreater () && !design.contrast) {
+            r.bottom += metrics [SM_CYFRAME];
+        }
+        if (IsWindows7 () && design.nice && !design.composited) {
+            r.bottom += metrics [SM_CYFRAME];
+        }
     } else {
         r.top -= 1;
         r.left -= 2;
@@ -901,7 +949,7 @@ LRESULT Window::OnDrawItem (WPARAM id, DRAWITEMSTRUCT * draw) {
             options.font = this->fonts.text.handle;
             options.theme = GetWindowTheme (draw->hwndItem);
 
-            this->GetCaptionTextColor (options.color, options.glow);
+            this->GetCaptionTextColor (options.theme, options.color, options.glow);
 
             if (!design.composited) {
                 options.glow = 0;
@@ -934,7 +982,7 @@ LRESULT Window::OnControlPrePaint (HDC hDC, HWND hControl) {
     rWindow.right -= metrics [SM_CXFRAME] + metrics [SM_CXPADDEDBORDER];
     rWindow.bottom -= metrics [SM_CYFRAME];
 
-    this->BackgroundFill (hDC, &rWindow, &rControl, true);
+    this->BackgroundFill (hDC, rWindow, &rControl, true);
     return (LRESULT) GetStockObject (NULL_BRUSH);
 }
 
@@ -962,7 +1010,7 @@ LRESULT Window::OnPaint () {
             hDC = hScreenDC;
         }
 
-        this->BackgroundFill (hDC, &client, &ps.rcPaint, false);
+        this->BackgroundFill (hDC, client, &ps.rcPaint, false);
 
         if (design.composited) {
             POINT iconPos = { 0, metrics [SM_CYFRAME] };
@@ -980,7 +1028,7 @@ LRESULT Window::OnPaint () {
                 COLORREF color;
                 UINT glow;
 
-                if (this->GetCaptionTextColor (color, glow)) { // text is bright
+                if (this->GetCaptionTextColor (hTheme, color, glow)) { // text is bright
                     for (auto & tc : this->alltabs) {
                         tc->buttons.color = 0xD0D0D0;
                         tc->buttons.hot = 0xFFFFFF;

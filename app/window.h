@@ -12,7 +12,7 @@
 //#define WM_APP_CHANNELS_COUNT   (WM_APP + 3)
 //#define WM_APP_IDENTITIES_COUNT (WM_APP + 4)
 
-// TODO: AppWindow : Window : WindowEnvironmnet
+// TODO: AppWindow : Window : WindowEnvironment
 //  - appwindow.h, common/window.h, common/window_environment.h
 
 class Window : public WindowEnvironment {
@@ -143,22 +143,22 @@ private:
 
     const MARGINS * GetDwmMargins ();
     RECT GetListsTabRect ();
-    RECT GetFeedsTabRect (const RECT &);
+    RECT GetFeedsTabRect (const RECT *);
     RECT GetListsFrame (const RECT *, const RECT & rListTabs);
     RECT GetViewsFrame (const RECT *);
-    RECT GetRightPane (const RECT & client, const RECT & rListTabs);
+    RECT GetRightPane (const RECT * client, const RECT & rListTabs);
     RECT GetFeedsFrame (const RECT *, const RECT & rFeedsTabs);
     RECT GetFiltersRect (const RECT * rcArea, const RECT & rRightPane);
 
     RECT GetTabControlClipRect (RECT);
     RECT GetTabControlContentRect (RECT);
-    void BackgroundFill (HDC hDC, const RECT * rcArea, const RECT * rcClip, bool fromControl);
+    void BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fromControl);
     LONG UpdateStatusBar (HWND hStatusBar, UINT dpi, const RECT & rParent);
     void UpdateListsPosition (HDWP &, const RECT &, const RECT & rListTabs);
     void UpdateViewsPosition (HDWP &, const RECT &);
     void UpdateFeedsPosition (HDWP &, const RECT &, const RECT & rFeedsTabs);
     void Reposition ();
-    bool GetCaptionTextColor (COLORREF & color, UINT & glow) const;
+    bool GetCaptionTextColor (HTHEME hTheme, COLORREF & color, UINT & glow) const;
 
     std::intptr_t TabIdFromContentMenu (LONG * x, LONG * y, TabControlInterface * tc);
     std::intptr_t FindFirstAvailableListId () const;
