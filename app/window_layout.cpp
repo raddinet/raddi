@@ -827,12 +827,11 @@ RECT Window::GetTabControlContentRect (RECT r) {
     return r;
 }
 
-RECT Window::GetListsFrame (const RECT * rcArea, const RECT & rListTabs) {
-    RECT r = *rcArea;
-    r.top += this->GetDwmMargins ()->cyTopHeight + this->tabs.views->minimum.cy - 1;
+RECT Window::GetAdjustedFrame (RECT r, LONG top, const RECT & rTabs) {
+    r.top += top + this->tabs.views->minimum.cy - 1;
+    r.left += rTabs.left;
+    r.right = r.left + rTabs.right;
     r.bottom -= metrics [SM_CYCAPTION] + 1;
-    r.left += rListTabs.left;
-    r.right = r.left + rListTabs.right;
 
     if (IsAppThemed ()) {
         if (design.nice) {
@@ -847,28 +846,21 @@ RECT Window::GetListsFrame (const RECT * rcArea, const RECT & rListTabs) {
         if ((winver == 7) && design.nice && !design.composited) {
             r.bottom += metrics [SM_CYFRAME];
         }
-
-        // TODO: rewrite as...
-        /*
-        if (design.nice) {
-            r.bottom -= metrics [SM_CYFRAME];
-        }
-        if (IsWindows10OrGreater ()) {
-            if (!design.contrast) {
-                r.bottom += metrics [SM_CYFRAME];
-            }
-        } else {
-            if (design.composited) {
-                r.bottom += metrics [SM_CYFRAME] + metrics [SM_CYEDGE] + 1;
-            } else {
-                if (design.nice && IsWindows7 ()) {
-                    r.bottom += metrics [SM_CYFRAME];
-                }
-            }
-        }// */
     } else {
         r.top -= 1;
         r.left -= 2;
+    }
+    return r;
+}
+
+RECT Window::GetListsFrame (const RECT * rcArea, const RECT & rListTabs) {
+    return this->GetAdjustedFrame (*rcArea, this->GetDwmMargins ()->cyTopHeight, rListTabs);
+}
+
+RECT Window::GetFeedsFrame (const RECT * rcArea, const RECT & rFeedsTabs) {
+    auto r = this->GetAdjustedFrame (*rcArea, rFeedsTabs.top, rFeedsTabs);
+    if (design.nice && !design.contrast) {
+        r.right += 2;
     }
     return r;
 }
@@ -889,36 +881,6 @@ RECT Window::GetFiltersRect (const RECT * rcArea, const RECT & rRightPane) {
     r.top += rRightPane.top + this->tabs.views->minimum.cy - 1 + metrics [SM_CYFRAME];
     r.left += rRightPane.left;
     r.right = r.left + rRightPane.right;
-    if (design.nice && !design.contrast) {
-        r.right += 2;
-    }
-    return r;
-}
-
-RECT Window::GetFeedsFrame (const RECT * rcArea, const RECT & rFeedsTabs) {
-    RECT r = *rcArea;
-    r.top += rFeedsTabs.top + this->tabs.views->minimum.cy - 1;
-    r.bottom -= metrics [SM_CYCAPTION] + 1;
-    r.left += rFeedsTabs.left;
-    r.right = r.left + rFeedsTabs.right;
-
-    if (IsAppThemed ()) {
-        if (design.nice) {
-            r.bottom -= metrics [SM_CYFRAME];
-        }
-        if (design.composited && (winver < 10)) {
-            r.bottom += metrics [SM_CYFRAME] + metrics [SM_CYEDGE] + 1;
-        }
-        if ((winver >= 10) && !design.contrast) {
-            r.bottom += metrics [SM_CYFRAME];
-        }
-        if ((winver == 7) && design.nice && !design.composited) {
-            r.bottom += metrics [SM_CYFRAME];
-        }
-    } else {
-        r.top -= 1;
-        r.left -= 2;
-    }
     if (design.nice && !design.contrast) {
         r.right += 2;
     }

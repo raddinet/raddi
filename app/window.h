@@ -144,6 +144,7 @@ private:
     const MARGINS * GetDwmMargins ();
     RECT GetListsTabRect ();
     RECT GetFeedsTabRect (const RECT *);
+    RECT GetAdjustedFrame (RECT r, LONG top, const RECT & rTabs);
     RECT GetListsFrame (const RECT *, const RECT & rListTabs);
     RECT GetViewsFrame (const RECT *);
     RECT GetRightPane (const RECT * client, const RECT & rListTabs);
