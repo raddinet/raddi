@@ -7,7 +7,7 @@ extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace {
     INT_PTR OnInitDialog (HWND hWnd, EditDialogBoxParameters * parameters) {
-        if (!IsWindowsVistaOrGreater ()) {
+        if (winver < 6) {
             // TODO: use Segoe UI Variable on 22000+
             // TODO: instead consider making two templates, one DS_SHELLFONT,8,MS Whatever and other 9, Segoe UI
             EnumChildWindows (hWnd,

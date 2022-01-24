@@ -354,7 +354,7 @@ namespace {
                                             options.color = 0x7F7F7F; // TODO: proper color
                                         }
 
-                                        if (IsWindows8OrGreater ()) {
+                                        if (winver >= 8) {
                                             // options.shadow.size = 1 * self->dpi / 96;
                                             // options.shadow.offset.x = 1;
                                             // options.shadow.offset.y = 1;
@@ -1063,7 +1063,7 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
             if (this->tabs [stack.top].close) {
                 if (this->theme) {
                     RECT r = stack.rCloseButton;
-                    if (!IsWindowsVistaOrGreater ()) {
+                    if (winver < 6) {
                         r.top += 1;
                     }
                     if (i == this->hot.stack) {

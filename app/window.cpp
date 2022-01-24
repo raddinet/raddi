@@ -943,7 +943,7 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
                     default:
                         if (id >= ID::LIST_BASE && id <= ID::LIST_LAST) {
 
-                            if (IsWindowsVistaOrGreater () && ListView_GetFocusedGroup (hFocus) != -1) {
+                            if ((winver >= 6) && (ListView_GetFocusedGroup (hFocus) != -1)) {
                                 this->OnCommand (0, 0xB3, hFocus);
                             } else {
                                 auto item = ListView_GetNextItem (hFocus, -1, LVNI_FOCUSED);
@@ -1121,7 +1121,7 @@ LRESULT Window::OnFinishCommand (LPARAM command) {
                     this->tabs.lists->move_stack (finish.list, (int) finish.list - 1);
                     this->tabs.lists->request (finish.list);
 
-                    if (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) {
+                    if ((winver >= 6) && (winver < 10)) {
                         SetWindowSubclass (hList, AlphaSubclassProcedure, 0, 0);
                         // SetWindowSubclass (ListView_GetHeader (hList), AlphaSubclassProcedure, 0, 0);
                     }

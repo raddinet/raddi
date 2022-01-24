@@ -60,7 +60,7 @@ ListPart ListView_OnContextMenu (const WindowEnvironment * parent, HWND hListVie
         LVHITTESTINFO info = { { x, y } };
         MapWindowPoints (NULL, hListView, &info.pt, 1);
 
-        if (SendMessage (hListView, LVM_HITTEST, IsWindowsVistaOrGreater () ? -1 : 0, reinterpret_cast <LPARAM> (&info)) != -1) {
+        if (SendMessage (hListView, LVM_HITTEST, (winver >= 6) ? -1 : 0, reinterpret_cast <LPARAM> (&info)) != -1) {
             *id = info.iItem;
 
             if (info.flags & LVHT_EX_GROUP) return ListPart::Group;

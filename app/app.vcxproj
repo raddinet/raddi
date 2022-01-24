@@ -228,7 +228,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
@@ -273,7 +273,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)lib\a64\$(Configuration);$(SolutionDir)a64\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;winsqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
       <MinimumRequiredVersion>
@@ -318,7 +318,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
@@ -362,7 +362,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)lib\a64\$(Configuration);$(SolutionDir)a64\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
       <MinimumRequiredVersion>
@@ -497,7 +497,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
@@ -540,7 +540,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)lib\$(PlatformTarget)\$(Configuration);$(SolutionDir)$(PlatformTarget)\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;wininet.lib;ws2_32.lib;user32.lib;shell32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;rpcrt4.lib;ole32.lib;uxtheme.lib;winspool.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
@@ -565,6 +565,7 @@
     <ClCompile Include="..\common\platform.cpp" />
     <ClCompile Include="..\common\uuid.cpp" />
     <ClCompile Include="..\common\window_environment.cpp" />
+    <ClCompile Include="..\common\winver.cpp" />
     <ClCompile Include="..\core\raddi_address.cpp" />
     <ClCompile Include="..\core\raddi_channel.cpp" />
     <ClCompile Include="..\core\raddi_command.cpp" />
@@ -637,6 +638,7 @@
     <ClInclude Include="..\common\platform.h" />
     <ClInclude Include="..\common\uuid.h" />
     <ClInclude Include="..\common\window_environment.h" />
+    <ClInclude Include="..\common\winver.h" />
     <ClInclude Include="..\core\raddi_address.h" />
     <ClInclude Include="..\core\raddi_channel.h" />
     <ClInclude Include="..\core\raddi_command.h" />

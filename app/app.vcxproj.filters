@@ -175,6 +175,9 @@
     <ClCompile Include="channels.cpp">
       <Filter>Views</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\winver.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app-en.rc">
@@ -361,6 +364,9 @@
     </ClInclude>
     <ClInclude Include="channels.h">
       <Filter>Views</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\winver.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

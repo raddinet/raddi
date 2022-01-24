@@ -1,4 +1,6 @@
 #include "appapi.h"
+#include "winver.h"
+
 #include <VersionHelpers.h>
 #include <algorithm>
 
@@ -49,14 +51,14 @@ void AppApiInitialize () {
         Symbol (hUxTheme, ptrEndBufferedPaint, "EndBufferedPaint");
         Symbol (hUxTheme, ptrDrawThemeTextEx, "DrawThemeTextEx");
 
-        if (IsWindows8OrGreater ()) {
+        if (winver >= 8) {
             Symbol (hUxTheme, ptrGetImmersiveColorTypeFromName, 96);
             Symbol (hUxTheme, ptrGetImmersiveColorFromColorSetEx, 95);
             Symbol (hUxTheme, ptrGetImmersiveColorNamedTypeByIndex, 100);
             Symbol (hUxTheme, ptrGetImmersiveUserColorSetPreference, 98);
 
         }
-        if (IsWindowsBuildOrGreater (10, 0, 17763)) {
+        if (winbuild >= 17763) {
             Symbol (hUxTheme, ptrFlushMenuThemes, 136);
             Symbol (hUxTheme, ptrAllowDarkModeForApp, 135);
             Symbol (hUxTheme, ptrAllowDarkModeForWindow, 133);
@@ -514,18 +516,16 @@ void Design::update () {
         ptrDwmIsCompositionEnabled (&compositionEnabled);
     }
 
-    bool Windows11 = IsWindowsBuildOrGreater (10, 0, 22000);
-    if (!Windows11) {
+    if (winver < 11) {
         this->override.outline = false;
         this->override.acrylic = false;
     }
 
     this->composited = compositionEnabled;
-    this->nice = (this->composited || (IsAppThemed () && IsWindowsVistaOrGreater ()));
+    this->nice = (this->composited || (IsAppThemed () && (winver >= 6)));
     
-    this->may_need_fix_alpha = (IsWindowsVistaOrGreater () && !IsWindows10OrGreater ()) // Vista, 7 or 8(.1)
-                            || Windows11;
-    this->fix_alpha = (this->composited && !IsWindows10OrGreater ()) || this->override.acrylic;
+    this->may_need_fix_alpha = ((winver >= 6) && (winver < 10)) || (winver >= 11);
+    this->fix_alpha = (this->composited && (winver < 10)) || this->override.acrylic;
 
     if (ptrDwmGetColorizationColor) {
         BOOL opaque = TRUE;
@@ -575,7 +575,7 @@ void Design::update () {
         this->override.outline = false;
         this->override.acrylic = false;
     } else
-    if (IsWindows10OrGreater ()) {
+    if (winver >= 10) {
         this->light = true;
         this->prevalence = false;
         this->colorization.active = 0xFFFFFF;

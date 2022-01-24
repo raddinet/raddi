@@ -48,12 +48,6 @@ namespace {
     BOOL GetChildRect (HWND hParent, UINT id, LPRECT rcCtrl) {
         return GetChildRect (hParent, GetDlgItem (hParent, id), rcCtrl);
     }
-    bool IsWindowsVista () {
-        return LOWORD (GetVersion ()) == 0x0006;
-    }
-    bool IsWindows7 () {
-        return LOWORD (GetVersion ()) == 0x0106;
-    }
 }
 
 bool Window::GetCaptionTextColor (HTHEME hTheme, COLORREF & color, UINT & glow) const {
@@ -62,13 +56,13 @@ bool Window::GetCaptionTextColor (HTHEME hTheme, COLORREF & color, UINT & glow) 
     color = GetSysColor (COLOR_CAPTIONTEXT);
     
     bool dark = !design.light
-             || (IsWindowsVista () && IsZoomed (this->hWnd))
-             || (!IsWindows7 () && (design.prevalence && !design.override.outline) && IsColorDark (design.colorization.active));
+             || ((winver == 6) && IsZoomed (this->hWnd))
+             || ((winver != 7) && (design.prevalence && !design.override.outline) && IsColorDark (design.colorization.active));
 
     if (this->active) {
         if (dark) {
             color = 0xFFFFFF;
-            if (IsWindowsVista ()) {
+            if (winver == 6) {
                 glow = 0;
             }
         }
@@ -86,7 +80,7 @@ const MARGINS * Window::GetDwmMargins () {
     static MARGINS margins = { 0,0,0,0 };
     margins.cyTopHeight = this->extension + metrics [SM_CYFRAME] + metrics [SM_CXPADDEDBORDER];
 
-    if (!IsWindows10OrGreater ()) {
+    if (winver < 10) {
         if (design.nice) {
             margins.cxLeftWidth = dividers.left;
             margins.cxRightWidth = dividers.right;
@@ -134,7 +128,7 @@ void Window::UpdateListsPosition (HDWP & hDwp, const RECT & client, const RECT &
 }
 void Window::UpdateViewsPosition (HDWP & hDwp, const RECT & client) {
     auto r = this->GetTabControlContentRect (this->GetViewsFrame (&client));
-    if (design.composited && !IsWindows10OrGreater ()) {
+    if (design.composited && (winver < 10)) {
         r.right += 2;
         r.bottom += metrics [SM_CYFRAME] + 3;
     }
@@ -167,7 +161,7 @@ RECT Window::GetListsTabRect () {
             if (!design.contrast) {
                 r.left = metrics [SM_CXPADDEDBORDER];
             }
-            if (!IsWindowsVistaOrGreater ()) {
+            if (winver < 6) {
                 r.left = metrics [SM_CXFRAME];
             }
         }
@@ -347,7 +341,7 @@ LRESULT Window::OnVisualEnvironmentChange () {
     if (ptrAllowDarkModeForWindow) {
         ptrAllowDarkModeForWindow (hWnd, true);
 
-        if (IsWindowsBuildOrGreater (10, 0, 22000)) {
+        if (winver >= 11) {
             if (design.override.outline) {
                 COLORREF clr = design.colorization.inactive;
                 if (design.override.acrylic) {
@@ -365,19 +359,16 @@ LRESULT Window::OnVisualEnvironmentChange () {
         }
 
         LONG dark = !design.light;
-        if (IsWindowsBuildOrGreater (10, 0, 20161)) {
+        if (winver >= 11 || winbuild >= 20161) {
             ptrDwmSetWindowAttribute (hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof dark);
-        } else
-        if (IsWindowsBuildOrGreater (10, 0, 18875)) {
+        } else if (winbuild >= 18875) {
             CompositionAttributeData attr = { WCA_USEDARKMODECOLORS, &dark, sizeof dark };
             ptrSetWindowCompositionAttribute (hWnd, &attr);
-        } else
-        if (IsWindowsBuildOrGreater (10, 0, 14393)) {
+        } else if (winbuild >= 14393) {
             ptrDwmSetWindowAttribute (hWnd, 0x13, &dark, sizeof dark);
         }
     }
 
-    // SetProp (hWnd, L"UseImmersiveDarkModeColors", (HANDLE) !design.light); // ???
     EnumChildWindows (this->hWnd, UpdateWindowTreeTheme, (LPARAM) 0);
     SetWindowTheme (this->hToolTip, design.light ? NULL : L"DarkMode_Explorer", NULL);
 
@@ -423,7 +414,7 @@ LRESULT Window::OnVisualEnvironmentChange () {
     }
     // TODO: for XP with blue luna theme or dark colored active caption, load white with black outline
     SendMessage (hWnd, WM_SETICON, ICON_SMALL, (LPARAM) this->icons [(std::size_t) IconSize::Small]);
-    SendMessage (hWnd, WM_SETICON, ICON_BIG, (LPARAM) this->icons [(std::size_t) (IsWindows10OrGreater () ? IconSize::Start : IconSize::Large)]);
+    SendMessage (hWnd, WM_SETICON, ICON_BIG, (LPARAM) this->icons [(std::size_t) ((winver >= 10) ? IconSize::Start : IconSize::Large)]);
 
         // tc->tabs [301].icon = icons [SmallIconSize];
     this->tabs.views->min_tab_width = 2 * (std::uint16_t) GetIconMetrics (IconSize::Small, dpiNULL).cx;
@@ -695,7 +686,7 @@ void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fro
                 rcArea.right + metrics [SM_CXFRAME],
                 rcArea.bottom
             };
-            if (IsWindowsVistaOrGreater ()) {
+            if (winver >= 6) {
                 DrawThemeBackground (hTheme, hDC, WP_FRAMELEFT, type, &rcLeft, rcClip);
                 DrawThemeBackground (hTheme, hDC, WP_FRAMERIGHT, type, &rcRight, rcClip);
             } else {
@@ -767,7 +758,7 @@ void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fro
     auto rFilters = GetFiltersRect (&rcArea, rRight);
 
     if (HANDLE hTheme = OpenThemeData (hWnd, VSCLASS_TAB)) {
-        if (IsWindows10OrGreater () || !design.composited) {
+        if ((winver >= 10) || !design.composited) {
             auto rPane = GetViewsFrame (&rcArea);
             auto rPaneClip = GetTabControlClipRect (rPane);
             DrawThemeBackground (hTheme, hDC, TABP_PANE, 0, &rPane, &rPaneClip);
@@ -808,10 +799,10 @@ RECT Window::GetViewsFrame (const RECT * rcArea) {
         if (design.nice) {
             r.bottom -= metrics [SM_CYFRAME];
 
-            if (IsWindows10OrGreater () && !design.contrast) {
+            if ((winver >= 10) && !design.contrast) {
                 r.bottom += metrics [SM_CYFRAME];
             }
-            if (IsWindows7 () && !design.composited) {
+            if ((winver == 7) && !design.composited) {
                 r.bottom += metrics [SM_CYFRAME];
             }
         }
@@ -826,7 +817,7 @@ RECT Window::GetTabControlContentRect (RECT r) {
         r = GetTabControlClipRect (r);
         r.bottom += metrics [SM_CYCAPTION] + metrics [SM_CYFRAME];
         InflateRect (&r, -1, -1);
-        if (!IsWindowsVistaOrGreater ()) {
+        if (winver < 6) {
             r.right -= 2;
             r.bottom -= this->extension + metrics [SM_CYFRAME] - 2; // why???
         }
@@ -847,13 +838,13 @@ RECT Window::GetListsFrame (const RECT * rcArea, const RECT & rListTabs) {
         if (design.nice) {
             r.bottom -= metrics [SM_CYFRAME];
         }
-        if (design.composited && !IsWindows10OrGreater ()) {
+        if (design.composited && (winver < 10)) {
             r.bottom += metrics [SM_CYFRAME] + metrics [SM_CYEDGE] + 1;
         }
-        if (IsWindows10OrGreater () && !design.contrast) {
+        if ((winver >= 10) && !design.contrast) {
             r.bottom += metrics [SM_CYFRAME];
         }
-        if (IsWindows7 () && design.nice && !design.composited) {
+        if ((winver == 7) && design.nice && !design.composited) {
             r.bottom += metrics [SM_CYFRAME];
         }
 
@@ -915,13 +906,13 @@ RECT Window::GetFeedsFrame (const RECT * rcArea, const RECT & rFeedsTabs) {
         if (design.nice) {
             r.bottom -= metrics [SM_CYFRAME];
         }
-        if (design.composited && !IsWindows10OrGreater ()) {
+        if (design.composited && (winver < 10)) {
             r.bottom += metrics [SM_CYFRAME] + metrics [SM_CYEDGE] + 1;
         }
-        if (IsWindows10OrGreater () && !design.contrast) {
+        if ((winver >= 10) && !design.contrast) {
             r.bottom += metrics [SM_CYFRAME];
         }
-        if (IsWindows7 () && design.nice && !design.composited) {
+        if ((winver == 7) && design.nice && !design.composited) {
             r.bottom += metrics [SM_CYFRAME];
         }
     } else {
@@ -1016,7 +1007,7 @@ LRESULT Window::OnPaint () {
             POINT iconPos = { 0, metrics [SM_CYFRAME] };
             SIZE iconSize = GetIconMetrics (IconSize::Start);
 
-            if (IsWindows10OrGreater ()) {
+            if (winver >= 10) {
                 if (IsZoomed (hWnd) || design.contrast) {
                     iconPos.y += metrics [SM_CXPADDEDBORDER];
                 } else {

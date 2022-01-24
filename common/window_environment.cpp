@@ -32,11 +32,11 @@ SIZE WindowEnvironment::GetIconMetrics (IconSize size, UINT dpiNULL) {
 
         case IconSize::Shell:
         case IconSize::Jumbo:
-            if (IsWindowsVistaOrGreater () || (size == IconSize::Shell)) { // XP doesn't have Jumbo
+            if ((winver >= 6) || (size == IconSize::Shell)) { // XP doesn't have Jumbo
                 if (HMODULE hShell32 = GetModuleHandle (L"SHELL32")) {
                     HRESULT (WINAPI * ptrSHGetImageList) (int, const GUID &, void **) = NULL;
 
-                    if (IsWindowsVistaOrGreater ()) {
+                    if (winver >= 6) {
                         Symbol (hShell32, ptrSHGetImageList, "SHGetImageList");
                     } else {
                         Symbol (hShell32, ptrSHGetImageList, 727);
