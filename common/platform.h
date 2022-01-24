@@ -65,6 +65,7 @@ static const char BUILD_TIMESTAMP [] = {
 #include <windows.h>
 #include <string_view>
 #include "log.h"
+#include "winver.h"
 
 // Windows API platform helper functions
 
@@ -73,7 +74,6 @@ DWORD GetCurrentProcessSessionId ();
 bool GetProcessSessionId (DWORD id, DWORD *);
 const VS_FIXEDFILEINFO * GetModuleVersionInfo (HMODULE);
 const VS_FIXEDFILEINFO * GetCurrentProcessVersionInfo ();
-bool IsWindowsBuildOrGreater (WORD wMajorVersion, WORD wMinorVersion, DWORD dwBuildNumber);
 bool IsPathAbsolute (std::wstring_view);
 
 template <typename P>

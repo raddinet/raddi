@@ -67,6 +67,7 @@ int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR
     if (IsDebuggerPresent ()) {
         AllocConsole ();
     }
+    InitializeWinVer ();
         
     raddi::log::display (L"all"); // TODO: redirect display to internal history window
     raddi::log::initialize (option (__argc, __wargv, L"log"), raddi::defaults::log_subdir, L"app", raddi::log::scope::user);

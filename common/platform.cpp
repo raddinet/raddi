@@ -33,21 +33,6 @@ const VS_FIXEDFILEINFO * GetCurrentProcessVersionInfo () {
     return GetModuleVersionInfo (NULL);
 }
 
-bool IsWindowsBuildOrGreater (WORD wMajorVersion, WORD wMinorVersion, DWORD dwBuildNumber) {
-    OSVERSIONINFOEXW osvi = { sizeof (osvi), 0, 0, 0, 0, { 0 }, 0, 0 };
-    DWORDLONG mask = 0;
-
-    mask = VerSetConditionMask (mask, VER_MAJORVERSION, VER_GREATER_EQUAL);
-    mask = VerSetConditionMask (mask, VER_MINORVERSION, VER_GREATER_EQUAL);
-    mask = VerSetConditionMask (mask, VER_BUILDNUMBER, VER_GREATER_EQUAL);
-
-    osvi.dwMajorVersion = wMajorVersion;
-    osvi.dwMinorVersion = wMinorVersion;
-    osvi.dwBuildNumber = dwBuildNumber;
-
-    return VerifyVersionInfoW (&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER, mask) != FALSE;
-}
-
 bool IsPathAbsolute (std::wstring_view path) {
     return ((path.length () >= 4) && std::iswalpha (path [0]) && path [1] == L':' && path [2] == L'\\')
         || ((path.length () >= 5) && path [0] == L'\\' && path [1] == L'\\')
