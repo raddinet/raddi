@@ -21,7 +21,7 @@ namespace raddi {
 
         // signature
         //  - verification signature of complete entry (except the 'signature' bytes, of course)
-        //  - NOTE: (signature[63] & 0xE0) == 0, we could reuse the 3 bits :)
+        //  - NOTE: (signature[63] & 0xF0) == 0, we could reuse the 4 bits :)
         //
         std::uint8_t signature [crypto_sign_ed25519_BYTES];
 
