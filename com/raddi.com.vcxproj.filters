@@ -62,6 +62,9 @@
     <ClCompile Include="..\common\log.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\core\raddi_database_peerset.cpp">
+      <Filter>Core\Database</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="raddi.com-en.rc">
@@ -158,6 +161,9 @@
     </ClInclude>
     <ClInclude Include="..\common\log.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\raddi_database_peerset.h">
+      <Filter>Core\Database</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

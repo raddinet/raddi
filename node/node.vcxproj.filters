@@ -113,6 +113,9 @@
     <ClCompile Include="dns.cpp">
       <Filter>System</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\winver.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="node-en.rc">
@@ -269,6 +272,9 @@
     </ClInclude>
     <ClInclude Include="dns.h">
       <Filter>System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\winver.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -42,21 +42,21 @@
     <ProjectGuid>{5FC7EF83-90C2-4D12-B980-1B9530C25912}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>raddi</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>node</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -64,7 +64,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Portable|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
@@ -72,21 +72,21 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -94,7 +94,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -102,7 +102,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Portable|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
@@ -110,7 +110,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Portable|ARM64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
@@ -372,7 +372,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <SetChecksum>true</SetChecksum>
@@ -383,6 +383,7 @@
       <SwapRunFromCD>true</SwapRunFromCD>
       <SwapRunFromNET>true</SwapRunFromNET>
       <AdditionalOptions>/STUB:..\tools\stub.exe  /EMITPOGOPHASEINFO %(AdditionalOptions)</AdditionalOptions>
+      <CETCompat>true</CETCompat>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
@@ -414,7 +415,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <SetChecksum>true</SetChecksum>
@@ -425,6 +426,7 @@
       <SwapRunFromCD>true</SwapRunFromCD>
       <SwapRunFromNET>true</SwapRunFromNET>
       <AdditionalOptions>/STUB:..\tools\stub.exe /EMITPOGOPHASEINFO %(AdditionalOptions)</AdditionalOptions>
+      <CETCompat>true</CETCompat>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
@@ -458,7 +460,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
       <SetChecksum>true</SetChecksum>
@@ -469,6 +471,7 @@
       <SwapRunFromCD>true</SwapRunFromCD>
       <SwapRunFromNET>true</SwapRunFromNET>
       <AdditionalOptions>/STUB:..\tools\stub.exe  /EMITPOGOPHASEINFO %(AdditionalOptions)</AdditionalOptions>
+      <CETCompat>true</CETCompat>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
@@ -501,7 +504,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>
       </MinimumRequiredVersion>
@@ -546,7 +549,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>5.2</MinimumRequiredVersion>
       <SetChecksum>true</SetChecksum>
@@ -557,6 +560,7 @@
       <SwapRunFromCD>true</SwapRunFromCD>
       <SwapRunFromNET>true</SwapRunFromNET>
       <AdditionalOptions>/STUB:..\tools\stub.exe /EMITPOGOPHASEINFO %(AdditionalOptions)</AdditionalOptions>
+      <CETCompat>true</CETCompat>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)tools\rsrcgen.exe" "$(ProjectDir)$(AssemblyName).info" "dir=$(ProjectDir)\" debug=$(UseDebugLibraries) platform=$(ProcessorArchitecture) targetfilename=$(TargetFileName)</Command>
@@ -589,7 +593,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>ntdll.lib;kernel32.lib;advapi32.lib;ws2_32.lib;iphlpapi.lib;winhttp.lib;dnsapi.lib;secur32.lib;rpcrt4.lib;user32.lib;shell32.lib;ole32.lib;liblzma.lib;libsodium.lib;noenv.obj;%(AdditionalDependencies)</AdditionalDependencies>
-      <StripPrivateSymbols>/PDBSTRIPPED</StripPrivateSymbols>
+      <StripPrivateSymbols>stripped.pdb</StripPrivateSymbols>
       <GenerateMapFile>true</GenerateMapFile>
       <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
       <SetChecksum>true</SetChecksum>
@@ -613,6 +617,7 @@
     <ClCompile Include="..\common\log.cpp" />
     <ClCompile Include="..\common\platform.cpp" />
     <ClCompile Include="..\common\uuid.cpp" />
+    <ClCompile Include="..\common\winver.cpp" />
     <ClCompile Include="..\core\raddi_address.cpp" />
     <ClCompile Include="..\core\raddi_channel.cpp" />
     <ClCompile Include="..\core\raddi_command.cpp" />
@@ -666,6 +671,7 @@
     <ClInclude Include="..\common\platform.h" />
     <ClInclude Include="..\common\threadpool.h" />
     <ClInclude Include="..\common\uuid.h" />
+    <ClInclude Include="..\common\winver.h" />
     <ClInclude Include="..\core\raddi.h" />
     <ClInclude Include="..\core\raddi_address.h" />
     <ClInclude Include="..\core\raddi_channel.h" />
