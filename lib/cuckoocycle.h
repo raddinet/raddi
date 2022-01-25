@@ -150,15 +150,15 @@ namespace cuckoo {
         static constexpr auto YBITS = XBITS; // TODO: I rely on these two being same (thread::start/end)
         static constexpr auto BIGSIZE = 5u;
         static constexpr auto BIGSIZE0 = (Complexity < 30) ? 4 : BIGSIZE;
-        static constexpr auto NEEDSYNC = (Complexity > 27) && (Complexity < 30);
+        static constexpr auto NEEDSYNC = (Complexity > 27);// && (Complexity < 30);
         static constexpr auto COMPRESSROUND = 28u; // EVEN!, TODO: was 14 for 28  ???
         static constexpr auto EXPANDROUND = COMPRESSROUND;
 
         static constexpr auto SMALLSIZE = 5u;
         static constexpr auto BIGGERSIZE = (EXPANDROUND == COMPRESSROUND) ? BIGSIZE : (BIGSIZE + 1);
 
-        static constexpr auto NEDGES = 1u << Complexity;
-        static constexpr auto EDGEMASK = NEDGES - 1u;
+        static constexpr auto NEDGES = 1uLL << Complexity;
+        static constexpr auto EDGEMASK = NEDGES - 1uLL;
         static constexpr auto MAXPATHLEN = 8u << ((Complexity + 3) / 3);
 
         static constexpr auto NX = 1u << XBITS;
@@ -295,6 +295,9 @@ namespace cuckoo {
             : buckets (new yzbucket <ZBUCKETSIZE> [NX]) {
 
             try {
+                if (parallelism > NY) {
+                    parallelism = NY;
+                }
                 this->threads.resize (parallelism);
             } catch (const std::bad_alloc &) {
                 delete [] this->buckets;

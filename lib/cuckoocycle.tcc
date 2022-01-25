@@ -176,7 +176,9 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
     // split workload into threads
     //  - 64 threads for complexity 26 and 27, 128 threads for complexity 28 and 29
 
-    for (auto i = 0; i != this->threads.size (); ++i) {
+    const auto n = this->threads.size ();
+
+    for (auto i = 0; i != n; ++i) {
         this->threads [i].solver = this;
         this->threads [i].start = i * NY / this->threads.size ();
         this->threads [i].end = (i + 1) * NY / this->threads.size ();
@@ -185,8 +187,6 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
     // trim
 
     if (!this->cancelled ()) {
-        auto n = this->threads.size ();
-
         this->threadpool.begin (n);
             for (auto & t : this->threads) this->threadpool.dispatch (&thread::genUnodes, &t);
         this->threadpool.join ();
@@ -251,7 +251,7 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
                                     while (nu--) this->recordedge (ni++, us [(nu + 1) & ~1], us [nu | 1]);
                                     while (nv--) this->recordedge (ni++, vs [nv | 1], vs [(nv + 1) & ~1]);
 
-                                    this->threadpool.begin (this->threads.size ());
+                                    this->threadpool.begin (n);
                                     for (auto & t : this->threads) {
                                         this->threadpool.dispatch (&thread::match, &t);
                                     }
@@ -504,11 +504,11 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimEdg
     const auto SRCSLOTBITS = std::min (SRCSIZE * 8, 2 * YZBITS);
     const auto SRCSLOTMASK = (1uLL << SRCSLOTBITS) - 1uLL;
     const auto SRCPREFBITS = SRCSLOTBITS - YZBITS;
-    const auto SRCPREFMASK = (1u << SRCPREFBITS) - 1u;
+    const auto SRCPREFMASK = (1uLL << SRCPREFBITS) - 1uLL;
     const auto DSTSLOTBITS = std::min (DSTSIZE * 8, 2 * YZBITS);
     const auto DSTSLOTMASK = (1uLL << DSTSLOTBITS) - 1uLL;
     const auto DSTPREFBITS = DSTSLOTBITS - YZZBITS;
-    const auto DSTPREFMASK = (1u << DSTPREFBITS) - 1u;
+    const auto DSTPREFMASK = (1uLL << DSTPREFBITS) - 1uLL;
 
     indexer <ZBUCKETSIZE> destination;
     indexer <TBUCKETSIZE> small;
@@ -585,9 +585,9 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimRen
     const auto SRCSLOTBITS = std::min (SRCSIZE * 8, (TRIMONV ? YZBITS : YZ1BITS) + YZBITS);
     const auto SRCSLOTMASK = (1uLL << SRCSLOTBITS) - 1uLL;
     const auto SRCPREFBITS = SRCSLOTBITS - YZBITS;
-    const auto SRCPREFMASK = (1u << SRCPREFBITS) - 1u;
+    const auto SRCPREFMASK = (1uLL << SRCPREFBITS) - 1uLL;
     const auto SRCPREFBITS2 = SRCSLOTBITS - YZZBITS;
-    const auto SRCPREFMASK2 = (1u << SRCPREFBITS2) - 1u;
+    const auto SRCPREFMASK2 = (1uLL << SRCPREFBITS2) - 1uLL;
 
     indexer <ZBUCKETSIZE> destination;
     indexer <TBUCKETSIZE> small;
