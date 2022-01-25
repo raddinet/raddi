@@ -50,13 +50,12 @@ namespace {
     }
 }
 
-bool Window::GetCaptionTextColor (HTHEME hTheme, COLORREF & color, UINT & glow) const {
+bool Window::GetCaptionTextColor (HTHEME, COLORREF & color, UINT & glow) const {
     glow = 2 * this->metrics [SM_CXFRAME] / 2;
-    // color = GetSysColor (COLOR_WINDOWTEXT);
-    color = GetSysColor (COLOR_CAPTIONTEXT);
+    color = GetSysColor (COLOR_WINDOWTEXT);
     
     bool dark = !design.light
-             || ((winver == 6) && IsZoomed (this->hWnd))
+             || ((winver == 6) && design.composited && IsZoomed (this->hWnd))
              || ((winver != 7) && (design.prevalence && !design.override.outline) && IsColorDark (design.colorization.active));
 
     if (this->active) {
@@ -67,11 +66,7 @@ bool Window::GetCaptionTextColor (HTHEME hTheme, COLORREF & color, UINT & glow) 
             }
         }
     } else {
-        if (design.contrast) {
-            color = GetSysColor (COLOR_INACTIVECAPTIONTEXT);
-        } else {
-            color = GetSysColor (COLOR_GRAYTEXT);
-        }
+        color = GetSysColor (COLOR_GRAYTEXT);
     }
     return dark;
 }
@@ -84,7 +79,7 @@ const MARGINS * Window::GetDwmMargins () {
         if (design.nice) {
             margins.cxLeftWidth = dividers.left;
             margins.cxRightWidth = dividers.right;
-            margins.cyBottomHeight = metrics [SM_CYCAPTION];
+            margins.cyBottomHeight = minimum.statusbar.cy + 2;
         }
     }
     return &margins;
@@ -130,7 +125,6 @@ void Window::UpdateViewsPosition (HDWP & hDwp, const RECT & client) {
     auto r = this->GetTabControlContentRect (this->GetViewsFrame (&client));
     if (design.composited && (winver < 10)) {
         r.right += 2;
-        r.bottom += metrics [SM_CYFRAME] + 3;
     }
     r.right -= r.left;
     r.bottom -= r.top;
@@ -747,10 +741,6 @@ void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fro
         }
     }
 
-    if (fromControl) {
-        rcArea.bottom -= metrics [SM_CYFRAME];
-    }
-
     auto rListTabs = this->GetListsTabRect ();
     auto rList = GetListsFrame (&rcArea, rListTabs);
     auto rRight = GetRightPane (&rcArea, rListTabs);
@@ -786,7 +776,7 @@ RECT Window::GetViewsFrame (const RECT * rcArea) {
     r.top += this->GetDwmMargins ()->cyTopHeight - 1;
     r.left += dividers.left - 1;
     r.right -= dividers.right - 1;
-    r.bottom -= metrics [SM_CYCAPTION] + 1;
+    r.bottom -= minimum.statusbar.cy;
 
     if (IsAppThemed ()) {
         if (!IsZoomed (hWnd)) {
@@ -796,15 +786,8 @@ RECT Window::GetViewsFrame (const RECT * rcArea) {
                 }
             }
         }
-        if (design.nice) {
+        if (winver < 6) {
             r.bottom -= metrics [SM_CYFRAME];
-
-            if ((winver >= 10) && !design.contrast) {
-                r.bottom += metrics [SM_CYFRAME];
-            }
-            if ((winver == 7) && !design.composited) {
-                r.bottom += metrics [SM_CYFRAME];
-            }
         }
     } else {
         r.top -= 1;
@@ -819,7 +802,7 @@ RECT Window::GetTabControlContentRect (RECT r) {
         InflateRect (&r, -1, -1);
         if (winver < 6) {
             r.right -= 2;
-            r.bottom -= this->extension + metrics [SM_CYFRAME] - 2; // why???
+            r.bottom -= this->extension + metrics [SM_CYFRAME] - 2; // shadow
         }
     } else {
         InflateRect (&r, -2, -2);
@@ -831,20 +814,11 @@ RECT Window::GetAdjustedFrame (RECT r, LONG top, const RECT & rTabs) {
     r.top += top + this->tabs.views->minimum.cy - 1;
     r.left += rTabs.left;
     r.right = r.left + rTabs.right;
-    r.bottom -= metrics [SM_CYCAPTION] + 1;
+    r.bottom -= minimum.statusbar.cy;
 
     if (IsAppThemed ()) {
-        if (design.nice) {
+        if (winver < 6) {
             r.bottom -= metrics [SM_CYFRAME];
-        }
-        if (design.composited && (winver < 10)) {
-            r.bottom += metrics [SM_CYFRAME] + metrics [SM_CYEDGE] + 1;
-        }
-        if ((winver >= 10) && !design.contrast) {
-            r.bottom += metrics [SM_CYFRAME];
-        }
-        if ((winver == 7) && design.nice && !design.composited) {
-            r.bottom += metrics [SM_CYFRAME];
         }
     } else {
         r.top -= 1;
@@ -869,7 +843,7 @@ RECT Window::GetRightPane (const RECT * client, const RECT & rListTabs) {
     RECT r = rListTabs;
     r.left = (client->right - client->left) - dividers.right + metrics [SM_CXFRAME] + metrics [SM_CXPADDEDBORDER] / 2;
     r.right = (client->right - client->left) - r.left;
-    if (!IsZoomed (hWnd)) {
+    if (!IsZoomed (hWnd) && !design.contrast) {
         r.right -= metrics [SM_CXPADDEDBORDER];
     }
     return r;
@@ -902,7 +876,7 @@ LRESULT Window::OnDrawItem (WPARAM id, DRAWITEMSTRUCT * draw) {
             options.font = this->fonts.text.handle;
             options.theme = GetWindowTheme (draw->hwndItem);
 
-            this->GetCaptionTextColor (options.theme, options.color, options.glow);
+            this->GetCaptionTextColor (NULL, options.color, options.glow);
 
             if (!design.composited) {
                 options.glow = 0;
@@ -933,7 +907,7 @@ LRESULT Window::OnControlPrePaint (HDC hDC, HWND hControl) {
     OffsetRect (&rControl, -rControl.left, -rControl.top);
     rWindow.left += metrics [SM_CXFRAME] + metrics [SM_CXPADDEDBORDER];
     rWindow.right -= metrics [SM_CXFRAME] + metrics [SM_CXPADDEDBORDER];
-    rWindow.bottom -= metrics [SM_CYFRAME];
+    rWindow.bottom -= metrics [SM_CYFRAME] + metrics [SM_CXPADDEDBORDER];
 
     this->BackgroundFill (hDC, rWindow, &rControl, true);
     return (LRESULT) GetStockObject (NULL_BRUSH);
@@ -978,7 +952,7 @@ LRESULT Window::OnPaint () {
             }
 
             if (HANDLE hTheme = OpenThemeData (hWnd, VSCLASS_WINDOW)) {
-                COLORREF color;
+                COLORREF color = 0xFF00FF;
                 UINT glow;
 
                 if (this->GetCaptionTextColor (hTheme, color, glow)) { // text is bright
@@ -1009,9 +983,9 @@ LRESULT Window::OnPaint () {
                 r.bottom = r.top + this->extension - metrics [SM_CYFRAME] / 2;
 
                 DrawCompositedTextDIB (hDC, hTheme, this->fonts.tiny.handle, subtitle, subtitle_length,
-                                        DT_BOTTOM | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS, r, color, glow);
+                                       DT_BOTTOM | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS, r, color, glow);
                 DrawCompositedTextDIB (hDC, hTheme, this->fonts.tabs.handle, title, title_length,
-                                        DT_TOP | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS, r, color, glow);
+                                       DT_TOP | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS, r, color, glow);
 
                 CloseThemeData (hTheme);
             }
