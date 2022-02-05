@@ -58,7 +58,7 @@ namespace {
         HWND hWnd;
         HFONT font = NULL;
         ThemeHandle theme;
-        ThemeHandle window;
+        ThemeHandle window; // for close tab button graphics
 
         std::vector <StackState> stacks;
         std::size_t current_stack = -1;
@@ -86,6 +86,9 @@ namespace {
         
         explicit TabControlState (HWND hWnd) : hWnd (hWnd) {
             this->stacks.reserve (32);
+            this->stacking = false;
+            this->badges = false;
+            this->dark = false;
         }
         void update_themes () {
             this->theme.update (this->hWnd, VSCLASS_TAB);
@@ -458,7 +461,7 @@ bool TabControlState::move_stack (std::intptr_t which, int index) {
             if (index < from_index) {
                 ++from_index;
             }
-            if (index < this->current_stack) {
+            if (index < (int) this->current_stack) {
                 ++this->current_stack;
             }
             this->stacks.erase (this->stacks.begin () + from_index);
@@ -646,7 +649,7 @@ void TabControlState::update_stacks_state () {
     for (auto & stack : this->stacks) {
         stack.progress = 0;
 
-        for (auto tabref : stack.tabs) {
+        for (const auto & tabref : stack.tabs) {
             const auto & tab = this->tabs [tabref.id];
 
             if (tab.progress != 0) {
@@ -661,7 +664,7 @@ void TabControlState::update_stacks_state () {
 
     // give app feedback on current stacking
     for (std::size_t i = 0u; i != this->stacks.size (); ++i) {
-        for (auto tabref : this->stacks [i].tabs) {
+        for (const auto & tabref : this->stacks [i].tabs) {
             this->tabs [tabref.id].stack_index = i;
         }
     }
@@ -956,6 +959,7 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
     this->update_stacks_state ();
     this->update_visual_representation ();
 
+    bool active = (GetForegroundWindow () == GetParent (hWnd));
     RECT rc = GetClientRect (hWnd);
     HDC hDC = NULL;
     HANDLE hBuffered = NULL;
@@ -991,10 +995,12 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
     FillRect (hDC, &rc, (HBRUSH) SendMessage (GetParent (hWnd), WM_CTLCOLORBTN, (WPARAM) hDC, (LPARAM) hWnd));
     SetBkMode (hDC, TRANSPARENT);
 
+    SelectObject (hDC, GetStockObject (DC_PEN));
     auto background = GetDCBrushColor (hDC);
 
     // line on classic
 
+    // this->style->underline (hDC, rc);
     if (this->theme == NULL) {
         RECT rLine = rc;
         rLine.top = rLine.bottom - 1;
@@ -1011,6 +1017,40 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
         RECT rStackVisible;
         if (IntersectRect (&rStackVisible, &stack.r, &rcInvalidated)) {
 
+            // this->style->tab (hDC, rc, stack);
+            if (this->dark) {
+                auto rFill = stack.r;
+                ++rFill.top;
+
+                SetDCPenColor (hDC, GetSysColor (COLOR_3DDKSHADOW));
+                MoveToEx (hDC, stack.r.left, stack.r.top, NULL);
+                LineTo   (hDC, stack.r.right, stack.r.top);
+
+                if (i == 0 || i == this->current_stack) { // stack.left
+                    MoveToEx (hDC, stack.r.left, stack.r.top, NULL);
+                    LineTo   (hDC, stack.r.left, stack.r.bottom);
+                    ++rFill.left;
+                }
+                if (stack.right) {
+                    MoveToEx (hDC, stack.r.right - 1, stack.r.top, NULL);
+                    LineTo   (hDC, stack.r.right - 1, stack.r.bottom);
+                    --rFill.right;
+                }
+
+                if (active) {
+                    SetDCBrushColor (hDC, this->style.dark.tab);
+                    if (i == this->hot.stack) {
+                        SetDCBrushColor (hDC, this->style.dark.hot);
+                    }
+                    if (i == this->current_stack) {
+                        SetDCBrushColor (hDC, this->style.dark.current);
+                    }
+                } else {
+                    SetDCBrushColor (hDC, this->style.dark.inactive);
+                }
+                FillRect (hDC, &rFill, (HBRUSH) GetStockObject (DC_BRUSH));
+
+            } else// */
             if (this->theme) {
                 int part = TABP_TABITEM;
                 int state = TIS_NORMAL;
@@ -1128,16 +1168,20 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
 
                     if (this->hot.tag && (tabref.id == this->hot.tab)) {
                         if (this->hot.down) {
-                            FillRect (hDC, &r, ( HBRUSH) GetStockObject (BLACK_BRUSH));
+                            FillRect (hDC, &r, (HBRUSH) GetStockObject (BLACK_BRUSH));
                         } else {
                             FillRect (hDC, &r, GetSysColorBrush (COLOR_HOTLIGHT));
                         }
                     } else {
                         if (auto badge = this->tabs [tabref.id].badge) {
                             SetDCBrushColor (hDC, 0x6060C0);
-                            FillRect (hDC, &r, ( HBRUSH) GetStockObject (DC_BRUSH));
+                            FillRect (hDC, &r, (HBRUSH) GetStockObject (DC_BRUSH));
                         } else {
-                            FillRect (hDC, &r, GetSysColorBrush (COLOR_3DSHADOW));
+                            if (this->dark) {
+                                FillRect (hDC, &r, GetSysColorBrush (COLOR_3DDKSHADOW));
+                            } else {
+                                FillRect (hDC, &r, GetSysColorBrush (COLOR_3DSHADOW));
+                            }
                         }
                     }
                 }
@@ -1145,8 +1189,16 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
 
             // text & icon
 
-            if (GetForegroundWindow () == GetParent (hWnd)) {
-                SetTextColor (hDC, GetSysColor (COLOR_BTNTEXT));
+            if (active) {
+                if (this->dark) {
+                    if (i == this->current_stack || i == this->hot.stack) {
+                        SetTextColor (hDC, 0xFFFFFF);
+                    } else {
+                        SetTextColor (hDC, 0xDDDDDD);
+                    }
+                } else {
+                    SetTextColor (hDC, GetSysColor (COLOR_BTNTEXT));
+                }
             } else {
                 SetTextColor (hDC, GetSysColor (COLOR_GRAYTEXT));
             }

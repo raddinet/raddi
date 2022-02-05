@@ -34,9 +34,9 @@ struct Tab {
     std::size_t     stack_index = 0;
 };
 
-struct TabControlVisualStyle; // TODO
-extern TabControlVisualStyle DarkTabControlVisualStyle;
-extern TabControlVisualStyle LightTabControlVisualStyle;
+// struct TabControlVisualStyle; // TODO
+// extern TabControlVisualStyle DarkTabControlVisualStyle;
+// extern TabControlVisualStyle LightTabControlVisualStyle;
 
 struct TabControlInterface {
     HWND                    hWnd = NULL;
@@ -44,9 +44,18 @@ struct TabControlInterface {
     std::uint16_t           dpi = 96;
     std::uint16_t           min_tab_width = 0;
     std::uint16_t           max_tab_width = 0;
-    bool                    stacking = false; // allow user to stack tabs
-    bool                    badges = false; // add padding for tab badges
-    TabControlVisualStyle * style = nullptr; // NULL - native
+    std::uint16_t           stacking : 1; // allow user to stack tabs
+    std::uint16_t           badges : 1; // add padding for tab badges
+    std::uint16_t           dark : 1; // custom dark theme
+    // TabControlVisualStyle * style = nullptr; // NULL - native
+    struct {
+        struct {
+            COLORREF        tab = 0x000000; // tab color
+            COLORREF        current = 0x101112; // currently selected tab color
+            COLORREF        hot = 0x101112; // hot tab color
+            COLORREF        inactive = 0x101112;
+        } dark;
+    } style;
     struct {
         COLORREF            color = 0xFFFFFF;
         COLORREF            hot = 0xFFFFFF;
