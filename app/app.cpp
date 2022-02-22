@@ -51,7 +51,7 @@ Resolver resolver;
 Design design;
 Cursors cursor;
 
-alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/1";
+alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/0";
 
 namespace {
     LPCTSTR InitializeGUI (HINSTANCE hInstance);

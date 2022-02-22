@@ -34,11 +34,13 @@ namespace raddi {
 
         static constexpr auto min_complexity = complexity_bias;
         static constexpr auto max_complexity = min_complexity + (1 << complexity_bits) - 1;
+        static constexpr auto max_wide_complexity = min_complexity + (1 << (complexity_bits + 1)) - 1;
         static constexpr auto min_length = length_bias;
         static constexpr auto max_length = min_length + 2 * ((1 << length_bits) - 1);
 
         // algorithm
         //  - 
+        //  - NOTE: use 'reserved11' first, we might choose to use bit 6 for complexity
         //
         enum class algorithm : std::uint8_t {
             reserved00 = 0,
@@ -128,6 +130,9 @@ namespace raddi {
                                      requirements, volatile bool * cancel = nullptr);
         static std::size_t generate (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES], void * target, std::size_t maximum,
                                      requirements, volatile bool * cancel = nullptr);
+
+        static std::size_t generate_wide (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES], void * target, std::size_t maximum,
+                                          requirements, volatile bool * cancel = nullptr);
 
         // size
         //  - returns full size of this 'proof' structure, including header, in bytes

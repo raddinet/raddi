@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <ntsecapi.h>
 #include <psapi.h>
 
 #include <algorithm>
@@ -34,7 +35,7 @@ static union {
 };
 volatile bool quit = false;
 
-alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/1";
+alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/0";
 const VS_FIXEDFILEINFO * const version = GetCurrentProcessVersionInfo ();
 
 int argc;
@@ -2271,14 +2272,14 @@ bool benchmark (const wchar_t * parameter) {
     std::uint8_t buffer [raddi::proof::max_size];
     
     static const std::uint8_t expected [] [raddi::proof::max_size] = {
-        {
+        { // 26
             0x00,
             0x43,0xa0,0x32,0x00, 0xe0,0x6e,0x04,0x00, 0x14,0x2c,0x27,0x00, 0xac,0xf2,0x20,0x00,
             0x6c,0xbe,0x03,0x00, 0x37,0x3d,0x3f,0x00, 0xab,0x78,0x4e,0x01, 0x97,0x55,0x66,0x00,
             0x0a,0x73,0x1e,0x00, 0x16,0xd9,0x1c,0x00, 0xc3,0x95,0x5c,0x00, 0x6b,0x5e,0x03,0x00,
             0x82,0xd1,0x37,0x00, 0x86,0x7f,0x86,0x00,
             0x81
-        }, {
+        }, { // 27
             0x00,
             0xb1,0x42,0x1e,0x00, 0xe1,0xea,0x31,0x00, 0xff,0x76,0x3e,0x00, 0x9a,0x28,0x5b,0x00,
             0x2b,0x29,0x47,0x00, 0x7a,0xfa,0x49,0x00, 0x14,0x51,0x3b,0x00, 0x46,0xe4,0x3e,0x01,
@@ -2286,7 +2287,7 @@ bool benchmark (const wchar_t * parameter) {
             0x5d,0xfc,0x7a,0x01, 0xf0,0x8f,0x14,0x00, 0x0f,0xe5,0xac,0x00, 0x69,0x27,0x01,0x00,
             0x8b,0x48,0x0a,0x00, 0x71,0x55,0xc5,0x00,
             0x93
-        }, {
+        }, { // 28
             0x00,
             0x3e,0x38,0x3b,0x00, 0xd8,0x49,0xbe,0x00, 0x7f,0x62,0x16,0x00, 0xa2,0x0e,0xb9,0x00,
             0x4d,0x0f,0x76,0x01, 0x5c,0x95,0x0e,0x01, 0x0a,0x8f,0xce,0x00, 0x8e,0x0f,0x29,0x01,
@@ -2294,7 +2295,7 @@ bool benchmark (const wchar_t * parameter) {
             0xd2,0xb6,0x3c,0x01, 0xe7,0xf4,0xbc,0x01, 0xa7,0xb6,0xbd,0x00, 0x20,0x83,0x19,0x00,
             0x38,0xa6,0x8a,0x01, 0xdb,0x13,0x46,0x00, 0xdb,0xc6,0x40,0x01, 0x94,0x34,0x3b,0x00,
             0xa4,
-        }, {
+        }, { // 29
             0x00,
             0xb6,0x6f,0x84,0x00, 0x2d,0x29,0x20,0x01, 0xa6,0x7c,0xb8,0x03, 0x8e,0x96,0xfd,0x00,
             0x0f,0x14,0x38,0x06, 0x65,0x22,0x4c,0x02, 0x29,0x03,0x33,0x00, 0x06,0x38,0x79,0x01,
@@ -2302,34 +2303,54 @@ bool benchmark (const wchar_t * parameter) {
             0xb5,0x7b,0x30,0x00, 0xe6,0x8b,0xdd,0x02, 0x0d,0x4e,0x11,0x00, 0xdf,0x3b,0x14,0x00,
             0x35,0x5a,0x45,0x00, 0x8b,0x5b,0xfc,0x01,
             0xb3,
+        }, { // 30
+        
+        }, { // 31
+        
+        }, { // 32
+        
+        }, { // 33
+        
         }
     };
 
+    auto first = raddi::proof::min_complexity;
+    auto last = raddi::proof::max_complexity;
+
     auto requested_complexity = std::wcstoul (parameter, nullptr, 0);
     if (requested_complexity) {
-        if (requested_complexity < raddi::proof::min_complexity || requested_complexity > raddi::proof::max_complexity) {
-            raddi::log::error (0x23, requested_complexity, raddi::proof::min_complexity, raddi::proof::max_complexity);
+        if (requested_complexity > raddi::proof::max_complexity && requested_complexity <= raddi::proof::max_wide_complexity) {
+            // warn
+            printf ("extended\n");
+        }
+
+        if (requested_complexity < first || requested_complexity >  raddi::proof::max_wide_complexity) {
+            raddi::log::error (0x23, requested_complexity, first, last);
             return false;
         }
+
+        first = requested_complexity;
+        last = requested_complexity;
     }
 
     for (auto i = 0u; i != sizeof hash; ++i) {
         hash [i] = (i << 2) ^ i ;
     }
-    for (auto complexity = raddi::proof::min_complexity; (complexity != raddi::proof::max_complexity + 1) && !quit; ++complexity) {
-        if (requested_complexity) {
-            if (complexity != requested_complexity)
-                continue;
-        }
-
+    for (auto complexity = first; (complexity != last + 1) && !quit; ++complexity) {
         printf ("benchmarking complexity %u: ", complexity);
         try {
             auto t0 = raddi::microtimestamp ();
-            if (auto n = raddi::proof::generate (hash, buffer, sizeof buffer, { complexity, 0 }, &quit)) {
+            if (auto n = raddi::proof::generate_wide (hash, buffer, sizeof buffer, { complexity, 0 }, &quit)) {
                 printf ("found... %.2fs\n", (raddi::microtimestamp () - t0) / 1000000.0);
                 for (auto i = 0u; i != n; ++i) {
                     if (buffer [i] != expected [complexity - raddi::proof::min_complexity] [i]) {
                         printf ("unexpected validation failure\n");
+
+                        // 
+                        for (auto i = 0u; i != n; ++i) {
+                            printf ("0x%02x, ", buffer [i]);
+                        }
+                        printf ("\n");
                         return false;
                     }
                 }

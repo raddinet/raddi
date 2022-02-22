@@ -3,7 +3,7 @@
 #include "raddi_consensus.h"
 #include "../lib/cuckoocycle.h"
 
-alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/1";
+alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/0";
 enum raddi::protocol::aes256gcm_mode raddi::protocol::aes256gcm_mode = raddi::protocol::aes256gcm_mode::automatic;
 
 const char * const raddi::protocol::aegis256::name = "AEGIS-256";

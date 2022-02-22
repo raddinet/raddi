@@ -125,6 +125,61 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
     }
 
     // complexity and time requriements
+    //  - we also bail if time spent exceeds one more second,
+    //    better to try another hash than spinning on too hight difficulty
+
+    auto tX = 1000 * (rq.time + 1000);
+    auto t0 = raddi::microtimestamp ();
+    switch (rq.complexity) {
+        case 26:
+            if (auto n = attempt <26> (hash, target, maximum, rq, cancel))
+                return n;
+            if ((raddi::microtimestamp () - t0) > tX)
+                return 0;
+
+            [[ fallthrough ]];
+        case 27:
+            if (auto n = attempt <26> (hash, target, maximum, rq, cancel))
+                return n;
+            if ((raddi::microtimestamp () - t0) > tX)
+                return 0;
+
+            [[ fallthrough ]];
+        case 28:
+            if (auto n = attempt <26> (hash, target, maximum, rq, cancel))
+                return n;
+            if ((raddi::microtimestamp () - t0) > tX)
+                return 0;
+
+            [[ fallthrough ]];
+        case 29:
+            rq.time = 0;
+            if (auto n = attempt <26> (hash, target, maximum, rq, cancel))
+                return n;
+
+            [[ fallthrough ]];
+        default:
+            return 0;
+    }
+}
+
+std::size_t raddi::proof::generate (crypto_hash_sha512_state state, void * target, std::size_t maximum,
+                                    requirements rq, volatile bool * cancel) {
+    std::uint8_t hash [crypto_hash_sha512_BYTES];
+    if (crypto_hash_sha512_final (&state, hash) == 0)
+        return raddi::proof::generate (hash, target, maximum, rq, cancel);
+    else
+        return false;
+}
+
+std::size_t raddi::proof::generate_wide (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES],
+                                         void * target, std::size_t maximum,
+                                         requirements rq, volatile bool * cancel) {
+    if (rq.complexity < min_complexity) {
+        rq.complexity = min_complexity;
+    }
+
+    // complexity and time requriements
     //  - we also bail if time spent exceeds one second,
     //    better to try another hash than spinning on too hight difficulty
 
@@ -157,19 +212,32 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
                 return n;
 
             [[ fallthrough ]];
+
+        case 30:
+            if (auto n = attempt <30> (hash, target, maximum, rq, cancel))
+                return n;
+
+            [[ fallthrough ]];
+        case 31:
+            if (auto n = attempt <31> (hash, target, maximum, rq, cancel))
+                return n;
+
+            [[ fallthrough ]];
+        case 32:
+            if (auto n = attempt <32> (hash, target, maximum, rq, cancel))
+                return n;
+
+            [[ fallthrough ]];
+        case 33:
+            if (auto n = attempt <33> (hash, target, maximum, rq, cancel))
+                return n;
+
+            [[ fallthrough ]];
         default:
             return 0;
     }
 }
 
-std::size_t raddi::proof::generate (crypto_hash_sha512_state state, void * target, std::size_t maximum,
-                                    requirements rq, volatile bool * cancel) {
-    std::uint8_t hash [crypto_hash_sha512_BYTES];
-    if (crypto_hash_sha512_final (&state, hash) == 0)
-        return raddi::proof::generate (hash, target, maximum, rq, cancel);
-    else
-        return false;
-}
 
 bool raddi::proof::initialize (enum class algorithm a, std::size_t complexity, std::size_t length) {
     if (a == algorithm::cuckoo_cycle
@@ -201,7 +269,7 @@ bool raddi::proof::verify (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES]
     auto solution = this->solution ();
     auto length = 2 * this->length + this->length_bias;
 
-    cycle [0] = solution [0]; // TODO: fix unaligned access
+    cycle [0] = solution [0];
     for (auto i = 1u; i != length; ++i) {
         cycle [i] = cycle [i - 1] + solution [i];
     }
