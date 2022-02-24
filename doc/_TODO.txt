@@ -7,6 +7,8 @@ accept all data from core nodes (don't consider old)
 
 (go through all reddit comments on raddi for ideas I've already forgot)
 
+apparently sharing history stopped working after data reset
+
 threads are inserted duplicated (race condition?)
 
 peer addresses appear validated or are validated even though it's not possible to connect to them
@@ -22,6 +24,12 @@ core/core sync does not always work, core node will not recognize other core nod
 fix continuous re-sharing no longer available node addresses
 
 download request for nested entry will also return all entries above to form a chain
+
+log passed seconds to detect time spans when the device was off, then issue download requests
+
+32-bit version issues
+
+libsodium: https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions
 
 frustration module (MITM protection)
  - TODO: implement only after reaching certain traffic
