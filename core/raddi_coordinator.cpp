@@ -1277,6 +1277,8 @@ void raddi::coordinator::announce_random_peers (connection * c) {
     std::set <address> sample;
 
     std::size_t i = 0;
+    std::size_t fakes = 0;
+
     for (int level = core_nodes; level != blacklisted_nodes; ++level) {
         if (!this->database.peers [level]->empty ()) {
 
@@ -1289,7 +1291,7 @@ void raddi::coordinator::announce_random_peers (connection * c) {
                 //  - this is to ensure plausible deniability of someone's IP existing on the network
                 //     - TODO: strength?
 
-                if ((this->random_distribution (this->random_generator) % 3) == 0) {
+                if ((fakes < 1) && (this->random_distribution (this->random_generator) % 3) == 0) {
 
                     // generate fake peer IP
                     //  - use default port number, but make 1 of 4 ports other random number
@@ -1308,6 +1310,8 @@ void raddi::coordinator::announce_random_peers (connection * c) {
                     } while (!fake.valid ());
 
                     sample.insert (fake);
+                    ++fakes;
+
                 } else {
 
                     // choose real random peer
