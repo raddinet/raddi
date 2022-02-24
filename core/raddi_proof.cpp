@@ -139,14 +139,14 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
 
             [[ fallthrough ]];
         case 27:
-            if (auto n = attempt <26> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <27> (hash, target, maximum, rq, cancel))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
             [[ fallthrough ]];
         case 28:
-            if (auto n = attempt <26> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <28> (hash, target, maximum, rq, cancel))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
@@ -154,7 +154,7 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
             [[ fallthrough ]];
         case 29:
             rq.time = 0;
-            if (auto n = attempt <26> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <29> (hash, target, maximum, rq, cancel))
                 return n;
 
             [[ fallthrough ]];
