@@ -37,6 +37,10 @@ typedef enum CompositionAttribute {
     WCA_USEDARKMODECOLORS = 26, // build 18875+
 } CompositionAttribute;
 
+#ifndef DWMWA_MICA
+#define DWMWA_MICA ((DWMWINDOWATTRIBUTE) 1029)
+#endif
+
 struct CompositionAttributeData {
     CompositionAttribute attribute;
     PVOID data;
