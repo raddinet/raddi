@@ -485,11 +485,14 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
                                     this->report (log::level::note, 0x23, connection->peer, a);
                                 }
                             } else {
-                                this->database.peers [announced_nodes]->erase (a);
+                                this->database.peers [announced_nodes]->insert (a, 2); // freshly announced nodes get only 2 attempts
+                                this->report (log::level::note, 0x22, connection->peer, a);
+
+/*                                this->database.peers [announced_nodes]->erase (a);
                                 if (!this->find (a)) {
                                     this->database.peers [validated_nodes]->insert (a);
                                     this->report (log::level::note, 0x22, connection->peer, a);
-                                }
+                                }*/
                             }
                         } else {
                             this->report (log::level::data, 0x22, connection->peer, a);
