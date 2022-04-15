@@ -111,6 +111,9 @@ bool Dns::resolve (Recipient * recipient, wchar_t * uri, unsigned short port) {
 void Dns::resolve (Recipient * recipient, Type type, const wchar_t * domain, unsigned short port) {
     {
         exclusive guard (this->lock);
+        if (this->requests.size () == 0) {
+            this->requests.reserve (4);
+        }
         this->requests.push_back ({ type, port, domain, recipient });
     }
     SetEvent (this->events [0]);
@@ -119,13 +122,13 @@ void Dns::resolve (Recipient * recipient, Type type, const wchar_t * domain, uns
 void Dns::worker () {
     while (WaitForMultipleObjects (2, this->events, FALSE, INFINITE) == WAIT_OBJECT_0) {
 
+        std::vector <Request> requests_copy;
+
         this->lock.acquire_exclusive ();
-        auto n = this->requests.size ();
+        requests_copy = std::move (this->requests);
         this->lock.release_exclusive ();
 
-        for (std::size_t i = 0; i != n; ++i) {
-            const auto & request = this->requests [i];
-
+        for (const auto & request : requests_copy) {
             DNS_RECORD * results = NULL;
             auto result = DnsQuery_W (request.name.c_str (), (WORD) request.type,
                                       DNS_QUERY_BYPASS_CACHE, NULL, &results, NULL);
@@ -187,10 +190,6 @@ void Dns::worker () {
                 }
             }
         }
-
-        this->lock.acquire_exclusive ();
-        this->requests.erase (this->requests.begin (), this->requests.begin () + n);
-        this->lock.release_exclusive ();
     }
 }
 
