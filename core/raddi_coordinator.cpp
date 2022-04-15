@@ -950,7 +950,7 @@ void raddi::coordinator::established (connection * connection) {
                 break;
 
             case validated_nodes:
-                if (this->database.peers [connection->level]->adjust (connection->peer, +1) >= 0xFF) {
+                if (this->database.peers [connection->level]->adjust (connection->peer, +1) > db::peerset::new_record_assessment + 1) {
                     this->move (connection, established_nodes);
                 }
                 break;
