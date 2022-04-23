@@ -28,6 +28,7 @@ HRESULT (WINAPI * ptrDwmSetWindowAttribute) (HWND, DWORD, LPCVOID, DWORD) = NULL
 HRESULT (WINAPI * ptrDwmExtendFrameIntoClientArea) (HWND, const MARGINS *) = NULL;
 HRESULT (WINAPI * ptrDwmGetColorizationColor) (DWORD *, BOOL *) = NULL;
 HRESULT (WINAPI * ptrDwmIsCompositionEnabled) (BOOL *) = NULL;
+HRESULT (WINAPI * ptrDwmEnableBlurBehindWindow) (HWND, const DWM_BLURBEHIND *) = NULL;
 
 BOOL (WINAPI * ptrEnableNonClientDpiScaling) (HWND) = NULL;
 BOOL (WINAPI * ptrChangeWindowMessageFilter) (UINT, DWORD) = NULL;
@@ -84,6 +85,7 @@ void AppApiInitialize () {
         Symbol (hDwmApi, ptrDwmDefWindowProc, "DwmDefWindowProc");
         Symbol (hDwmApi, ptrDwmGetWindowAttribute, "DwmGetWindowAttribute");
         Symbol (hDwmApi, ptrDwmSetWindowAttribute, "DwmSetWindowAttribute");
+        Symbol (hDwmApi, ptrDwmEnableBlurBehindWindow, "DwmEnableBlurBehindWindow");
         Symbol (hDwmApi, ptrDwmIsCompositionEnabled, "DwmIsCompositionEnabled");
         Symbol (hDwmApi, ptrDwmGetColorizationColor, "DwmGetColorizationColor");
         Symbol (hDwmApi, ptrDwmExtendFrameIntoClientArea, "DwmExtendFrameIntoClientArea");
@@ -561,10 +563,12 @@ void Design::update () {
         this->contrast = false;
     }
 
-    wchar_t filename [MAX_PATH];
-    if (GetCurrentThemeName (filename, MAX_PATH, NULL, 0, NULL, 0) == S_OK) {
-        if (std::wcsstr (filename, L"AeroLite.msstyles")) {
-            this->contrast = true;
+    if (!this->composited) {
+        wchar_t filename [MAX_PATH];
+        if (GetCurrentThemeName (filename, MAX_PATH, NULL, 0, NULL, 0) == S_OK) {
+            if (std::wcsstr (filename, L"AeroLite.msstyles")) {
+                this->contrast = true;
+            }
         }
     }
 
@@ -628,7 +632,7 @@ void Design::update () {
         this->colorization.background = GetSysColor (COLOR_WINDOW);
         this->colorization.text = GetSysColor (COLOR_WINDOWTEXT);
     } else {
-        this->colorization.background = 0x101112;// 0x212223; // TODO: retrieve from theme if possible?
+        this->colorization.background = 0x121110; // TODO: retrieve from theme if possible?
         this->colorization.text = 0xEEEEEE;
     }
 

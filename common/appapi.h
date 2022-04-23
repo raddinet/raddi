@@ -143,6 +143,7 @@ extern HRESULT (WINAPI * ptrDwmSetWindowAttribute) (HWND, DWORD, LPCVOID, DWORD)
 extern HRESULT (WINAPI * ptrDwmExtendFrameIntoClientArea) (HWND, const MARGINS *);
 extern HRESULT (WINAPI * ptrDwmGetColorizationColor) (DWORD *, BOOL *);
 extern HRESULT (WINAPI * ptrDwmIsCompositionEnabled) (BOOL *);
+extern HRESULT (WINAPI * ptrDwmEnableBlurBehindWindow) (HWND, const DWM_BLURBEHIND *);
 
 extern BOOL (WINAPI * ptrEnableNonClientDpiScaling) (HWND);
 extern BOOL (WINAPI * ptrChangeWindowMessageFilter) (UINT, DWORD);
