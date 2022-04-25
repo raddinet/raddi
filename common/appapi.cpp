@@ -522,6 +522,9 @@ void Design::update () {
         this->override.outline = false;
         this->override.acrylic = false;
     }
+    if (winbuild >= 22543) {
+        this->override.acrylic = false;
+    }// */
 
     this->composited = compositionEnabled;
     this->nice = (this->composited || (IsAppThemed () && (winver >= 6)));
@@ -582,7 +585,7 @@ void Design::update () {
     if (winver >= 10) {
         this->light = true;
         this->prevalence = false;
-        this->colorization.active = 0xFFFFFF;
+        this->colorization.active = GetSysColor (COLOR_WINDOW); // 0xFFFFFF;
 
         HKEY hKey;
         if (ptrAllowDarkModeForWindow) {
@@ -608,14 +611,14 @@ void Design::update () {
                 this->colorization.active = this->colorization.accent;
             } else {
                 if (this->light) {
-                    this->colorization.active = 0xFFFFFF;
+                    this->colorization.active = GetSysColor (COLOR_WINDOW); // 0xFFFFFF;
                 } else {
                     this->colorization.active = 0x000000;
                 }
             }
 
             if (this->light) {
-                this->colorization.inactive = 0xFFFFFF;
+                this->colorization.inactive = GetSysColor (COLOR_WINDOW); // 0xFFFFFF;
             } else {
                 this->colorization.inactive = 0x2B2B2B; // TODO: retrieve from theme, now hardcoded to match Win10 1809
             }
