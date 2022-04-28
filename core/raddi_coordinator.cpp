@@ -7,6 +7,8 @@
 
 #include "../common/directory.h"
 
+#pragma warning (disable:26812) // unscoped enum
+
 raddi::coordinator::coordinator (db & database)
     : provider ("coordinator")
     , database (database)
@@ -485,14 +487,22 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
                                     this->report (log::level::note, 0x23, connection->peer, a);
                                 }
                             } else {
-                                this->database.peers [announced_nodes]->insert (a, 2); // freshly announced nodes get only 2 attempts
-                                this->report (log::level::note, 0x22, connection->peer, a);
 
-/*                                this->database.peers [announced_nodes]->erase (a);
+                                // if we know we know
+
                                 if (!this->find (a)) {
-                                    this->database.peers [validated_nodes]->insert (a);
-                                    this->report (log::level::note, 0x22, connection->peer, a);
-                                }*/
+
+                                    // don't always add announced nodes normally
+                                    //  - sometimes we lie to ourselves and consider peer validated to maintain plausible deniability
+
+                                    if ((this->random_distribution (this->random_generator) % 8) == 0) {
+                                        auto fake_assessment = 9 * (this->random_distribution (this->random_generator) % db::peerset::new_record_assessment) / 8 + 1;
+                                        this->database.peers [validated_nodes]->insert (a, fake_assessment);
+                                    } else {
+                                        this->database.peers [announced_nodes]->insert (a, 2); // freshly announced nodes get only 2 attempts
+                                    }
+                                }
+                                this->report (log::level::note, 0x22, connection->peer, a);
                             }
                         } else {
                             this->report (log::level::data, 0x22, connection->peer, a);
