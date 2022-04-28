@@ -1,6 +1,9 @@
 #include "directory.h"
 #include <cwchar>
 
+#pragma warning (disable:26812) // unscoped enum
+#pragma warning (disable:6262) // stack usage warning for create_full_path
+
 directory::directory (const wchar_t * query) {
     this->search = FindFirstFileEx (query, FindExInfoBasic, &found, FindExSearchNameMatch, NULL, FIND_FIRST_EX_LARGE_FETCH);
 
