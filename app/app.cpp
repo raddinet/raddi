@@ -188,6 +188,8 @@ int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR
          : ERROR_SUCCESS;
 }
 
+void InitializeWindowLayoutGlobals ();
+
 namespace {
     LPCTSTR InitializeGUI (HINSTANCE hInstance) {
         AppApiInitialize ();
@@ -208,6 +210,8 @@ namespace {
 
         InitializeMenus (hInstance);
         InitializeSearchBox (hInstance);
+
+        InitializeWindowLayoutGlobals ();
 
         switch (CoInitializeEx (NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE | COINIT_SPEED_OVER_MEMORY)) {
             case S_OK:

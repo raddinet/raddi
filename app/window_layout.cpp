@@ -29,6 +29,12 @@ extern Design design;
 extern Cursors cursor;
 
 namespace {
+    ATOM atomCOMBOBOX = 0;
+    ATOM atomEDIT = 0;
+    ATOM atomSysHeader32 = 0;
+    ATOM atomSysListView32 = 0;
+    ATOM atomStatusBar = 0;
+
     void DeferWindowPos (HDWP & hDwp, HWND hCtrl, const RECT & r, UINT flags = 0) {
         hDwp = DeferWindowPos (hDwp, hCtrl, NULL, r.left, r.top, r.right, r.bottom, SWP_NOACTIVATE | SWP_NOZORDER | flags);
     }
@@ -227,7 +233,7 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
                     auto rIdentities = rRightPane;
 
                     InflateRect (&rFilters, -2, -2);
-                    rFilters.right = rFilters.right - rFilters.left -2;
+                    rFilters.right = rFilters.right - rFilters.left - 2;
                     rFilters.bottom = rFilters.bottom - rFilters.top;// -2;
 
                     DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::TABS_VIEWS), tabs);
@@ -245,7 +251,7 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
 
                     DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::IDENTITIES), rIdentities);
                     DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::FILTERS), rFilters);
-                        
+
                     EndDeferWindowPos (hDwp);
                 }
 
@@ -260,13 +266,12 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
             }
         }
 
-        // TODO: different maximized/inactive colors
         if (design.composited && design.override.acrylic) {
-            AccentPolicy policy = { 4, 0x01E0, 0x88232221 /* 0x7FFFAA00 */, 0 };
+            AccentPolicy policy = { 4, 0x01E0, 0xAA232221 /* 0x7FFFAA00 */, 0 };
             if (design.light) {
                 policy.gradient = 0xCCE5E5E5;
-                // policy.gradient = 0xAAFFFFFF;
             }
+
             CompositionAttributeData data = { WCA_ACCENT_POLICY, &policy, sizeof policy };
 
             ptrSetWindowCompositionAttribute (this->hWnd, &data);
@@ -306,9 +311,38 @@ LRESULT Window::OnDpiChange (WPARAM dpi, const RECT * r) {
     return 0;
 }
 
+ATOM GetClassAtom (LPCTSTR name) {
+    WNDCLASSEX wc {};
+    wc.cbSize = sizeof wc;
+
+    return (ATOM) GetClassInfoEx (NULL, name, &wc);
+}
+
+void InitializeWindowLayoutGlobals () {
+    atomStatusBar = GetClassAtom (L"msctls_statusbar32");
+
+    atomSysListView32 = GetClassAtom (L"SysListView32");
+    atomSysHeader32 = GetClassAtom (L"SysHeader32");
+    atomCOMBOBOX = GetClassAtom (L"COMBOBOX");
+    atomEDIT = GetClassAtom (L"EDIT");
+}
+
 BOOL WINAPI UpdateWindowTreeTheme (HWND hCtrl, LPARAM param) {
     EnumChildWindows (hCtrl, UpdateWindowTreeTheme, param);
-    SetWindowTheme (hCtrl, design.light ? NULL : L"DarkMode_Explorer", NULL);
+
+    if (auto atom = GetClassWord (hCtrl, GCW_ATOM)) {
+        /*if (atom == atomStatusBar) {
+            SetWindowTheme (hCtrl, design.light ? NULL : L"ExplorerStatusBar", NULL);
+        } else*/
+        if (atom == atomCOMBOBOX || atom == atomEDIT) {
+            SetWindowTheme (hCtrl, design.light ? NULL : L"DarkMode_CFD", NULL);
+        } else
+        if (atom == atomSysHeader32/* || atom == atomSysListView32*/) {
+            SetWindowTheme (hCtrl, design.light ? NULL : L"DarkMode_ItemsView", NULL);
+        } else {
+            SetWindowTheme (hCtrl, design.light ? NULL : L"DarkMode_Explorer", NULL);
+        }
+    }
     return TRUE;
 }
 
@@ -335,7 +369,20 @@ LRESULT Window::OnVisualEnvironmentChange () {
     if (ptrAllowDarkModeForWindow) {
         ptrAllowDarkModeForWindow (hWnd, true);
 
+        /*if (ptrDwmEnableBlurBehindWindow) {
+            DWM_BLURBEHIND bb = { DWM_BB_ENABLE, TRUE, NULL, FALSE };
+            ptrDwmEnableBlurBehindWindow (hWnd, &bb);
+        }// */
+
         if (winver >= 11) {
+            /*if (design.override.acrylic && winbuild >= 22543) {
+                BOOL bTrue = TRUE;
+                ptrDwmSetWindowAttribute (hWnd, DWMWA_USE_HOSTBACKDROPBRUSH, &bTrue, sizeof bTrue);
+
+                DWORD dwType = DWMSBT_TABBEDWINDOW;
+                ptrDwmSetWindowAttribute (hWnd, DWMWA_SYSTEMBACKDROP_TYPE, &dwType, sizeof dwType);
+            }// */
+
             if (design.override.outline) {
                 COLORREF clr = design.colorization.inactive;
                 if (design.override.acrylic) {
@@ -355,18 +402,39 @@ LRESULT Window::OnVisualEnvironmentChange () {
         LONG dark = !design.light;
         if (winver >= 11 || winbuild >= 20161) {
             ptrDwmSetWindowAttribute (hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof dark);
-        } else if (winbuild >= 18875) {
+        } else
+        if (winbuild >= 18875) {
             CompositionAttributeData attr = { WCA_USEDARKMODECOLORS, &dark, sizeof dark };
             ptrSetWindowCompositionAttribute (hWnd, &attr);
         } else if (winbuild >= 14393) {
             ptrDwmSetWindowAttribute (hWnd, 0x13, &dark, sizeof dark);
         }
+
+        this->tabs.views->dark = dark;
+        this->tabs.lists->dark = dark;
+        this->tabs.feeds->dark = dark;
+
+        if (dark) {
+            if (design.prevalence) {
+                this->tabs.views->style.dark.tab = 0x232221;
+                this->tabs.views->style.dark.inactive = 0x232221;
+            } else {
+                this->tabs.views->style.dark.tab = 0;
+                this->tabs.views->style.dark.inactive = 0x232221;
+            }
+            this->tabs.views->style.dark.hot = design.colorization.background;
+            this->tabs.views->style.dark.current = design.colorization.background;
+
+            this->tabs.lists->style = this->tabs.views->style;
+            this->tabs.feeds->style = this->tabs.views->style;
+        }
+
     }
 
     EnumChildWindows (this->hWnd, UpdateWindowTreeTheme, (LPARAM) 0);
     SetWindowTheme (this->hToolTip, design.light ? NULL : L"DarkMode_Explorer", NULL);
 
-    for (auto tab : this->tabs.lists->tabs) {
+    for (const auto & tab : this->tabs.lists->tabs) {
         ListView_SetBkColor (tab.second.content, design.colorization.background);
         ListView_SetTextColor (tab.second.content, design.colorization.text);
         ListView_SetTextBkColor (tab.second.content, CLR_NONE);
@@ -747,6 +815,20 @@ void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fro
     auto rFeeds = GetFeedsFrame (&rcArea, this->GetFeedsTabRect (&rRight));
     auto rFilters = GetFiltersRect (&rcArea, rRight);
 
+    if (!design.light) {
+        SelectObject (hDC, GetStockObject (DC_PEN));
+        SelectObject (hDC, GetStockObject (NULL_BRUSH));
+        SetDCPenColor (hDC, GetSysColor (COLOR_3DDKSHADOW));
+
+        auto rPane = GetViewsFrame (&rcArea);
+        auto rPaneClip = GetTabControlClipRect (rPane);
+        Rectangle (hDC, rPaneClip.left, rPaneClip.top, rPaneClip.right, rPaneClip.bottom + 1);
+
+        Rectangle (hDC, rList.left, rList.top, rList.right, rList.bottom);
+        Rectangle (hDC, rFeeds.left, rFeeds.top, rFeeds.right, rFeeds.bottom);
+        Rectangle (hDC, rFilters.left, rFilters.top, rFilters.right, rFilters.bottom);
+
+    } else
     if (HANDLE hTheme = OpenThemeData (hWnd, VSCLASS_TAB)) {
         if ((winver >= 10) || !design.composited) {
             auto rPane = GetViewsFrame (&rcArea);

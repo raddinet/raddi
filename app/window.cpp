@@ -162,11 +162,12 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
             return this->OnDrawItem (wParam, reinterpret_cast <DRAWITEMSTRUCT *> (lParam));
 
         case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORSTATIC:
         case WM_CTLCOLORLISTBOX:
             if (!design.light) { // dark
                 SetBkColor ((HDC) wParam, design.colorization.background);
                 SetTextColor ((HDC) wParam, design.colorization.text);
-                SetDCBrushColor ((HDC) wParam, design.colorization.background);
+                SetDCBrushColor ((HDC) wParam, 0x232221/* design.colorization.background*/);
                 return (WPARAM) GetStockObject (DC_BRUSH);
             } else
                 break;
@@ -371,10 +372,11 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
 
         tc->stacking = true;
         tc->badges = true;
-
+        
+        tc->tabs [-4].badge = 69;
         tc->tabs [-4].text = L"\xE128"; // "\x2081\x2082"; // NET
         tc->tabs [-4].tip = LoadString (0x11);
-        tc->tabs [-4].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"Network overview (something like /r/all?)",
+        tc->tabs [-4].content = CreateWindowEx (WS_EX_NOPARENTNOTIFY, L"STATIC", L"Network overview (something like /r/all?)\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20",
                                                 WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hWnd, NULL,
                                                 cs->hInstance, NULL);
         tc->tabs [-3].text = L"\xE1CF"; // FAVorites
