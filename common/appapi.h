@@ -76,7 +76,7 @@ LRESULT CALLBACK AlphaSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam,
 struct Design {
     bool composited = true; // DWM composition is enabled
     bool nice = false; // DWM or theme on Vista/7
-    bool light = true;
+    bool light = true; // true = system color, false = artificially dark
     bool prevalence = true;
     bool contrast = false;
 

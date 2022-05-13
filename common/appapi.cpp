@@ -576,9 +576,10 @@ void Design::update () {
     }
 
     if (this->contrast) {
+        this->light = true;
+        this->prevalence = true;
         this->colorization.active = GetSysColor (COLOR_ACTIVECAPTION);
         this->colorization.inactive = GetSysColor (COLOR_INACTIVECAPTION);
-        this->prevalence = true;
         this->override.outline = false;
         this->override.acrylic = false;
     } else
