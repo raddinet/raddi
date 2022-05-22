@@ -10,6 +10,7 @@
 template <typename Thread>
 class threadpool {
     HANDLE      handle;
+    std::size_t workload;
     std::size_t semaphore;
 
     struct parameter {
@@ -23,7 +24,8 @@ public:
     threadpool ();
     ~threadpool ();
 
-    void begin (std::size_t);
+    void init (std::size_t workload);
+    void begin ();
     bool dispatch (void (Thread::*fn)(), Thread * t);
     void join ();
 };

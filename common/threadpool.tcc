@@ -12,8 +12,13 @@ threadpool <Thread> ::~threadpool () {
 }
 
 template <typename Thread>
-void threadpool <Thread> ::begin (std::size_t n) {
-    this->semaphore = n;
+void threadpool <Thread> ::init (std::size_t workload) {
+    this->workload = workload;
+}
+
+template <typename Thread>
+void threadpool <Thread> ::begin () {
+    InterlockedExchange (&this->semaphore, this->workload);
 }
 
 template <typename Thread>

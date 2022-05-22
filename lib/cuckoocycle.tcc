@@ -187,27 +187,28 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
     // trim
 
     if (!this->cancelled ()) {
-        this->threadpool.begin (n);
+        this->threadpool.init (n);
+        this->threadpool.begin ();
             for (auto & t : this->work) this->threadpool.dispatch (&fiber::genUnodes, &t);
         this->threadpool.join ();
-        this->threadpool.begin (n);
+        this->threadpool.begin ();
             for (auto & t : this->work) this->threadpool.dispatch (&fiber::genVnodes, &t);
         this->threadpool.join ();
 
         this->round = 2;
         for (; (this->round != ((Complexity > 30) ? 96u : 68u) - 2) && !this->cancelled (); this->round += 2) {
-            this->threadpool.begin (n);
+            this->threadpool.begin ();
                 for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <true>, &t);
             this->threadpool.join ();
-            this->threadpool.begin (n);
+            this->threadpool.begin ();
                 for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <false> , &t);
             this->threadpool.join ();
         }
 
-        this->threadpool.begin (n);
+        this->threadpool.begin ();
             for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <true>, &t);
         this->threadpool.join ();
-        this->threadpool.begin (n);
+        this->threadpool.begin ();
             for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <false>, &t);
         this->threadpool.join ();
     }
@@ -251,7 +252,7 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
                                     while (nu--) this->recordedge (ni++, us [(nu + 1) & ~1], us [nu | 1]);
                                     while (nv--) this->recordedge (ni++, vs [nv | 1], vs [(nv + 1) & ~1]);
 
-                                    this->threadpool.begin (n);
+                                    this->threadpool.begin ();
                                     for (auto & t : this->work) {
                                         this->threadpool.dispatch (&fiber::match, &t);
                                     }
