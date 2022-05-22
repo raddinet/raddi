@@ -3,12 +3,18 @@
 #include <cwctype>
 
 DWORD GetLogicalProcessorCount () {
+    if (auto hKernel32 = GetModuleHandle (L"KERNEL32")) {
+        DWORD (WINAPI * ptrGetActiveProcessorCount) (WORD);
+        if (Symbol (hKernel32, ptrGetActiveProcessorCount, "GetActiveProcessorCount")) { // NT 6.1+
+            auto n = ptrGetActiveProcessorCount (ALL_PROCESSOR_GROUPS);
+            if (n)
+                return n;
+        }
+    }
+
     SYSTEM_INFO si;
     GetSystemInfo (&si);
 
-    if (si.dwNumberOfProcessors > MAXIMUM_PROC_PER_GROUP) {
-        si.dwNumberOfProcessors = MAXIMUM_PROC_PER_GROUP;
-    }
     if (si.dwNumberOfProcessors < 1) {
         si.dwNumberOfProcessors = 1;
     }
