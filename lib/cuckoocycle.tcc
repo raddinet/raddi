@@ -173,42 +173,42 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
         this->touch (this->buckets, sizeof (zbucket<ZBUCKETSIZE>) * NY * NX, this->cancel);
     }
 
-    // split workload into threads
-    //  - 64 threads for complexity 26 and 27, 128 threads for complexity 28 and 29
+    // split workload into work items
+    //  - 64 items for complexity 26 and 27, 128 items  for complexity 28 and 29
 
-    const auto n = this->threads.size ();
+    const auto n = this->work.size ();
 
     for (auto i = 0; i != n; ++i) {
-        this->threads [i].solver = this;
-        this->threads [i].start = i * NY / this->threads.size ();
-        this->threads [i].end = (i + 1) * NY / this->threads.size ();
+        this->work [i].solver = this;
+        this->work [i].start = i * NY / this->work.size ();
+        this->work [i].end = (i + 1) * NY / this->work.size ();
     }
 
     // trim
 
     if (!this->cancelled ()) {
         this->threadpool.begin (n);
-            for (auto & t : this->threads) this->threadpool.dispatch (&thread::genUnodes, &t);
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::genUnodes, &t);
         this->threadpool.join ();
         this->threadpool.begin (n);
-            for (auto & t : this->threads) this->threadpool.dispatch (&thread::genVnodes, &t);
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::genVnodes, &t);
         this->threadpool.join ();
 
         this->round = 2;
         for (; (this->round != ((Complexity > 30) ? 96u : 68u) - 2) && !this->cancelled (); this->round += 2) {
             this->threadpool.begin (n);
-                for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRoundT, &t);
+                for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <true>, &t);
             this->threadpool.join ();
             this->threadpool.begin (n);
-                for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRoundF, &t);
+                for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <false> , &t);
             this->threadpool.join ();
         }
 
         this->threadpool.begin (n);
-            for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRename1T, &t);
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <true>, &t);
         this->threadpool.join ();
         this->threadpool.begin (n);
-            for (auto & t : this->threads) this->threadpool.dispatch (&thread::trimRename1F, &t);
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <false>, &t);
         this->threadpool.join ();
     }
 
@@ -252,8 +252,8 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
                                     while (nv--) this->recordedge (ni++, vs [nv | 1], vs [(nv + 1) & ~1]);
 
                                     this->threadpool.begin (n);
-                                    for (auto & t : this->threads) {
-                                        this->threadpool.dispatch (&thread::match, &t);
+                                    for (auto & t : this->work) {
+                                        this->threadpool.dispatch (&fiber::match, &t);
                                     }
                                     this->threadpool.join ();
 
@@ -329,7 +329,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::touch (void * p
 // solver trimming threads
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
-void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::genUnodes () {
+void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::genUnodes () {
     indexer <ZBUCKETSIZE>   destination;
     std::size_t             last [NX];
 
@@ -356,7 +356,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::genUnod
 
             for (auto i = 0u; i != Generator::parallelism; ++i) {
                 auto ux = (node [i] & EDGEMASK) >> YZBITS;
-                auto zz = (offset) (edge + i) << YZBITS | (node [i] & YZMASK);
+                auto zz = (offset) ((edge + i) << YZBITS) | (node [i] & YZMASK);
 
                 if (NEEDSYNC) {
                     if (i || zz) {
@@ -386,7 +386,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::genUnod
 }
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
-void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::genVnodes () {
+void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::genVnodes () {
     static const auto NONDEGBITS = std::min (BIGSLOTBITS, 2 * YZBITS) - ZBITS;
     static const auto NONDEGMASK = (1u << NONDEGBITS) - 1u;
 
@@ -499,7 +499,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::genVnod
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
 template <unsigned SRCSIZE, unsigned DSTSIZE, bool TRIMONV>
-void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimEdges () {
+void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimEdges () {
 
     const auto SRCSLOTBITS = std::min (SRCSIZE * 8, 2 * YZBITS);
     const auto SRCSLOTMASK = (1uLL << SRCSLOTBITS) - 1uLL;
@@ -580,7 +580,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimEdg
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
 template <unsigned SRCSIZE, unsigned DSTSIZE, bool TRIMONV>
-void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimRename () {
+void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimRename () {
 
     const auto SRCSLOTBITS = std::min (SRCSIZE * 8, (TRIMONV ? YZBITS : YZ1BITS) + YZBITS);
     const auto SRCSLOTMASK = (1uLL << SRCSLOTBITS) - 1uLL;
@@ -705,7 +705,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimRen
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
 template <bool TRIMONV>
-void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimEdges1 () {
+void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimEdges1 () {
 
     indexer <ZBUCKETSIZE> destination;
 
@@ -755,7 +755,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimEdg
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
 template <bool TRIMONV>
-void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimRename1 () {
+void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimRename1 () {
 
     indexer <ZBUCKETSIZE> destination;
 
@@ -832,7 +832,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimRen
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
 template <bool TRIMONV>
-void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimRound () {
+void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimRound () {
 
     auto c = this->solver->round;
     auto e = this->solver->round + !TRIMONV;
@@ -859,7 +859,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::trimRou
 }
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
-void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::thread::match () {
+void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::match () {
     auto edge = this->start << YZBITS;
     auto endedge = edge + NYZ;
 

@@ -238,7 +238,7 @@ namespace cuckoo {
             std::size_t storeU (yzbucket <Size> * buckets, std::size_t x);
         };
 
-        class thread {
+        class fiber {
             yzbucket <TBUCKETSIZE> bucket;
             std::uint8_t  deg  [2 * NYZ1];
             std::uint16_t z    [NTRIMMEDZ];
@@ -256,12 +256,6 @@ namespace cuckoo {
             template <bool TRIMONV> void trimRound ();
             template <bool TRIMONV> void trimRename1 ();
 
-            // MSVC 15.8 fix (?)
-            void trimRoundT () { return this->trimRound <true> (); };
-            void trimRoundF () { return this->trimRound <false> (); };
-            void trimRename1T () { return this->trimRename1 <true> (); };
-            void trimRename1F () { return this->trimRename1 <false> (); };
-
         private:
             template <bool TRIMONV> void trimEdges1 ();
             template <unsigned SRCSIZE, unsigned DSTSIZE, bool TRIMONV> void trimEdges ();
@@ -270,7 +264,7 @@ namespace cuckoo {
 
     private:
         Generator                   generator;
-        ThreadPoolControl <thread>  threadpool;
+        ThreadPoolControl <fiber>   threadpool;
 
         union {
             yzbucket <ZBUCKETSIZE> * const buckets;
@@ -281,7 +275,7 @@ namespace cuckoo {
             std::uint8_t           base [NX * sizeof (yzbucket <ZBUCKETSIZE>)];
         };// */
 
-        std::vector <thread>    threads;
+        std::vector <fiber>     work;
         std::bitset <NXY>       uxymap;
         std::uintmax_t          cycleus [MAXPATHLEN];
         std::uintmax_t          cyclevs [MAXPATHLEN];
@@ -298,7 +292,7 @@ namespace cuckoo {
                 if (parallelism > NY) {
                     parallelism = NY;
                 }
-                this->threads.resize (parallelism);
+                this->work.resize (parallelism);
             } catch (const std::bad_alloc &) {
                 delete [] this->buckets;
             }
@@ -310,7 +304,7 @@ namespace cuckoo {
     public:
         static constexpr auto               complexity = Complexity;
         typedef Generator                   generator_type;
-        typedef ThreadPoolControl <thread>  threadpool_type;
+        typedef ThreadPoolControl <fiber>   threadpool_type;
 
     private:
         std::uint32_t path (std::uint32_t * cycle, std::uint32_t u, std::uint32_t * us) const;
