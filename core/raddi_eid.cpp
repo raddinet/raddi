@@ -5,7 +5,7 @@
 
 bool raddi::eid::serialize (wchar_t * buffer, std::size_t size) const {
     if (auto offset = this->identity.serialize (buffer, size)) {
-        return std::swprintf (buffer + offset, size - offset, L"-%x", this->timestamp) > 1;
+        return std::swprintf (buffer + offset, size - offset, L"-%x", this->timestamp - this->identity.timestamp) > 1;
     } else
         return false;
 }
@@ -14,6 +14,7 @@ std::size_t raddi::eid::parse (const wchar_t * string) {
     if (std::size_t offset = this->identity.parse (string)) {
         std::size_t offset2;
         if (std::swscanf (string + offset, L" - %8x%zn", &this->timestamp, &offset2) == 1) {
+            this->timestamp += this->identity.timestamp;
             return offset + offset2;
         }
     }
@@ -24,6 +25,7 @@ std::size_t raddi::eid::parse (const char * string) {
     if (std::size_t offset = this->identity.parse (string)) {
         std::size_t offset2;
         if (std::sscanf (string + offset, " - %8x%zn", &this->timestamp, &offset2) == 1) {
+            this->timestamp += this->identity.timestamp;
             return offset + offset2;
         }
     }
