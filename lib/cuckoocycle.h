@@ -286,7 +286,7 @@ namespace cuckoo {
         std::uint32_t           results [2 * NX * NYZ2];
 
     public:
-        explicit solver (unsigned int parallelism)
+        explicit solver (unsigned int parallelism = ~0u)
             : buckets (new yzbucket <ZBUCKETSIZE> [NX]) {
 
             try {

@@ -56,8 +56,8 @@ namespace {
         if (cancel && *cancel)
             return 0;
 
-        auto n = (unsigned int) GetLogicalProcessorCount (); // TODO: abstract elsewhere or use C++17/20
-        auto solver = std::make_unique <cuckoo::solver <complexity, generator, threadpool>> (n);
+        // auto n = (unsigned int) GetLogicalProcessorCount (); // TODO: abstract elsewhere or use C++17/20
+        auto solver = std::make_unique <cuckoo::solver <complexity, generator, threadpool>> ();
 
         solver->shortest = raddi::proof::min_length;
         solver->longest = raddi::proof::max_length;
@@ -74,7 +74,7 @@ namespace {
                                             if (proof->initialize (raddi::proof::algorithm::cuckoo_cycle, complexity, length)) {
                                                 raw [0] = 0x00;  // proof starts with NUL byte
 
-                                                auto solution = proof->solution (); // TODO: fix unaligned uint32 access
+                                                auto solution = proof->solution ();
                                                 solution [0] = std::uint32_t (cycle [0]);
 
                                                 for (auto i = 1u; i != length; ++i) {

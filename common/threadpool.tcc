@@ -4,7 +4,8 @@
 template <typename Thread>
 threadpool <Thread> ::threadpool ()
     : handle (CreateEvent (NULL, FALSE, FALSE, NULL))
-    , semaphore (0) {}
+    , semaphore (0)
+    , workload (0) {}
 
 template <typename Thread>
 threadpool <Thread> ::~threadpool () {
@@ -22,7 +23,7 @@ void threadpool <Thread> ::begin () {
 }
 
 template <typename Thread>
-bool threadpool <Thread> ::dispatch (void (Thread::*fn)(), Thread * t) {
+bool threadpool <Thread> ::dispatch (void (Thread::*fn)(), Thread * t, bool defer) {
     return QueueUserWorkItem (ThreadProc, new parameter { this, t, fn }, 0);
 }
 

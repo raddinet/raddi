@@ -189,27 +189,27 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
     if (!this->cancelled ()) {
         this->threadpool.init (n);
         this->threadpool.begin ();
-            for (auto & t : this->work) this->threadpool.dispatch (&fiber::genUnodes, &t);
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::genUnodes, &t, true);
         this->threadpool.join ();
         this->threadpool.begin ();
-            for (auto & t : this->work) this->threadpool.dispatch (&fiber::genVnodes, &t);
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::genVnodes, &t, true);
         this->threadpool.join ();
 
         this->round = 2;
         for (; (this->round != ((Complexity > 30) ? 96u : 68u) - 2) && !this->cancelled (); this->round += 2) {
             this->threadpool.begin ();
-                for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <true>, &t);
+                for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <true>, &t, true);
             this->threadpool.join ();
             this->threadpool.begin ();
-                for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <false> , &t);
+                for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <false> , &t, true);
             this->threadpool.join ();
         }
 
         this->threadpool.begin ();
-            for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <true>, &t);
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <true>, &t, true);
         this->threadpool.join ();
         this->threadpool.begin ();
-            for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <false>, &t);
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <false>, &t, true);
         this->threadpool.join ();
     }
 
@@ -254,7 +254,7 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
 
                                     this->threadpool.begin ();
                                     for (auto & t : this->work) {
-                                        this->threadpool.dispatch (&fiber::match, &t);
+                                        this->threadpool.dispatch (&fiber::match, &t, true);
                                     }
                                     this->threadpool.join ();
 
