@@ -475,9 +475,28 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
 
                     if (!this->database.peers [blacklisted_nodes]->count (a)) {
 
-                        // accept local network addresses only from peers on local network
+                        bool accept = false;
+                        if (this->settings.local_peers_only) {
 
-                        if (a.accessible () || !connection->peer.accessible (address::validation::allow_null_port)) {
+                            // local mode
+                            //  - accept only reported peers on the 'local' network(s)
+
+                            accept = !a.accessible ();
+
+                        } else {
+
+                            // regular mode
+                            //  - accept all internet peers
+                            //  - accept local network addresses only from peers on local network
+
+                            if (a.accessible () || !connection->peer.accessible (address::validation::allow_null_port)) {
+                                accept = true;
+                            } else {
+                                this->report (log::level::data, 0x22, connection->peer, a);
+                            }
+                        }
+
+                        if (accept) {
 
                             // core nodes may announce other core node
                             //  - if we already know that node, upgrade it's status
@@ -504,8 +523,6 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
                                 }
                                 this->report (log::level::note, 0x22, connection->peer, a);
                             }
-                        } else {
-                            this->report (log::level::data, 0x22, connection->peer, a);
                         }
                     } else {
                         this->report (log::level::note, 0x2A, connection->peer, a);
