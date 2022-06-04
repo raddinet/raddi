@@ -24,7 +24,7 @@ namespace cuckoo {
     template <typename T>
     class singlethreaded {
     public:
-        void init (std::size_t) {};
+        bool init (std::size_t) { return true; };
         void begin () {};
         bool dispatch (void (T::*fn)(), T * t) {
             (t->*fn) ();
