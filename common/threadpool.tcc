@@ -13,8 +13,9 @@ threadpool <Thread> ::~threadpool () {
 }
 
 template <typename Thread>
-void threadpool <Thread> ::init (std::size_t workload) {
+bool threadpool <Thread> ::init (std::size_t workload) {
     this->workload = workload;
+    return true;
 }
 
 template <typename Thread>

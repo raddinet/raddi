@@ -25,7 +25,7 @@ public:
     threadpool ();
     ~threadpool ();
 
-    void init (std::size_t workload);
+    bool init (std::size_t workload);
     void begin ();
     bool dispatch (void (Thread::*fn)(), Thread * t, bool defer);
     void join ();
