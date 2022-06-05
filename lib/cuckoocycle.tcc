@@ -163,6 +163,20 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::indexer 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
 template <typename Callback>
 std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (const std::uint8_t (&seed) [Generator::width], Callback callback) {
+
+    // split workload into work items
+    //  - 64 items for complexity 26 and 27, 128 items for complexity 28 and 29
+
+    const auto n = this->work.size ();
+    if (!this->threadpool.init (n))
+        return 0;
+
+    for (auto i = 0; i != n; ++i) {
+        this->work [i].solver = this;
+        this->work [i].start = i * NY / n;
+        this->work [i].end = (i + 1) * NY / n;
+    }
+
     this->generator.seed (seed);
 
     // actually preallocate the memory for faster performance
@@ -173,45 +187,32 @@ std::size_t cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::solve (c
         this->touch (this->buckets, sizeof (zbucket<ZBUCKETSIZE>) * NY * NX, this->cancel);
     }
 
-    // split workload into work items
-    //  - 64 items for complexity 26 and 27, 128 items  for complexity 28 and 29
-
-    const auto n = this->work.size ();
-
-    for (auto i = 0; i != n; ++i) {
-        this->work [i].solver = this;
-        this->work [i].start = i * NY / this->work.size ();
-        this->work [i].end = (i + 1) * NY / this->work.size ();
-    }
-
     // trim
 
     if (!this->cancelled ()) {
-        if (this->threadpool.init (n)) {
-            this->threadpool.begin ();
-                for (auto & t : this->work) this->threadpool.dispatch (&fiber::genUnodes, &t, true);
-            this->threadpool.join ();
-            this->threadpool.begin ();
-                for (auto & t : this->work) this->threadpool.dispatch (&fiber::genVnodes, &t, true);
-            this->threadpool.join ();
+        this->threadpool.begin ();
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::genUnodes, &t, true);
+        this->threadpool.join ();
+        this->threadpool.begin ();
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::genVnodes, &t, true);
+        this->threadpool.join ();
 
-            this->round = 2;
-            for (; (this->round != ((Complexity > 30) ? 96u : 68u) - 2) && !this->cancelled (); this->round += 2) {
-                this->threadpool.begin ();
-                    for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <true>, &t, true);
-                this->threadpool.join ();
-                this->threadpool.begin ();
-                    for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <false> , &t, true);
-                this->threadpool.join ();
-            }
-
+        this->round = 2;
+        for (; (this->round != ((Complexity > 30) ? 96u : 68u) - 2) && !this->cancelled (); this->round += 2) {
             this->threadpool.begin ();
-                for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <true>, &t, true);
+                for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <true>, &t, true);
             this->threadpool.join ();
             this->threadpool.begin ();
-                for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <false>, &t, true);
+                for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRound <false> , &t, true);
             this->threadpool.join ();
         }
+
+        this->threadpool.begin ();
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <true>, &t, true);
+        this->threadpool.join ();
+        this->threadpool.begin ();
+            for (auto & t : this->work) this->threadpool.dispatch (&fiber::template trimRename1 <false>, &t, true);
+        this->threadpool.join ();
     }
 
     // solution recovery

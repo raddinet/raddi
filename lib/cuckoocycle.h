@@ -286,7 +286,7 @@ namespace cuckoo {
         std::uint32_t           results [2 * NX * NYZ2];
 
     public:
-        explicit solver (unsigned int parallelism = ~0u)
+        explicit solver (unsigned int parallelism = NY)
             : buckets (new yzbucket <ZBUCKETSIZE> [NX]) {
 
             try {
@@ -304,6 +304,7 @@ namespace cuckoo {
 
     public:
         static constexpr auto               complexity = Complexity;
+        static constexpr auto               suggested_parallelism = NY;
         typedef Generator                   generator_type;
         typedef ThreadPoolControl <fiber>   threadpool_type;
 
