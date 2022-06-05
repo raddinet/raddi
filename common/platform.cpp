@@ -36,7 +36,9 @@ namespace {
 
             } else
             if (GetLastError () == ERROR_INSUFFICIENT_BUFFER) {
-                buffer.resize (n + 8);
+
+                n += 128;
+                buffer.resize (n);
                 
                 if (ptrGetLogicalProcessorInformationEx (relationship, (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *) buffer.data (), &n)) {
                     return buffer;
