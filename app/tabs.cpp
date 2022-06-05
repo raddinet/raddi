@@ -1042,11 +1042,11 @@ void TabControlState::repaint (HDC _hDC, RECT rcInvalidated) {
                     if (i == this->hot.stack) {
                         SetDCBrushColor (hDC, this->style.dark.hot);
                     }
-                    if (i == this->current_stack) {
-                        SetDCBrushColor (hDC, this->style.dark.current);
-                    }
                 } else {
                     SetDCBrushColor (hDC, this->style.dark.inactive);
+                }
+                if (i == this->current_stack) {
+                    SetDCBrushColor (hDC, this->style.dark.current);
                 }
                 FillRect (hDC, &rFill, (HBRUSH) GetStockObject (DC_BRUSH));
 
