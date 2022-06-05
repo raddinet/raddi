@@ -7,6 +7,7 @@
 #include "../common/log.h"
 #include "../common/platform.h"
 #include "../common/threadpool.h"
+#include "../common/threadpool2.h"
 
 #include <memory>
 
@@ -56,8 +57,12 @@ namespace {
         if (cancel && *cancel)
             return 0;
 
-        // auto n = (unsigned int) GetLogicalProcessorCount (); // TODO: abstract elsewhere or use C++17/20
-        auto solver = std::make_unique <cuckoo::solver <complexity, generator, threadpool>> ();
+        auto parallelism = cuckoo::solver <complexity, generator, threadpool2>::suggested_parallelism;
+        if ((GetPredominantSMT () >= 4) && (GetLogicalProcessorCount () >= 48)) {
+            parallelism /= 2;
+        }
+
+        auto solver = std::make_unique <cuckoo::solver <complexity, generator, threadpool2>> (parallelism);
 
         solver->shortest = raddi::proof::min_length;
         solver->longest = raddi::proof::max_length;
