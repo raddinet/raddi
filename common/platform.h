@@ -64,17 +64,53 @@ static const char BUILD_TIMESTAMP [] = {
 #ifdef _WIN32
 #include <windows.h>
 #include <string_view>
+#include <vector>
 #include "log.h"
 #include "winver.h"
 
 // Windows API platform helper functions
 
+void InitPlatformAPI ();
+
 DWORD GetLogicalProcessorCount ();
 DWORD GetCurrentProcessSessionId ();
+
 bool GetProcessSessionId (DWORD id, DWORD *);
 const VS_FIXEDFILEINFO * GetModuleVersionInfo (HMODULE);
 const VS_FIXEDFILEINFO * GetCurrentProcessVersionInfo ();
 bool IsPathAbsolute (std::wstring_view);
+
+struct Processor {
+    union {
+        struct {
+            WORD group;
+            BYTE number; // SMT 0..63 (or less) in group (first thread of a core)
+            BYTE eclass : 2; // P/E higher number means fastest CORE
+            BYTE smt    : 6; // SMT thread within CORE
+        };
+        DWORD spec = 0;
+    };
+    KAFFINITY affinity = 0; // module or L2 affinity
+
+public:
+    unsigned int rank () const {
+        return ((this->smt * 2) + (this->eclass * this->eclass));
+    }
+    unsigned int order () const {
+        return (this->rank () << 24)
+             + (this->group << 8)
+             + (this->number << 0);
+    }
+
+    bool operator == (const Processor & other) const { return this->spec == other.spec; }
+    bool operator < (const Processor & other) const { return this->order () < other.order (); }
+};
+
+std::size_t GetPredominantSMT ();
+std::vector <Processor> GetRankedLogicalProcessorList ();
+
+BOOL AssignThreadLogicalProcessor (HANDLE hThread, Processor processor);
+BOOL SetThreadIdealLogicalProcessor (HANDLE hThread, Processor processor);
 
 template <typename P>
 bool Symbol (HMODULE h, P & pointer, const char * name) {
