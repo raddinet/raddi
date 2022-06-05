@@ -458,6 +458,7 @@ int wmain (int argc, wchar_t ** argw) {
     SetErrorMode (0x8007);
     SetDllDirectoryW (L"");
     RegDisablePredefinedCache ();
+    InitPlatformAPI ();
 
     std::signal (SIGBREAK, [](int) { ::quit = true; });
     std::signal (SIGTERM, [](int) { ::quit = true; });
@@ -669,6 +670,16 @@ bool go () {
 
     if (auto parameter = command (argc, argw, L"hash")) {
         return hash (parameter);
+    }
+
+    if (auto parameter = command (argc, argw, L"processors")) {
+        auto processors = GetRankedLogicalProcessorList ();
+        for (auto processor : processors) {
+            std::printf ("[%u:%u] T%u, class %u, affinity: %016zX\n",
+                         processor.group, processor.number, processor.smt, processor.eclass, processor.affinity);
+        }
+        std::printf ("predominant SMT %zu\n", GetPredominantSMT ());
+        return true;
     }
 
     if (auto parameter = command (argc, argw, L"list")) {
