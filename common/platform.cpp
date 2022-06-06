@@ -102,22 +102,27 @@ std::size_t GetPredominantSMT () {
     auto buffer = CallGetLogicalProcessorInformationEx (RelationProcessorCore);
     if (!buffer.empty ()) {
 
-        unsigned int smt [256] = {};
+        constexpr auto N = 8;
+        unsigned int smt [N] = {};
         auto p = buffer.data ();
         while (true) {
 
             auto info = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *) p;
             if (info->Size) {
                 if (info->Relationship == RelationProcessorCore) {
-                    ++smt [CountSetBits (info->Processor.GroupMask [0].Mask) - 1];
+                    auto n = CountSetBits (info->Processor.GroupMask [0].Mask);
+                    if (n > N) {
+                        n = N;
+                    }
+                    ++smt [n - 1];
                 }
                 p += info->Size;
             } else
                 break;
         }
 
-        unsigned int highest = 0;
-        for (auto i = 1u; i != 256; ++i) {
+        std::size_t highest = 0;
+        for (auto i = 1u; i != N; ++i) {
             if (smt [highest] < smt [i]) {
                 highest = i;
             }
