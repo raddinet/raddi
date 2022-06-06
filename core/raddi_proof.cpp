@@ -51,18 +51,13 @@ namespace {
     //  - returns solution length or 0 if no solution was found
     //  - on success returns solution/cycle length
     //
-    template <unsigned complexity>
+    template <typename Solver>
     std::size_t solve (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES],
-                       void * target, std::size_t maximum, volatile bool * cancel) {
+                       void * target, std::size_t maximum, unsigned int parallelism, volatile bool * cancel) {
         if (cancel && *cancel)
             return 0;
 
-        auto parallelism = cuckoo::solver <complexity, generator, threadpool2>::suggested_parallelism;
-        if ((GetPredominantSMT () >= 4) && (GetLogicalProcessorCount () >= 48)) {
-            parallelism /= 2;
-        }
-
-        auto solver = std::make_unique <cuckoo::solver <complexity, generator, threadpool2>> (parallelism);
+        auto solver = std::make_unique <Solver> (parallelism);
 
         solver->shortest = raddi::proof::min_length;
         solver->longest = raddi::proof::max_length;
@@ -76,7 +71,7 @@ namespace {
                                             auto raw = reinterpret_cast <std::uint8_t *> (target);
                                             auto proof = reinterpret_cast <raddi::proof *> (&raw [size - 1]);
 
-                                            if (proof->initialize (raddi::proof::algorithm::cuckoo_cycle, complexity, length)) {
+                                            if (proof->initialize (raddi::proof::algorithm::cuckoo_cycle, Solver::complexity, length)) {
                                                 raw [0] = 0x00;  // proof starts with NUL byte
 
                                                 auto solution = proof->solution ();
@@ -98,68 +93,101 @@ namespace {
     template <unsigned complexity>
     std::size_t attempt (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES],
                          void * target, std::size_t maximum,
-                         raddi::proof::requirements rq, volatile bool * cancel) {
+                         raddi::proof::options options, volatile bool * cancel) {
 
+        auto processors = GetLogicalProcessorCount ();
+        auto parallelism = cuckoo::solver <complexity, generator>::suggested_parallelism; // 64 for 26/27, 128 for 28/29
+
+        if (options.threadpool == raddi::proof::threadpool::automatic) {
+            if ((parallelism > 64) && (processors > 64)) {
+                options.threadpool = raddi::proof::threadpool::custom;
+            } else {
+                options.threadpool = raddi::proof::threadpool::system;
+            }
+        }
+        if (parallelism > processors) {
+            parallelism = processors;
+        }
+
+        std::size_t length = 0;
         auto t0 = raddi::microtimestamp ();
-        if (auto length = solve <complexity> (hash, target, maximum, cancel)) {
 
+        switch (options.threadpool) {
+            case raddi::proof::threadpool::none:
+                length = solve <cuckoo::solver <complexity, generator>> (hash, target, maximum, parallelism, cancel);
+                break;
+
+            case raddi::proof::threadpool::system:
+                length = solve <cuckoo::solver <complexity, generator, threadpool>> (hash, target, maximum, parallelism, cancel);
+                break;
+
+            case raddi::proof::threadpool::custom:
+                if ((parallelism > 64) && (GetPredominantSMT () >= 4) && (processors >= 48)) { // threadpool overhead exceeds SMT gains
+                    parallelism /= 2;
+                }
+                length = solve <cuckoo::solver <complexity, generator, threadpool2>> (hash, target, maximum, parallelism, cancel);
+                break;
+        }
+
+        if (length) {
             auto elapsed = (raddi::microtimestamp () - t0) / 1000;
-            if (elapsed < rq.time) {
-                raddi::log::note (raddi::component::main, 0x10, complexity, rq.time, elapsed);
+            if (elapsed < options.requirements.time) {
+                raddi::log::note (raddi::component::main, 0x10, complexity, options.requirements.time, elapsed);
                 return 0;
             }
 
-            raddi::log::note (raddi::component::main, 0x11, complexity, rq.time, elapsed);
+            raddi::log::note (raddi::component::main, 0x11, complexity, options.requirements.time, elapsed);
             return raddi::proof::size (length);
-        }
 
-        raddi::log::note (raddi::component::main, 0x14, complexity);
-        return 0;
+        } else {
+            raddi::log::note (raddi::component::main, 0x14, complexity);
+            return 0;
+        }
     }
 }
 
 std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES],
                                     void * target, std::size_t maximum,
-                                    requirements rq, volatile bool * cancel) {
+                                    options options, volatile bool * cancel) {
 
     static_assert (min_complexity == 26);
     static_assert (max_complexity == 29);
 
-    if (rq.complexity < min_complexity) {
-        rq.complexity = min_complexity;
+    if (options.requirements.complexity < min_complexity) {
+        options.requirements.complexity = min_complexity;
     }
 
     // complexity and time requriements
     //  - we also bail if time spent exceeds one more second,
     //    better to try another hash than spinning on too hight difficulty
 
-    auto tX = 1000 * (rq.time + 1000);
+    auto tX = 1000 * (options.requirements.time + 1000);
     auto t0 = raddi::microtimestamp ();
-    switch (rq.complexity) {
+    switch (options.requirements.complexity) {
         case 26:
-            if (auto n = attempt <26> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <26> (hash, target, maximum, options, cancel))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
             [[ fallthrough ]];
         case 27:
-            if (auto n = attempt <27> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <27> (hash, target, maximum, options, cancel))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
             [[ fallthrough ]];
         case 28:
-            if (auto n = attempt <28> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <28> (hash, target, maximum, options, cancel))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
             [[ fallthrough ]];
         case 29:
-            rq.time = 0;
-            if (auto n = attempt <29> (hash, target, maximum, rq, cancel))
+            options.requirements.time = 0;
+            if (auto n = attempt <29> (hash, target, maximum, options, cancel))
                 return n;
 
             [[ fallthrough ]];
@@ -169,72 +197,72 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
 }
 
 std::size_t raddi::proof::generate (crypto_hash_sha512_state state, void * target, std::size_t maximum,
-                                    requirements rq, volatile bool * cancel) {
+                                    options options, volatile bool * cancel) {
     std::uint8_t hash [crypto_hash_sha512_BYTES];
     if (crypto_hash_sha512_final (&state, hash) == 0)
-        return raddi::proof::generate (hash, target, maximum, rq, cancel);
+        return raddi::proof::generate (hash, target, maximum, options, cancel);
     else
         return false;
 }
 
 std::size_t raddi::proof::generate_wide (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES],
                                          void * target, std::size_t maximum,
-                                         requirements rq, volatile bool * cancel) {
-    if (rq.complexity < min_complexity) {
-        rq.complexity = min_complexity;
+                                         options options, volatile bool * cancel) {
+    if (options.requirements.complexity < min_complexity) {
+        options.requirements.complexity = min_complexity;
     }
 
     // complexity and time requriements
     //  - we also bail if time spent exceeds one second,
     //    better to try another hash than spinning on too hight difficulty
 
-    auto tX = 1000 * (rq.time + 1000);
+    auto tX = 1000 * (options.requirements.time + 1000);
     auto t0 = raddi::microtimestamp ();
-    switch (rq.complexity) {
+    switch (options.requirements.complexity) {
         case 26:
-            if (auto n = attempt <26> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <26> (hash, target, maximum, options, cancel))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
             [[ fallthrough ]];
         case 27:
-            if (auto n = attempt <27> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <27> (hash, target, maximum, options, cancel))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
             [[ fallthrough ]];
         case 28:
-            if (auto n = attempt <28> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <28> (hash, target, maximum, options, cancel))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
             [[ fallthrough ]];
         case 29:
-            if (auto n = attempt <29> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <29> (hash, target, maximum, options, cancel))
                 return n;
 
             [[ fallthrough ]];
 
         case 30:
-            if (auto n = attempt <30> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <30> (hash, target, maximum, options, cancel))
                 return n;
 
             [[ fallthrough ]];
         case 31:
-            if (auto n = attempt <31> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <31> (hash, target, maximum, options, cancel))
                 return n;
 
             [[ fallthrough ]];
         case 32:
-            if (auto n = attempt <32> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <32> (hash, target, maximum, options, cancel))
                 return n;
 
             [[ fallthrough ]];
         case 33:
-            if (auto n = attempt <33> (hash, target, maximum, rq, cancel))
+            if (auto n = attempt <33> (hash, target, maximum, options, cancel))
                 return n;
 
             [[ fallthrough ]];

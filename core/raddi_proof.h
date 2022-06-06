@@ -107,6 +107,24 @@ namespace raddi {
             unsigned int time = 500; // ms
         };
 
+        // threadpool
+        //  - 
+        //
+        enum class threadpool {
+            automatic = 0,
+            none,   // v0 "cucukoocycle.h" no threadpool
+            system, // v1 "threapool.h" QueueUserWorkItem
+            custom, // v2 "threapool2.h" spans groups
+        };
+
+        // options
+        //  - 
+        //
+        struct options {
+            requirements requirements;
+            threadpool   threadpool = threadpool::automatic;
+        };
+
     public:
 
         // validate
@@ -127,12 +145,12 @@ namespace raddi {
         //             just change hash (increase timestamp) and try again
         //
         static std::size_t generate (crypto_hash_sha512_state, void * target, std::size_t maximum,
-                                     requirements, volatile bool * cancel = nullptr);
+                                     options, volatile bool * cancel = nullptr);
         static std::size_t generate (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES], void * target, std::size_t maximum,
-                                     requirements, volatile bool * cancel = nullptr);
+                                     options, volatile bool * cancel = nullptr);
 
         static std::size_t generate_wide (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES], void * target, std::size_t maximum,
-                                          requirements, volatile bool * cancel = nullptr);
+                                          options, volatile bool * cancel = nullptr);
 
         // size
         //  - returns full size of this 'proof' structure, including header, in bytes
