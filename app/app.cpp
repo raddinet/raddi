@@ -67,6 +67,7 @@ int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR
     if (IsDebuggerPresent ()) {
         AllocConsole ();
     }
+    InitPlatformAPI ();
     InitializeWinVer ();
         
     raddi::log::display (L"all"); // TODO: redirect display to internal history window
@@ -272,15 +273,19 @@ namespace {
         auto select = database.prepare (L"SELECT `id`,`x`,`y`,`w`,`h`,`m`"
                                         L" FROM `windows`"
                                         L" ORDER BY `m`=2 DESC, `m`=3 DESC, `m`=1 DESC");
+        
+        auto extra = 0;
+        auto style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
+
         if (select.next ()) {
             do {
                 auto id = select.get <std::intptr_t> (0);
                 RECT r = FixWindowCoordinates (select.get <int> (1), select.get <int> (2),
                                                select.get <int> (3), select.get <int> (4));
 
-                if (auto hWnd = CreateWindow (atom, L"", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-                                              r.left, r.top, r.right, r.bottom,
-                                              HWND_DESKTOP, NULL, hInstance, (LPVOID) id)) {
+                if (auto hWnd = CreateWindowEx (extra, atom, L"", style,
+                                                r.left, r.top, r.right, r.bottom,
+                                                HWND_DESKTOP, NULL, hInstance, (LPVOID) id)) {
                     auto mode = select.get <int> (5);
                     if (select.row == n) {
                         if (mode == SW_SHOWMINIMIZED) mode = SW_SHOWNORMAL;
@@ -294,8 +299,8 @@ namespace {
             } while (select.next ());
         } else {
             static const auto D = CW_USEDEFAULT;
-            if (auto hWnd = CreateWindow (atom, L"", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-                                          D, D, D, D, HWND_DESKTOP, NULL, hInstance, (LPVOID) 1)) {
+            if (auto hWnd = CreateWindowEx (extra, atom, L"", style,
+                                            D, D, D, D, HWND_DESKTOP, NULL, hInstance, (LPVOID) 1)) {
                 ShowWindow (hWnd, nCmdShow);
                 any = true;
             } else {
