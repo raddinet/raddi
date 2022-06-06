@@ -26,7 +26,7 @@ namespace cuckoo {
     public:
         bool init (std::size_t) { return true; };
         void begin () {};
-        bool dispatch (void (T::*fn)(), T * t) {
+        bool dispatch (void (T::*fn)(), T * t, bool) {
             (t->*fn) ();
             return true;
         };
