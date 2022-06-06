@@ -60,8 +60,6 @@ bool threadpool2 <Fiber> ::dispatch (void (Fiber::*fn)(), Fiber * ctx, bool defe
     this->queue.push_back ({ ctx, fn });
     InterlockedIncrement (&this->remains);
 
-    defer = false; // ignore suggestion for now
-
     if (defer) {
         InterlockedIncrement (&this->deferred);
     } else {
