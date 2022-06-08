@@ -87,6 +87,7 @@ int wmain (int argc, wchar_t ** argw) {
     SetErrorMode (0x8007);
     SetDllDirectoryW (L"");
     RegDisablePredefinedCache ();
+    InitPlatformAPI ();
 
     ULONG heapmode = 2;
     HeapSetInformation (GetProcessHeap (), HeapCompatibilityInformation, &heapmode, sizeof heapmode);
@@ -672,6 +673,8 @@ namespace {
                     coordinator->detached.reject (entry->id);
                     return true;
                 }
+
+                // TODO: check against consensus for single user creating max number of channels/threads per time
 
                 // is any of the apps subscribing to this entry' channel/thread/stream/identity
                 //  - if not, then only distribute it to other connections (that participate in network propagation)
