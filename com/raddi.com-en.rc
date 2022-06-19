@@ -15,7 +15,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | NOTE | 0x12  "proof-of-work complexity level is {1}, required time is {2} ms"
     MAIN | NOTE | 0x13  "proof-of-work complexity level overriden to {1}, required time is {2} ms"
     MAIN | NOTE | 0x14  "proof-of-work on complexity level {1} not found, will try harder or on different seed"
+    // MAIN | NOTE | 0x15  ""
 
+    MAIN | ERROR | 5    "out of memory"
     MAIN | ERROR | 12   "call to {1} failed, error {ERR}"
 
     MAIN | ERROR | 0x10 "argument {1} conversion failed, error {ERR}"
@@ -38,9 +40,14 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 0x21 "invalid offset/length, specification {3}+{4}={5} exceeds size of file {1} which is {2} bytes"
     MAIN | ERROR | 0x22 "channel required"
     MAIN | ERROR | 0x23 "requested benchmark complexity {1} out of supported range {2}...{3}"
+    MAIN | ERROR | 0x24 "requested unknown benchmark threadpool {1}, try: auto, none, system or custom"
+    MAIN | ERROR | 0x25 "unexpected validation failure, result: {1}"
+    MAIN | ERROR | 0x26 "unexpected validation failure, no solution found"
 
     MAIN | STOP  | 0x20 "{1} internal error, validation failed in {2}"
     MAIN | STOP  | 0x21 "database corruption, no proof-of-work in entry {1}"
+
+    MAIN | DATA  | 0x10 "warning: requested benchmark complexity {1} out of regular range {2}...{3}"
 
     MAIN | DATA  | 0x90 "warning: instance {1} is not broadcasting at the moment"
     MAIN | DATA  | 0x91 "warning: no node instance available"

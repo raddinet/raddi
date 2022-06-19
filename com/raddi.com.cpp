@@ -2331,8 +2331,7 @@ bool benchmark (const wchar_t * parameter) {
     auto requested_complexity = std::wcstoul (parameter, nullptr, 0);
     if (requested_complexity) {
         if (requested_complexity > raddi::proof::max_complexity && requested_complexity <= raddi::proof::max_wide_complexity) {
-            // warn
-            printf ("extended\n");
+            raddi::log::data (0x10, requested_complexity, first, last);
         }
 
         if (requested_complexity < first || requested_complexity >  raddi::proof::max_wide_complexity) {
@@ -2347,30 +2346,59 @@ bool benchmark (const wchar_t * parameter) {
     for (auto i = 0u; i != sizeof hash; ++i) {
         hash [i] = (i << 2) ^ i ;
     }
+
+    raddi::proof::options opts;
+    opts.threadpool = raddi::proof::threadpool::automatic;
+
+    if (auto parameter = option (argc, argw, L"threadpool")) {
+        if (!std::wcscmp (parameter, L"auto")) {
+            opts.threadpool = raddi::proof::threadpool::automatic;
+        } else
+        if (!std::wcscmp (parameter, L"none")) {
+            opts.threadpool = raddi::proof::threadpool::none;
+        } else
+        if (!std::wcscmp (parameter, L"system")) {
+            opts.threadpool = raddi::proof::threadpool::system;
+        } else
+        if (!std::wcscmp (parameter, L"custom")) {
+            opts.threadpool = raddi::proof::threadpool::custom;
+        } else {
+            raddi::log::error (0x24, parameter);
+        }
+    }
+
     for (auto complexity = first; (complexity != last + 1) && !quit; ++complexity) {
         printf ("benchmarking complexity %u: ", complexity);
+
+        opts.requirements.complexity = complexity;
+
         try {
             auto t0 = raddi::microtimestamp ();
-            if (auto n = raddi::proof::generate_wide (hash, buffer, sizeof buffer, { complexity, 0 }, &quit)) {
+            if (auto n = raddi::proof::generate (hash, buffer, sizeof buffer, opts, &quit)) {
+
                 printf ("found... %.2fs\n", (raddi::microtimestamp () - t0) / 1000000.0);
+
                 for (auto i = 0u; i != n; ++i) {
                     if (buffer [i] != expected [complexity - raddi::proof::min_complexity] [i]) {
-                        printf ("unexpected validation failure\n");
 
-                        // 
+                        wchar_t result [3 * raddi::proof::max_size + 1];
+
+                        auto offset = 0u;
                         for (auto i = 0u; i != n; ++i) {
-                            printf ("0x%02x, ", buffer [i]);
+                            std::swprintf (&result [offset], 4, L"%02X ", buffer [i]);
+                            offset += 2 + !(i % 4);
                         }
-                        printf ("\n");
+
+                        raddi::log::error (0x25, result);
                         return false;
                     }
                 }
-            } else {
-                printf ("unexpected, not found\n");
-                return false;
-            }
+
+            } else
+                return raddi::log::error (0x26);
+
         } catch (const std::bad_alloc &) {
-            printf ("not enough memory.\n");
+            raddi::log::error (5);
         }
     }
     return true;
