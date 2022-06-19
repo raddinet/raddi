@@ -271,6 +271,8 @@ RADDI.com utility functions/commands:
 		  time it took to generate them
 		- complexity
 			- number; requests to benchmark for only <complexity> complexity
+		- optional parameters:
+			- threadpool - override choice of threadpool to schedule work
 	- deepscan
 		- performs revalidation of the entire database; enumerates all entries
 		  and validates their correctness and verifies their proof-of-work and
@@ -489,6 +491,19 @@ RADDI.com utility additional and optional parameters to functions:
 			  the developers are lazy to re-tune the levels
 		- applies to:
 			- new:identity, new:channel, new:thread, reply
+	- threadpool:<auto|none|system|custom>
+		- overrides threadpool used to run CC PoW benchmark
+		- value: one of predefined strings:
+			- "auto" - default, use the appropriate implementation
+			  current behavior (may change) selects:
+				- "system" pool for complexities 26 and 27
+				- "custom" pool for complexities 28 and above on hardware
+				  with more than 64 hardware threads (logical processors)
+			- "none" - use only single thread, schedule work sequentially
+			- "system" - schedule work through the simplest OS API
+			- "custom" - custom group-spanning core affinity thread pool
+		- applies to:
+			- benchmark
 	- identity:*
 	- identity:<iid>:*
 	- identity:<iid>:<key>
