@@ -415,13 +415,11 @@ LRESULT Window::OnVisualEnvironmentChange () {
         this->tabs.feeds->dark = dark;
 
         if (dark) {
-            if (design.prevalence) {
-                this->tabs.views->style.dark.tab = 0x232221;
-                this->tabs.views->style.dark.inactive = 0x232221;
-            } else {
+            this->tabs.views->style.dark.tab = 0x232221;
+            this->tabs.views->style.dark.inactive = 0x232221;
+            /* if (design.prevalence && winver == 10) {
                 this->tabs.views->style.dark.tab = 0;
-                this->tabs.views->style.dark.inactive = 0x232221;
-            }
+            }*/
             this->tabs.views->style.dark.hot = design.colorization.background;
             this->tabs.views->style.dark.current = design.colorization.background;
 
@@ -433,6 +431,9 @@ LRESULT Window::OnVisualEnvironmentChange () {
 
     EnumChildWindows (this->hWnd, UpdateWindowTreeTheme, (LPARAM) 0);
     SetWindowTheme (this->hToolTip, design.light ? NULL : L"DarkMode_Explorer", NULL);
+
+    ListView_SetBkColor (GetDlgItem (this->hWnd, ID::FILTERS) , design.colorization.background);
+    ListView_SetTextColor (GetDlgItem (this->hWnd, ID::FILTERS), design.colorization.text);
 
     for (const auto & tab : this->tabs.lists->tabs) {
         ListView_SetBkColor (tab.second.content, design.colorization.background);

@@ -167,7 +167,7 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
             if (!design.light) { // dark
                 SetBkColor ((HDC) wParam, design.colorization.background);
                 SetTextColor ((HDC) wParam, design.colorization.text);
-                SetDCBrushColor ((HDC) wParam, 0x232221/* design.colorization.background*/);
+                SetDCBrushColor ((HDC) wParam, design.colorization.background);
                 return (WPARAM) GetStockObject (DC_BRUSH);
             } else
                 break;
@@ -356,8 +356,8 @@ void Window::AssignHint (HWND hCtrl, UINT string) {
 
 LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
     this->hToolTip = CreateWindowEx (WS_EX_NOPARENTNOTIFY, TOOLTIPS_CLASS, L"",
-                                        WS_POPUP | WS_VISIBLE | TTS_NOPREFIX, 0,0,0,0, hWnd,
-                                        NULL, cs->hInstance, NULL);
+                                     WS_POPUP | WS_VISIBLE | TTS_NOPREFIX, 0,0,0,0, hWnd,
+                                     NULL, cs->hInstance, NULL);
     if (this->hToolTip) {
         SendMessage (this->hToolTip, CCM_DPISCALE, TRUE, 0);
         SetWindowPos (this->hToolTip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
