@@ -108,17 +108,17 @@ namespace raddi {
         };
 
         // threadpool
-        //  - 
+        //  - which threadpool to use when parallelizing workload
         //
         enum class threadpool {
             automatic = 0,
             none,   // v0 "cucukoocycle.h" no threadpool
             system, // v1 "threapool.h" QueueUserWorkItem
-            custom, // v2 "threapool2.h" spans groups
+            custom, // v2 "threapool2.h" spans groups, but has higher overhead
         };
 
         // options
-        //  - 
+        //  - cummulative parameter to configure proof generator optional settings
         //
         struct options {
             requirements requirements;

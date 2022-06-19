@@ -205,6 +205,7 @@ std::size_t raddi::proof::generate (crypto_hash_sha512_state state, void * targe
         return false;
 }
 
+/*
 std::size_t raddi::proof::generate_wide (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES],
                                          void * target, std::size_t maximum,
                                          options options, volatile bool * cancel) {
@@ -269,7 +270,7 @@ std::size_t raddi::proof::generate_wide (const std::uint8_t (&hash) [crypto_hash
         default:
             return 0;
     }
-}
+}// */
 
 
 bool raddi::proof::initialize (enum class algorithm a, std::size_t complexity, std::size_t length) {
