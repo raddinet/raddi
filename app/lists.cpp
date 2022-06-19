@@ -70,6 +70,79 @@ ListPart ListView_OnContextMenu (const WindowEnvironment * parent, HWND hListVie
     return ListPart::Canvas;
 }
 
+bool Header_GetItemText (HWND hHeader, int index, wchar_t * buffer, std::size_t length) {
+    HDITEM hdi;
+    hdi.mask = HDI_TEXT;
+    hdi.pszText = buffer;
+    if (length <= MAXINT) {
+        hdi.cchTextMax = (int) length;
+    } else {
+        hdi.cchTextMax = MAXINT;
+    }
+    return Header_GetItem (hHeader, index, &hdi);
+}
+
+LRESULT CALLBACK ListView_CustomHeaderSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
+                                                         UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    if (uIdSubclass) {
+        raddi::log::event (0xA1F0, "ListView_CustomHeaderSubclassProcedure", hWnd, uIdSubclass, dwRefData);
+    }
+    switch (message) {
+        case WM_NOTIFY:
+
+            if (auto nm = reinterpret_cast <NMHDR *> (lParam))
+                switch (nm->code) {
+
+                    case NM_CUSTOMDRAW:
+                        if (auto draw = reinterpret_cast <NMCUSTOMDRAW *> (nm))
+                            switch (draw->dwDrawStage) {
+
+                                case CDDS_PREPAINT:
+                                    return CDRF_NOTIFYITEMDRAW;
+
+                                case CDDS_ITEMPREPAINT:
+                                    auto window = reinterpret_cast <const Window *> (dwRefData);
+                                    auto r = draw->rc;
+
+                                    r.top = r.bottom - 1;
+                                    r.left += 3 * window->dpi / 96;
+                                    r.right -= 4 * window->dpi / 96;
+
+                                    if (!ListView_IsGroupViewEnabled (hWnd)) {
+                                        if (r.left < r.right) {
+                                            if (design.light) {
+                                                FillRect (draw->hdc, &r, GetSysColorBrush (COLOR_3DSHADOW));
+                                            } else {
+                                                FillRect (draw->hdc, &r, GetSysColorBrush (COLOR_3DDKSHADOW));
+                                            }
+                                        }
+                                    }
+                                    if (design.light) {
+                                        SetTextColor (draw->hdc, GetSysColor (COLOR_WINDOWTEXT));
+                                    } else {
+                                        SetTextColor (draw->hdc, 0xFFFFFF);
+                                    }
+
+                                    SetBkMode (draw->hdc, TRANSPARENT);
+
+                                    wchar_t text [256];
+                                    Header_GetItemText (nm->hwndFrom, (int) draw->dwItemSpec, text, 256);
+
+                                    DrawCompositedTextOptions opts;
+                                    opts.theme = GetWindowTheme (hWnd);
+                                    opts.font = window->fonts.text.handle;
+
+                                    r.top = draw->rc.top;
+                                    DrawCompositedText (draw->hdc, text, DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS, r, &opts);
+                                    return CDRF_SKIPDEFAULT;// */
+                            }
+                        break;
+                }
+            break;
+    }
+    return DefSubclassProc (hWnd, message, wParam, lParam);
+}
+
 bool Lists::Load (const Window * parent, TabControlInterface * tc) {
     try {
         auto columns = Lists::Internal::GetColumns ();
@@ -77,7 +150,7 @@ bool Lists::Load (const Window * parent, TabControlInterface * tc) {
         while (database.lists.query.next ()) {
             auto id = database.lists.query.get <int> (0);
 
-            if (auto h = Lists::Internal::Create (parent->hWnd, parent->hToolTip, id, columns)) {
+            if (auto h = Lists::Internal::Create (parent, id, columns)) {
                 tc->tabs [id].text = database.lists.query.get <std::wstring> (1);
                 tc->tabs [id].content = h;
                 tc->tabs [id].close = false;
@@ -133,7 +206,7 @@ bool Lists::Load (const Window * parent, TabControlInterface * tc) {
 }
 
 HWND Lists::Create (const Window * parent, TabControlInterface * tc, std::intptr_t id, const std::wstring & text) {
-    if (auto h = Lists::Internal::Create (parent->hWnd, parent->hToolTip, id, Lists::Internal::GetColumns ())) {
+    if (auto h = Lists::Internal::Create (parent, id, Lists::Internal::GetColumns ())) {
         tc->tabs [id].text = text;
         tc->tabs [id].content = h;
         tc->tabs [id].close = false;
@@ -145,15 +218,18 @@ HWND Lists::Create (const Window * parent, TabControlInterface * tc, std::intptr
         return NULL;
 }
 
-HWND Lists::Internal::Create (HWND hParent, HWND hToolTip, std::intptr_t id, const std::vector <std::wstring> & columns) {
+HWND Lists::Internal::Create (const Window * parent, std::intptr_t id, const std::vector <std::wstring> & columns) {
     static constexpr auto style = WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | LVS_REPORT | LVS_EDITLABELS | LVS_SHAREIMAGELISTS;// | LVS_NOCOLUMNHEADER;
     static constexpr auto extra = LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER;
 
     if (auto h = CreateWindowEx (WS_EX_NOPARENTNOTIFY, WC_LISTVIEW, L"", style,
-                                 0,0,0,0, hParent, (HMENU) (Window::ID::LIST_BASE + id), NULL, NULL)) {
+                                 0,0,0,0, parent->hWnd, (HMENU) (Window::ID::LIST_BASE + id), NULL, NULL)) {
 
+        ListView_SetToolTips (h, parent->hToolTip);
         ListView_SetExtendedListViewStyle (h, extra);
-        ListView_SetToolTips (h, hToolTip);
+
+        SetWindowSubclass (h, ListView_CustomHeaderSubclassProcedure, 1, (DWORD_PTR) parent);
+
         SendMessage (h, WM_SETREDRAW, FALSE, 0);
         SetWindowLongPtr (h, GWLP_USERDATA, (LONG_PTR) id);
 
@@ -167,7 +243,7 @@ HWND Lists::Internal::Create (HWND hParent, HWND hToolTip, std::intptr_t id, con
             column.pszText = const_cast <wchar_t *> (label.c_str ());
             ListView_InsertColumn (h, column.iSubItem++, &column);
         }
-
+        
         return h;
     } else
         return NULL;

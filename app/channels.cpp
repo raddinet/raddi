@@ -58,20 +58,21 @@ namespace {
             return connection.database->channels.get ();
         }
     };
-}
 
-// TODO: on OS where AlphaProc messes header control add LVS_NOCOLUMNHEADER
+}
 
 ListOfChannels::ListOfChannels (const Window * parent, UINT id, Node::table table)
     : hWnd (CreateWindowEx (WS_EX_NOPARENTNOTIFY, WC_LISTVIEW, L"",
                             WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | LVS_REPORT | LVS_EDITLABELS | LVS_SHAREIMAGELISTS | LVS_OWNERDATA,
-                            0, 0, 0, 0, parent->hWnd, ( HMENU) (std::uintptr_t) id, NULL, NULL))
+                            0, 0, 0, 0, parent->hWnd, (HMENU) (std::uintptr_t) id, NULL, NULL))
     , parent (parent)
     , table (table) {
 
     if (this->hWnd) {
         ListView_SetToolTips (this->hWnd, parent->hToolTip);
         ListView_SetExtendedListViewStyle (this->hWnd, LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+
+        SetWindowSubclass (this->hWnd, ListView_CustomHeaderSubclassProcedure, 0, (DWORD_PTR) this->parent);
 
         try {
             LVCOLUMN column;

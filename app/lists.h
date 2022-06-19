@@ -22,6 +22,12 @@ enum class ListPart {
 //
 ListPart ListView_OnContextMenu (const WindowEnvironment * parent, HWND hListView, LONG & x, LONG & y, int * id);
 
+// ListView_CustomHeaderSubclassProcedure
+//  - 
+//  - install with SetWindowSubclass (hListView, ..., 0, (DWORD_PTR) (const Window *) parent);
+//
+LRESULT CALLBACK ListView_CustomHeaderSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
+                                                         UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 // User-defined list of channels are not represented by an object, just HWND with IDs LIST_BASE...LIST_LAST
 
@@ -40,7 +46,7 @@ namespace Lists {
     int InsertEntry (HWND, std::intptr_t id, int group);
 
     namespace Internal {
-        HWND Create (HWND hParent, HWND hToolTip, std::intptr_t id, const std::vector <std::wstring> & columns);
+        HWND Create (const Window * parent, std::intptr_t id, const std::vector <std::wstring> & columns);
         void CreateFinalize (HWND hList);
         std::vector <std::wstring> GetColumns ();
     }
