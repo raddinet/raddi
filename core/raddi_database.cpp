@@ -100,7 +100,7 @@ raddi::db::statistics raddi::db::stats () const {
     return s;
 }
 
-raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, root * top, assessed_level * level) {
+raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, _Out_ root * top, _Out_ assessed_level * level) {
     const auto entry = static_cast <const raddi::entry *> (data);
     const auto type = entry->is_announcement ();
 
@@ -125,13 +125,36 @@ raddi::db::assessment raddi::db::assess (const void * data, std::size_t size, ro
             if (!this->identities->get (entry->id.identity, read::content,
                                         &author, nullptr, sizeof (identity::public_key))) {
 
-                this->report (log::level::data, 5, entry->id.serialize ());
+                this->report (log::level::data, 3, entry->id.serialize ());
                 return raddi::db::rejected;
             }
 
             // verify it's signed by that author
 
             if (!entry->verify (size, author.public_key)) {
+
+                this->report (log::level::data, 4, entry->id.serialize ());
+                return raddi::db::rejected;
+            }
+            break;
+    }
+
+    // verify that 'identity' and 'channel' announcement is plain line of text
+    //  - that means no control data (like upvote or attachment), international characters (full unicode) are still allowed
+
+    switch (type) {
+        case raddi::entry::new_identity_announcement:
+            if (!raddi::content::is_plain_line (entry->content () + raddi::identity::overhead_size,
+                                                size - sizeof (raddi::entry) - raddi::identity::overhead_size)) {
+
+                this->report (log::level::data, 5, entry->id.serialize ());
+                return raddi::db::rejected;
+            }
+            break;
+
+        case raddi::entry::new_channel_announcement:
+            if (!raddi::content::is_plain_line (entry->content (),
+                                               size - sizeof (raddi::entry))) {
 
                 this->report (log::level::data, 6, entry->id.serialize ());
                 return raddi::db::rejected;

@@ -26,8 +26,10 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     DATABASE | EVENT | 13   "shard split into {1:x} and {2:x} containing {3} and {4} entries respectively, {5} lost"
 
     DATABASE | DATA | 2     "rejected identity {1} announcement, signature(s) did not verify"
-    DATABASE | DATA | 5     "rejected entry {1}, unknown author"
-    DATABASE | DATA | 6     "rejected entry {1} does not verify against author's public key"
+    DATABASE | DATA | 3     "rejected entry {1}, unknown author"
+    DATABASE | DATA | 4     "rejected entry {1} does not verify against author's public key"
+    DATABASE | DATA | 5     "rejected entry {1} identity name invalid" // not a plain line
+    DATABASE | DATA | 6     "rejected entry {1} channel name invalid" // not a plain line
     DATABASE | DATA | 8     "rejected entry {1} reinsertion, does not match previous ({2}, {3})"
 
     DATABASE | DATA | 0x10  "rejected entry {1}, malformed, timestamp {2} older than parent's {3}"

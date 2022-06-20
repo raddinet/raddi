@@ -1,8 +1,6 @@
 TODO
 ====
 
-allow only plain text in identities/channels names
-
 accept all data from core nodes (don't consider old)
 
 (go through all reddit comments on raddi for ideas I've already forgot)
