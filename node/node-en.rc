@@ -78,6 +78,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 9    "entry {1} erase failed, no such entry or database failure"
     MAIN | ERROR | 10   "failed to initialize system facility, error {ERR}"
     MAIN | ERROR | 11   "HW support for {1} encryption scheme is not available, reverting to default {2}"
+    MAIN | ERROR | 12   "call to {1} failed, error {ERR}"
     MAIN | ERROR | 0x20 "bootstrap: failed to parse URL {1}, error {ERR}"
     MAIN | ERROR | 0x21 "bootstrap: failed to prepare request to {1}:{2}, error {ERR}"
     MAIN | ERROR | 0x22 "bootstrap: failed to prepare request to {1}:{2}{3}, error {ERR}"
