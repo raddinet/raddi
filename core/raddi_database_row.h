@@ -236,14 +236,14 @@ public:
 //  - internal parameter, actually a bitmask (would be nice to benefit from it though)
 //
 enum class raddi::db::read : unsigned int {
-    nothing = 0,
-    identification = 1,
-    verification = 2,
-    identification_and_verification = 3,
-    content = 4,
-    identification_and_content = 5,
-    verification_and_content = 6,
-    everything = 7
+    nothing                         = 0b000,
+    identification                  = 0b001,
+    verification                    = 0b010,
+    identification_and_verification = 0b011,
+    content                         = 0b100,
+    identification_and_content      = 0b101,
+    verification_and_content        = 0b110,
+    everything                      = 0b111
 };
 
 #endif
