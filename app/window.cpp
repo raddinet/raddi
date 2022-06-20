@@ -750,11 +750,20 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
             break;
 
         // Rename List
-        case 0xA3:
-            if (this->tabs.lists->contextual > 0) {
+        case 0xA3: {
+            std::intptr_t i = 0;
+            switch (notification) {
+                case 0: // menu item (mouse click)
+                    i = this->tabs.lists->contextual;
+                    break;
+                case 1: // accelerator (F2 on focus)
+                    i = tabs.lists->current;
+                    break;
+            }
 
-                finish.list = (int) this->tabs.lists->contextual;
-                finish.text = this->tabs.lists->tabs [this->tabs.lists->contextual].text;
+            if (i > 0) {
+                finish.list = (int) i;
+                finish.text = this->tabs.lists->tabs [i].text;
 
                 if (EditDialogBox (hWnd, 0x65,
                                    GetDlgItem (hWnd, ID::TABS_LISTS), { metrics [SM_CXICON], metrics [SM_CYICON] },
@@ -763,8 +772,10 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
                     database.lists.rename (finish.text, finish.list);
                     FinishCommandInAllWindows (command);
                 }
+            } else {
+                MessageBeep (MB_ICONASTERISK);
             }
-            break;
+        } break;
 
         // Delete List
         case 0xAD:
@@ -954,6 +965,10 @@ LRESULT Window::OnCommand (UINT notification, UINT command, HWND control) {
                                 }
                             }
                         }
+                        break;
+
+                    case ID::TABS_LISTS:
+                        this->OnCommand (1, 0xA3, hFocus);
                         break;
 
                     case ID::LIST_CHANNELS:

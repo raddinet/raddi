@@ -151,7 +151,7 @@ STRINGTABLE {
         MENUITEM L"\x200C&New List…", 0xA1
         MENUITEM SEPARATOR
         //MENUITEM "Duplicate", 0xA2
-        MENUITEM "&Rename…", 0xA3
+        MENUITEM "&Rename…\tF2", 0xA3
         //POPUP "Merge to" {
         //    MENUITEM "TODO: List of other Lists", -1
         //}
