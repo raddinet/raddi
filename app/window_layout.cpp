@@ -16,6 +16,7 @@
 #include "feed.h"
 #include "data.h"
 #include "../common/errorbox.h"
+#include "../common/textscale.h"
 #include "editbox.h"
 #include "../common/node.h"
 #include "resolver.h"
@@ -27,6 +28,7 @@ extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 extern Design design;
 extern Cursors cursor;
+extern TextScale scale;
 
 namespace {
     ATOM atomCOMBOBOX = 0;
@@ -351,14 +353,14 @@ LRESULT Window::OnVisualEnvironmentChange () {
     auto dpiNULL = GetDPI (NULL);
     auto hTheme = OpenThemeData (hWnd, L"TEXTSTYLE");
 
-    this->fonts.text.Update (hTheme, dpi, dpiNULL, TMT_MSGBOXFONT);
+    this->fonts.text.Update (hTheme, dpi, dpiNULL, TMT_MSGBOXFONT, nullptr, scale.current, 100);
     this->fonts.tabs.Update (hTheme, dpi, dpiNULL, TMT_CAPTIONFONT);
     this->fonts.tiny.Update (hTheme, dpi, dpiNULL, TMT_MENUFONT, L"Calibri", 7, 8);
 
     this->fonts.italic.make_italic = true;
-    this->fonts.italic.Update (hTheme, dpi, dpiNULL, TMT_MSGBOXFONT);
+    this->fonts.italic.Update (hTheme, dpi, dpiNULL, TMT_MSGBOXFONT, nullptr, scale.current, 100);
     this->fonts.underlined.make_underlined = true;
-    this->fonts.underlined.Update (hTheme, dpi, dpiNULL, TMT_MSGBOXFONT);
+    this->fonts.underlined.Update (hTheme, dpi, dpiNULL, TMT_MSGBOXFONT, nullptr, scale.current, 100);
 
     // TODO: Wingdings for some
 

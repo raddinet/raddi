@@ -178,6 +178,9 @@
     <ClCompile Include="..\common\winver.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\textscale.cpp">
+      <Filter>Window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app-en.rc">
@@ -367,6 +370,9 @@
     </ClInclude>
     <ClInclude Include="..\common\winver.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\textscale.h">
+      <Filter>Window</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

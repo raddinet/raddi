@@ -564,6 +564,7 @@
     <ClCompile Include="..\common\log.cpp" />
     <ClCompile Include="..\common\node.cpp" />
     <ClCompile Include="..\common\platform.cpp" />
+    <ClCompile Include="..\common\textscale.cpp" />
     <ClCompile Include="..\common\uuid.cpp" />
     <ClCompile Include="..\common\window_environment.cpp" />
     <ClCompile Include="..\common\winver.cpp" />
@@ -637,6 +638,7 @@
     <ClInclude Include="..\common\node.h" />
     <ClInclude Include="..\common\options.h" />
     <ClInclude Include="..\common\platform.h" />
+    <ClInclude Include="..\common\textscale.h" />
     <ClInclude Include="..\common\uuid.h" />
     <ClInclude Include="..\common\window_environment.h" />
     <ClInclude Include="..\common\winver.h" />

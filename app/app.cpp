@@ -27,6 +27,7 @@
 #include "../core/raddi_defaults.h"
 
 #include "../common/errorbox.h"
+#include "../common/textscale.h"
 #include "searchbox.h"
 #include "window.h"
 #include "menus.h"
@@ -50,6 +51,7 @@ Resolver resolver;
 
 Design design;
 Cursors cursor;
+TextScale scale;
 
 alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/0";
 
@@ -211,8 +213,17 @@ namespace {
 
         InitializeMenus (hInstance);
         InitializeSearchBox (hInstance);
-
         InitializeWindowLayoutGlobals ();
+
+        if (scale.Initialize ()) {
+            HANDLE hThreadPoolWait = NULL;
+            RegisterWaitForSingleObject (&hThreadPoolWait, scale.hEvent,
+                                         [] (PVOID, BOOLEAN) {
+                                            if (scale.OnEvent ()) {
+                                                PostMessage (NULL, WM_APP_GUI_THEME_CHANGE, 0, 0);
+                                            }
+                                         }, NULL, INFINITE, 0);
+        }
 
         switch (CoInitializeEx (NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE | COINIT_SPEED_OVER_MEMORY)) {
             case S_OK:
