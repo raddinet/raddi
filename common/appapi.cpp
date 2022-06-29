@@ -175,8 +175,7 @@ std::wstring GetDlgItemString (HWND hWnd, UINT id) {
 }
 
 LRESULT ReportOutOfMemory (HWND hParent, HWND hControl, UINT idControl) {
-    // TODO: create global app custom extension (NMOUTOFMEMORY) to pass where actually this happened
-    NMHDR nm = { hControl, (UINT) idControl, (UINT) NM_OUTOFMEMORY };
+    NMOUTOFMEMORY nm = { { hControl, (UINT) idControl, 1, (UINT) NM_OUTOFMEMORY } };
     return SendMessage (hParent, WM_NOTIFY, idControl, (LPARAM) &nm);
 }
 
@@ -324,7 +323,7 @@ HRESULT DrawCompositedText (HDC hDC, std::wstring_view string, DWORD format, REC
                             }
                             DeleteDC (hShadowDC);
                         }
-                    
+
 
 
                         // TODO: draw into separate dib
@@ -520,17 +519,19 @@ void Design::update () {
 
     if (winver < 11) {
         this->override.outline = false;
-        this->override.acrylic = false;
+        this->override.backdrop = DWMSBT_NONE;
     }
-    if (winbuild >= 22543) {
-        this->override.acrylic = false;
-    }// */
 
     this->composited = compositionEnabled;
     this->nice = (this->composited || (IsAppThemed () && (winver >= 6)));
     
+    if (!this->composited) {
+        this->override.outline = false;
+        this->override.backdrop = DWMSBT_NONE;
+    }
+
     this->may_need_fix_alpha = ((winver >= 6) && (winver < 10)) || (winver >= 11);
-    this->fix_alpha = (this->composited && (winver < 10)) || this->override.acrylic;
+    this->fix_alpha = (this->composited && (winver < 10)) || (this->override.backdrop != DWMSBT_NONE);
 
     if (ptrDwmGetColorizationColor) {
         BOOL opaque = TRUE;
@@ -581,7 +582,7 @@ void Design::update () {
         this->colorization.active = GetSysColor (COLOR_ACTIVECAPTION);
         this->colorization.inactive = GetSysColor (COLOR_INACTIVECAPTION);
         this->override.outline = false;
-        this->override.acrylic = false;
+        this->override.backdrop = DWMSBT_NONE;
     } else
     if (winver >= 10) {
         this->light = true;
@@ -612,14 +613,14 @@ void Design::update () {
                 this->colorization.active = this->colorization.accent;
             } else {
                 if (this->light) {
-                    this->colorization.active = GetSysColor (COLOR_WINDOW); // 0xFFFFFF;
+                    this->colorization.active = GetSysColor (COLOR_WINDOW);
                 } else {
                     this->colorization.active = 0x000000;
                 }
             }
 
             if (this->light) {
-                this->colorization.inactive = GetSysColor (COLOR_WINDOW); // 0xFFFFFF;
+                this->colorization.inactive = GetSysColor (COLOR_WINDOW);
             } else {
                 this->colorization.inactive = 0x2B2B2B; // TODO: retrieve from theme, now hardcoded to match Win10 1809
             }

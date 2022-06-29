@@ -100,7 +100,7 @@ struct Design {
 
     struct {
         bool outline = true; // Windows 11, outline only
-        bool acrylic = true; // Windows 11, acrylic/mica background, experimental (same issues as Vista glass)
+        DWM_SYSTEMBACKDROP_TYPE backdrop = DWMSBT_TABBEDWINDOW; // Windows 11, acrylic/mica background, experimental (same issues as Vista glass)
         DWM_WINDOW_CORNER_PREFERENCE corners = DWMWCP_DEFAULT; // Windows 11
     } override;
 

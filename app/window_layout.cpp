@@ -90,6 +90,12 @@ const MARGINS * Window::GetDwmMargins () {
             margins.cyBottomHeight = minimum.statusbar.cy + 2;
         }
     }
+    if ((design.override.backdrop != DWMSBT_NONE) && (winbuild >= 22543)) {
+        margins.cxLeftWidth = dividers.left;
+        margins.cxRightWidth = dividers.right + 1;
+        margins.cyBottomHeight = minimum.statusbar.cy + 2;
+    }
+
     return &margins;
 }
 
@@ -268,7 +274,7 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
             }
         }
 
-        if (design.composited && design.override.acrylic) {
+        if (design.composited && (design.override.backdrop != DWMSBT_NONE) && (winbuild < 22543)) {
             AccentPolicy policy = { 4, 0x01E0, 0xAA232221 /* 0x7FFFAA00 */, 0 };
             if (design.light) {
                 policy.gradient = 0xCCE5E5E5;
@@ -371,23 +377,17 @@ LRESULT Window::OnVisualEnvironmentChange () {
     if (ptrAllowDarkModeForWindow) {
         ptrAllowDarkModeForWindow (hWnd, true);
 
-        /*if (ptrDwmEnableBlurBehindWindow) {
-            DWM_BLURBEHIND bb = { DWM_BB_ENABLE, TRUE, NULL, FALSE };
-            ptrDwmEnableBlurBehindWindow (hWnd, &bb);
-        }// */
-
         if (winver >= 11) {
-            /*if (design.override.acrylic && winbuild >= 22543) {
-                BOOL bTrue = TRUE;
-                ptrDwmSetWindowAttribute (hWnd, DWMWA_USE_HOSTBACKDROPBRUSH, &bTrue, sizeof bTrue);
-
-                DWORD dwType = DWMSBT_TABBEDWINDOW;
-                ptrDwmSetWindowAttribute (hWnd, DWMWA_SYSTEMBACKDROP_TYPE, &dwType, sizeof dwType);
-            }// */
+            if ((design.override.backdrop != DWMSBT_NONE) && (winbuild >= 22543)) {
+                ptrDwmSetWindowAttribute (hWnd, DWMWA_SYSTEMBACKDROP_TYPE, &design.override.backdrop, sizeof design.override.backdrop);
+            }
 
             if (design.override.outline) {
                 COLORREF clr = design.colorization.inactive;
-                if (design.override.acrylic) {
+                if ((design.override.backdrop != DWMSBT_NONE) && (winver >= 11)) {
+                    if (winbuild >= 22543) {
+                        clr = DWMWA_COLOR_NONE;
+                    } else
                     if (design.light) {
                         clr = 0x00FFFFFF;
                     } else {
@@ -456,7 +456,7 @@ LRESULT Window::OnVisualEnvironmentChange () {
                         }, (LPARAM) this->fonts.tabs.handle);
 
     SendMessage (this->hToolTip, WM_SETFONT, (WPARAM) this->fonts.text.handle, 0);
-    SendDlgItemMessage (hWnd, ID::IDENTITIES, WM_SETFONT, (WPARAM) this->fonts.tabs.handle, 0);
+    SendDlgItemMessage (hWnd, ID::IDENTITIES, WM_SETFONT, (WPARAM) this->fonts.text.handle, 0);
     SendDlgItemMessage (hWnd, ID::FILTERS, WM_SETFONT, (WPARAM) this->fonts.tabs.handle, 0);
 
     for (const auto & tab : this->tabs.lists->tabs) {
@@ -712,7 +712,7 @@ void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fro
 
         IntersectRect (&face, &face, rcClip);
 
-        if (design.override.acrylic) {
+        if (design.override.backdrop != DWMSBT_NONE) {
             FillRect (hDC, &face, transparent);
         } else {
             if (this->active && !design.override.outline) {
@@ -728,7 +728,7 @@ void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fro
         //    painting transparent, so as temporary fix I use the outline color of tabs which
         //    draws them not-rounded again; TODO: fix
 
-        if (design.override.acrylic) {
+        if (design.override.backdrop != DWMSBT_NONE) {
             if (design.light) {
                 SetDCBrushColor (hDC, 0x00E5E5E5);
             } else {
@@ -828,8 +828,8 @@ void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fro
         Rectangle (hDC, rPaneClip.left, rPaneClip.top, rPaneClip.right, rPaneClip.bottom + 1);
 
         Rectangle (hDC, rList.left, rList.top, rList.right, rList.bottom);
-        Rectangle (hDC, rFeeds.left, rFeeds.top, rFeeds.right, rFeeds.bottom);
-        Rectangle (hDC, rFilters.left, rFilters.top, rFilters.right, rFilters.bottom);
+        Rectangle (hDC, rFeeds.left, rFeeds.top, rFeeds.right - 2, rFeeds.bottom);
+        Rectangle (hDC, rFilters.left, rFilters.top, rFilters.right - 2, rFilters.bottom);
 
     } else
     if (HANDLE hTheme = OpenThemeData (hWnd, VSCLASS_TAB)) {
@@ -937,7 +937,7 @@ RECT Window::GetRightPane (const RECT * client, const RECT & rListTabs) {
 RECT Window::GetFiltersRect (const RECT * rcArea, const RECT & rRightPane) {
     RECT r = *rcArea;
     r.bottom = r.top + LONG (dividers.feeds);
-    r.top += rRightPane.top + this->tabs.views->minimum.cy - 1 + metrics [SM_CYFRAME];
+    r.top += rRightPane.top + /*this->tabs.views->minimum.cy*/ this->fonts.text.height + 4 * this->metrics [SM_CYFIXEDFRAME] - 1 + metrics [SM_CYFRAME];
     r.left += rRightPane.left;
     r.right = r.left + rRightPane.right;
     if (design.nice && !design.contrast) {
