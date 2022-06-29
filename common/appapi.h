@@ -22,6 +22,21 @@ bool IsLastWindow (HWND hWnd);
 bool IsColorDark (COLORREF color);
 bool IsWindowClass (HWND hWnd, std::wstring_view name);
 
+typedef struct tagNMHDRCOOKIE {
+    HWND      hwndFrom;
+    UINT_PTR  idFrom : (8 * sizeof (UINT_PTR) - 1);
+    UINT_PTR  cookie : 1; // since idFrom from Comctl32 are 16-bit, we have upper 16..48 bits to play with
+    UINT      code;
+    // UINT      cookie; // it's not safe to reuse the padding, that's available only on 64-bit
+} NMHDRCOOKIE;
+
+struct NMOUTOFMEMORY {
+    NMHDRCOOKIE hdr;
+    // TODO: global app custom extension (NMOUTOFMEMORY) to pass where actually this happened
+
+    static_assert (sizeof (NMHDR) == sizeof (NMHDRCOOKIE));
+};
+
 LRESULT ReportOutOfMemory (HWND hControl);
 LRESULT ReportOutOfMemory (HWND hParent, UINT control);
 LRESULT ReportOutOfMemory (HWND hParent, HWND hControl, UINT idControl);
