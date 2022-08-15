@@ -1,11 +1,21 @@
 #ifndef RADDI_DATABASE_SHARD_TCC
 #define RADDI_DATABASE_SHARD_TCC
 
+#include "raddi_database_shard.h"
+
 template <typename Key>
-std::wstring raddi::db::shard <Key>::path (const db::table <Key> * table, const wchar_t * suffix) const {
+std::wstring raddi::db::shard <Key>::path (const db::table <Key> * table, stream stream) const {
+    const wchar_t * suffix;
+    switch (stream) {
+        case stream::index: suffix = L"i"; break;
+        case stream::content: suffix = L"d"; break;
+        case stream::index_log: suffix = L"i~"; break; //  + std::to_wstring (raddi::microtimestamp ());
+        case stream::content_log: suffix = L"d~"; break; //  + std::to_wstring (raddi::microtimestamp ());
+    }
+
     wchar_t filename [32768];
     _snwprintf (filename, (sizeof filename / sizeof filename [0]) - 256,
-                L"%s\\%s\\%08x%s",
+                L"%s\\%s\\%08x.%s",
                 table->db.path.c_str (), table->name.c_str (), this->base, suffix);
     return filename;
 }
@@ -143,24 +153,26 @@ bool raddi::db::shard <Key>::unsynchronized_advance (const db::table <Key> * tab
     }
 
     if (this->index.closed ()) {
-        if (this->index.open (this->path (table), open, table->db.mode, share, file::buffer::sequential)) {
+        auto path = this->path (table, stream::index);
+        if (this->index.open (path, open, table->db.mode, share, file::buffer::sequential)) {
             if ((open == file::mode::always) && this->index.created ()) {
-                this->report (log::level::event, 12, this->path (table));
+                this->report (log::level::event, 12, path);
             } else {
-                this->report (log::level::note, 12, this->path (table));
+                this->report (log::level::note, 12, path);
             }
             opened = true;
         } else {
-            this->report (log::level::error, 11, this->path (table), table->db.mode, share);
+            this->report (log::level::error, 11, path, table->db.mode, share);
             return false;
         }
     }
 
     if (this->content.closed ()) {
-        if (this->content.open (this->path (table, L"d"), open, table->db.mode, share, file::buffer::random)) {
+        auto path = this->path (table, stream::content);
+        if (this->content.open (path, open, table->db.mode, share, file::buffer::random)) {
             this->content.tail ();
         } else {
-            this->report (log::level::error, 12, this->path (table, L"d"), table->db.mode, share);
+            this->report (log::level::error, 12, path, table->db.mode, share);
             this->index.close ();
             return false;
         }
@@ -351,7 +363,7 @@ bool raddi::db::shard <Key>::erase (const db::table <Key> * table, const decltyp
             if (thorough) {
                 const auto length = ii->data.length + sizeof (raddi::entry::signature);
                 if (!this->content.zero (ii->data.offset, length)) {
-                    this->report (log::level::error, 19, this->path (table, L"d"), ii->data.offset, length);
+                    this->report (log::level::error, 19, this->path (table, stream::content), ii->data.offset, length);
                 }
             }
 
@@ -498,13 +510,12 @@ raddi::db::shard <Key> raddi::db::shard <Key>::split (const db::table <Key> * ta
     exclusive guard (this->lock);
     this->report (log::level::note, 15, timestamp);
 
-    const auto suffix = L"d~" + std::to_wstring (raddi::microtimestamp ());
-    const auto tmp_index_filename = this->path (table, suffix.c_str () + 1);
-    const auto tmp_content_filename = this->path (table, suffix.c_str () + 0);
+    const auto tmp_index_filename = this->path (table, stream::index_log);
+    const auto tmp_content_filename = this->path (table, stream::content_log);
 
     if (this->unsynchronized_advance (table)
-        && MoveFileEx (this->path (table).c_str (), tmp_index_filename.c_str (), MOVEFILE_REPLACE_EXISTING)
-        && MoveFileEx (this->path (table, L"d").c_str (), tmp_content_filename.c_str (), MOVEFILE_REPLACE_EXISTING)) {
+        && MoveFileEx (this->path (table, stream::index).c_str (), tmp_index_filename.c_str (), MOVEFILE_REPLACE_EXISTING)
+        && MoveFileEx (this->path (table, stream::content).c_str (), tmp_content_filename.c_str (), MOVEFILE_REPLACE_EXISTING)) {
 
         // TODO: this and remaining probably use the same data file
 

@@ -129,7 +129,14 @@ public:
     friend bool operator < (const std::uint32_t & a, const shard & b) { return a < b.base; }
 
 private:
-    std::wstring path (const db::table <Key> *, const wchar_t * suffix = L"") const;
+    enum class stream {
+        index,
+        content,
+        index_log,
+        content_log,
+    };
+
+    std::wstring path (const db::table <Key> *, stream stream = stream::index) const;
 
     void unsynchronized_close ();
     bool unsynchronized_advance (const db::table <Key> *);
