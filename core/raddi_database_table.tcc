@@ -1,6 +1,7 @@
 #ifndef RADDI_DATABASE_TABLE_TCC
 #define RADDI_DATABASE_TABLE_TCC
 
+#include "raddi_database_table.h"
 #include "../common/directory.h"
 
 template <typename Key>
@@ -20,12 +21,12 @@ bool raddi::db::table <Key>::reload () {
                 auto callback = [&timestamps] (const wchar_t * filename) {
                     wchar_t * tail = nullptr;
                     auto timestamp = std::wcstoul (filename, &tail, 16);
-                    if ((tail == &filename [8]) && (filename [8] == L'\0')) {
+                    if ((tail == &filename [8]) && (filename [8] == L'.')) {
                         timestamps.push_back (timestamp);
                     }
                 };
 
-                if (::directory ((this->db.table_directory_path (this->name) + L"????????").c_str ()) (callback)) {
+                if (::directory ((this->db.table_directory_path (this->name) + L"????????.i").c_str ()) (callback)) {
                     std::sort (timestamps.begin (), timestamps.end ());
 
                     exclusive guard (this->lock);
