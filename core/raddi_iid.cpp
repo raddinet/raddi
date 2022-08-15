@@ -2,7 +2,7 @@
 #include <cstdio>
 
 std::size_t raddi::iid::serialize (wchar_t * buffer, std::size_t size) const {
-    auto n = std::swprintf (buffer, size, L"%08x%x", this->nonce, this->timestamp);
+    auto n = std::swprintf (buffer, size, L"%08x%08x", this->nonce, this->timestamp);
     if ((n >= iid::min_length) && (n <= iid::max_length))
         return n;
     else

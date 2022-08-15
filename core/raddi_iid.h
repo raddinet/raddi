@@ -60,6 +60,15 @@ namespace raddi {
         static constexpr auto max_length = 2 * sizeof (nonce) + 2 * sizeof (timestamp);
     };
 
+    // translate
+    //  - for passing IID as a log function parameter
+    //
+    inline std::wstring translate (const iid & identity, const std::wstring &) {
+        return identity.serialize ();
+    }
+
+    // general comparison operators
+
     inline bool operator == (const iid & a, const iid & b) {
         return a.timestamp == b.timestamp
             && a.nonce == b.nonce;
