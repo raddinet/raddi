@@ -94,7 +94,7 @@ bool Data::locate_and_open () {
 bool Data::open_data_file (const wchar_t * filename, bool create_separated_if_new) {
     if (this->open (filename)) {
 
-        auto lockname = std::wstring (filename) + L".lock";
+        auto lockname = std::wstring (filename) + L".lck";
         if (this->lock.open (lockname, file::mode::create, file::access::write, file::share::read)) {
             this->lock.write (GetCurrentThreadId ());
             this->lock.write (GetCurrentProcessId ());
