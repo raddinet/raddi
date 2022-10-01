@@ -834,6 +834,11 @@ namespace {
         const auto onexit = report_service_stopped ();
         const auto scope = scope_from_status ();
 
+        if (argc < 2) {
+            argc = __argc;
+            argw = __wargv;
+        }
+
         raddi::log::display (option (argc, argw, L"display"));
         raddi::log::initialize (option (argc, argw, L"log"), raddi::defaults::log_subdir, L"node", scope);
 
