@@ -95,13 +95,21 @@ struct Design {
     bool prevalence = true;
     bool contrast = false;
 
-    bool may_need_fix_alpha = true; // TODO: Vista, 7 or 11
+    bool may_need_fix_alpha = true; // TODO: Vista, 7 or 11+
     bool fix_alpha = false; // need to fix alpha on glass
 
     struct {
-        bool outline = true; // Windows 11, outline only
-        DWM_SYSTEMBACKDROP_TYPE backdrop = DWMSBT_TABBEDWINDOW; // Windows 11, acrylic/mica background, experimental (same issues as Vista glass)
-        DWM_WINDOW_CORNER_PREFERENCE corners = DWMWCP_DEFAULT; // Windows 11
+        bool outline = true; // Windows 11, outline only, instead of fully colorized titlebar
+
+        // backdrop on Windows 11 22000 will attempt to render with acrylic backdrop
+        // backdrop on Windows 11 22500+
+        //  - DWMSBT_AUTO - will not render background, fully transparent, not supported by our background renderer
+        //  - DWMSBT_MAINWINDOW - mica background
+        //  - DWMSBT_TABBEDWINDOW - strong mica background
+        //  - DWMSBT_TRANSIENTWINDOW - acrylic backdrop, not currently supported by our background renderer
+        //
+        DWM_SYSTEMBACKDROP_TYPE backdrop = DWMSBT_TABBEDWINDOW;
+        DWM_WINDOW_CORNER_PREFERENCE corners = DWMWCP_DEFAULT; // Windows 11 rounded corners mode
     } override;
 
     struct {
