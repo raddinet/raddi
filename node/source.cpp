@@ -1,5 +1,8 @@
 #include "source.h"
+#include <sddl.h>
 #include <set>
+
+#pragma warning (disable:6262) // stack usage warning
 
 SourceState::SourceState (const wchar_t * path, const wchar_t * nonce) {
     wchar_t temp [32768];
@@ -34,7 +37,20 @@ SourceState::SourceState (const wchar_t * path, const wchar_t * nonce) {
                 std::wcscat (temp, nonce);
                 std::wcscat (temp, L"\\");
 
-                if (CreateDirectory (temp, NULL)) {
+                SECURITY_ATTRIBUTES sa = {
+                    sizeof (SECURITY_ATTRIBUTES), NULL, FALSE
+                };
+                ConvertStringSecurityDescriptorToSecurityDescriptor (
+                    L"D:" // Discretionary
+                        // "(D;OICI;GA;;;BG)"  // Deny access to built-in guests
+                        // "(D;OICI;GA;;;AN)"  // Deny access to anonymous logon
+                        "(A;OICI;GW;;;AU)"  // Allow write access to authenticated users
+                        // "(A;OICI;GRGWGX;;;AU)" // Allow read/write/execute access to authenticated users
+                        "(A;OICI;GA;;;BA)"  // Allow full control to administrators
+                        //"(A;NP;GRGWGXFA;;;SY)"  // Allow full control to SYSTEM
+                    , SDDL_REVISION_1, &sa.lpSecurityDescriptor, NULL);
+
+                if (CreateDirectory (temp, &sa)) {
                     this->created = true;
                 } else {
                     if (GetLastError () != ERROR_ALREADY_EXISTS) {
@@ -42,6 +58,9 @@ SourceState::SourceState (const wchar_t * path, const wchar_t * nonce) {
                         return;
                     }
                 }
+
+                // LocalFree (sa.lpSecurityDescriptor);
+
                 this->handle = CreateFile (temp, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
                                            NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_BACKUP_SEMANTICS,
                                            NULL);
