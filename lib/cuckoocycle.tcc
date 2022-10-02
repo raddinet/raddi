@@ -1,6 +1,8 @@
 #ifndef CUCKOOCYCLE_TCC
 #define CUCKOOCYCLE_TCC
 
+#include "cuckoocycle.h"
+
 // hash
 
 template <unsigned N1, unsigned N2>
@@ -312,13 +314,15 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::recordedge (uns
     auto vyz = this->buckets [(v1 >> Z2BITS) & YMASK] [vx].renamev1 [v1 & Z2MASK];
 
     if (COMPRESSROUND > 0) {
-        uyz = this->buckets [ux] [uyz >> Z1BITS].renameu [uyz & Z1MASK];
-        vyz = this->buckets [vyz >> Z1BITS] [vx].renamev [vyz & Z1MASK];
+        uyz = this->buckets [ux] [(uyz >> Z1BITS) & YMASK].renameu [uyz & Z1MASK];
+        vyz = this->buckets [(vyz >> Z1BITS) & XMASK] [vx].renamev [vyz & Z1MASK];
     }
 
-    this->cycleus [i] = (ux << YZBITS) | uyz;
-    this->cyclevs [i] = (vx << YZBITS) | vyz;
-    this->uxymap [std::size_t (this->cycleus [i] >> ZBITS)] = 1;
+    if (i < MAXPATHLEN) {
+        this->cycleus [i] = (ux << YZBITS) | uyz;
+        this->cyclevs [i] = (vx << YZBITS) | vyz;
+        this->uxymap [std::size_t (this->cycleus [i] >> ZBITS)] = 1;
+    }
 }
 
 template <unsigned Complexity, typename Generator, template <typename> class ThreadPoolControl>
@@ -440,6 +444,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::genVnode
 
             auto zs = this->z;
             auto edges0 = this->edge;
+            auto edgesE = &this->edge [NTRIMMEDZ];
             auto edges = edges0;
             auto edge = 0u;
 
@@ -454,6 +459,9 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::genVnode
                 if (this->deg [z]) {
                     ++edges;
                     ++zs;
+
+                    if (edges >= edgesE)
+                        break;
                 }
             }
 
@@ -566,10 +574,12 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimEdge
                 auto e = *(std::uint64_t *) rdsmall & DSTSLOTMASK;
                 ux += ((std::uint32_t) (e >> YZZBITS) - ux) & DSTPREFMASK;
 
-                *(std::uint64_t *) (this->solver->base + destination.index [ux]) = vy34 | ((e & ZMASK) << YZBITS) | ((e >> ZBITS) & YZMASK);
+                if (ux < NX) {
+                    *(std::uint64_t *) (this->solver->base + destination.index [ux]) = vy34 | ((e & ZMASK) << YZBITS) | ((e >> ZBITS) & YZMASK);
 
-                if (this->deg [e & ZMASK]) {
-                    destination.index [ux] += DSTSIZE;
+                    if (this->deg [e & ZMASK]) {
+                        destination.index [ux] += DSTSIZE;
+                    }
                 }
             }
         }
@@ -821,7 +831,7 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimRena
                 }
             }
         }
-                    
+
         if (maxnnid < newnodeid) {
             maxnnid = newnodeid;
         }
