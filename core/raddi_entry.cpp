@@ -149,10 +149,11 @@ std::size_t raddi::entry::sign (std::size_t size,
         
         raddi::proof::options options;
         options.requirements = rq;
+        options.parameters.cancel = cancel;
 
         if (auto proof_size = raddi::proof::generate (imprint.hs,
                                                       proof_ptr, entry::max_content_size - size,
-                                                      options, cancel)) {
+                                                      options)) {
 
             crypto_sign_ed25519ph_update (&imprint, proof_ptr, proof_size);
             if (crypto_sign_ed25519ph_final_create (&imprint, this->signature, nullptr, private_key) == 0) {

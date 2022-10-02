@@ -25,6 +25,7 @@
 #include "../core/raddi_defaults.h"
 #include "../core/raddi_peer_levels.h"
 #include "../core/raddi_database_peerset.h"
+#include "../core/raddi_protocol.h"
 
 #pragma warning (disable:6262) // function stack size warning
 
@@ -375,6 +376,29 @@ raddi::proof::requirements complexity (raddi::proof::requirements complexity) {
     return complexity;
 }
 
+// threadpool
+//  - parse "threadpool" command-line parameter
+//
+raddi::proof::threadpool threadpool (raddi::proof::threadpool default_ = raddi::proof::threadpool::automatic) {
+    if (auto parameter = option (argc, argw, L"threadpool")) {
+        if (!std::wcscmp (parameter, L"auto")) {
+            return raddi::proof::threadpool::automatic;
+        } else
+        if (!std::wcscmp (parameter, L"none")) {
+            return raddi::proof::threadpool::none;
+        } else
+        if (!std::wcscmp (parameter, L"system")) {
+            return raddi::proof::threadpool::system;
+        } else
+        if (!std::wcscmp (parameter, L"custom")) {
+            return raddi::proof::threadpool::custom;
+        } else {
+            raddi::log::error (0x24, parameter);
+        }
+    }
+    return default_;
+}
+
 // send
 //  - places data entry into instance's source directory for transmission
 // 
@@ -549,6 +573,7 @@ int wmain (int argc, wchar_t ** argw) {
 bool benchmark (const wchar_t *);
 bool database_verification ();
 bool hash (const wchar_t *);
+bool proove (const wchar_t *);
 
 bool new_identity ();
 bool new_channel ();
@@ -667,6 +692,16 @@ bool go () {
     if (auto parameter = command (argc, argw, L"benchmark")) {
         return benchmark (parameter);
     }
+    
+    // proove
+    //  - find proof for provided content
+
+    if (auto parameter = command (argc, argw, L"proove")) {
+        return proove (parameter);
+    }
+
+    // hash
+    //  - generate content hash
 
     if (auto parameter = command (argc, argw, L"hash")) {
         return hash (parameter);
@@ -2348,33 +2383,17 @@ bool benchmark (const wchar_t * parameter) {
     }
 
     raddi::proof::options opts;
-    opts.threadpool = raddi::proof::threadpool::automatic;
-
-    if (auto parameter = option (argc, argw, L"threadpool")) {
-        if (!std::wcscmp (parameter, L"auto")) {
-            opts.threadpool = raddi::proof::threadpool::automatic;
-        } else
-        if (!std::wcscmp (parameter, L"none")) {
-            opts.threadpool = raddi::proof::threadpool::none;
-        } else
-        if (!std::wcscmp (parameter, L"system")) {
-            opts.threadpool = raddi::proof::threadpool::system;
-        } else
-        if (!std::wcscmp (parameter, L"custom")) {
-            opts.threadpool = raddi::proof::threadpool::custom;
-        } else {
-            raddi::log::error (0x24, parameter);
-        }
-    }
+    opts.threadpool = threadpool ();
 
     for (auto complexity = first; (complexity != last + 1) && !quit; ++complexity) {
         printf ("benchmarking complexity %u: ", complexity);
 
         opts.requirements.complexity = complexity;
+        opts.parameters.cancel = &quit;
 
         try {
             auto t0 = raddi::microtimestamp ();
-            if (auto n = raddi::proof::generate (hash, buffer, sizeof buffer, opts, &quit)) {
+            if (auto n = raddi::proof::generate (hash, buffer, sizeof buffer, opts)) {
 
                 printf ("found... %.2fs\n", (raddi::microtimestamp () - t0) / 1000000.0);
 
@@ -2396,6 +2415,55 @@ bool benchmark (const wchar_t * parameter) {
 
             } else
                 return raddi::log::error (0x26);
+
+        } catch (const std::bad_alloc &) {
+            raddi::log::error (5);
+        }
+    }
+    return true;
+}
+
+bool proove (const wchar_t * parameter) {
+    // TODO: 'parameter' will allow to choose different PoW algorithm in the future
+
+    std::uint8_t hash [crypto_hash_sha512_BYTES];
+    std::uint8_t buffer [raddi::proof::max_size];
+
+    const auto datasize = gather (rawbuffer, sizeof rawbuffer);
+    crypto_hash_sha512 (hash, rawbuffer, datasize);
+
+    raddi::proof::options opts;
+
+    opts.parameters.cancel = &quit;
+    opts.requirements.time = 0;
+    opts.requirements.complexity = 0;
+    opts.requirements = complexity (opts.requirements);
+    opts.threadpool = threadpool ();
+
+    auto first = raddi::proof::min_complexity;
+    auto last = raddi::proof::max_complexity;
+
+    if (opts.requirements.complexity) {
+        first = opts.requirements.complexity;
+        last = opts.requirements.complexity;
+    }
+
+    for (auto cx = first; (cx != last + 1) && !quit; ++cx) {
+        opts.requirements.complexity = cx;
+
+        try {
+            if (auto n = raddi::proof::generate (hash, buffer, sizeof buffer, opts)) {
+
+                std::printf ("%u:", cx);
+                for (auto i = 1u; i != n; ++i) {
+                    if (!((i - 1) % 4)) {
+                        std::printf (" ");
+                    }
+                    std::printf ("%02x", buffer [i]);
+                }
+                std::printf ("\n");
+            } else
+                raddi::log::data (0x11, cx);
 
         } catch (const std::bad_alloc &) {
             raddi::log::error (5);

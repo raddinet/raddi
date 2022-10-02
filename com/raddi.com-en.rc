@@ -39,7 +39,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | ERROR | 0x20 "invalid offset {3} exceeds size of file {1} which is {2} bytes"
     MAIN | ERROR | 0x21 "invalid offset/length, specification {3}+{4}={5} exceeds size of file {1} which is {2} bytes"
     MAIN | ERROR | 0x22 "channel required"
-    MAIN | ERROR | 0x23 "requested benchmark complexity {1} out of supported range {2}...{3}"
+    MAIN | ERROR | 0x23 "requested complexity {1} out of supported range {2}...{3}"
     MAIN | ERROR | 0x24 "requested unknown benchmark threadpool {1}, try: auto, none, system or custom"
     MAIN | ERROR | 0x25 "unexpected validation failure, result: {1}"
     MAIN | ERROR | 0x26 "unexpected validation failure, no solution found"
@@ -47,7 +47,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
     MAIN | STOP  | 0x20 "{1} internal error, validation failed in {2}"
     MAIN | STOP  | 0x21 "database corruption, no proof-of-work in entry {1}"
 
-    MAIN | DATA  | 0x10 "warning: requested benchmark complexity {1} out of regular range {2}...{3}"
+    MAIN | DATA  | 0x10 "warning: requested complexity {1} out of regular range {2}...{3}"
+    MAIN | DATA  | 0x11 "no proof found for complexity {1}"
 
     MAIN | DATA  | 0x90 "warning: instance {1} is not broadcasting at the moment"
     MAIN | DATA  | 0x91 "warning: no node instance available"

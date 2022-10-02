@@ -99,6 +99,34 @@ namespace cuckoo {
     template <typename Generator>
     bool verify (unsigned complexity, const std::uint8_t (&seed) [Generator::width], const std::uintmax_t * cycle, std::size_t length);
 
+    // parameters
+    //  - solver initialization and operation parameters
+    //
+    struct parameters {
+
+        // cancel
+        //  - set 'cancel' to true during search for 'solve' to terminate prematurely
+        //  - NOTE: I know 'volatile' should be pointless here ...but just to be sure
+        //  - does not reset automatically to prevent races
+        //
+        volatile bool * cancel = nullptr;
+
+        // shortest/longest
+        //  - length limits imposed on solutions
+        //  - shortest than 4 and longest than MAXPATHLEN won't work
+        //  - solutions with length outside this range are discarded
+        //  - 0 means initialized to 4 and MAXPATHLEN respectfully
+        //
+        std::uint16_t shortest = 0;
+        std::uint16_t longest = 0;
+
+        // parallelism
+        //  - maximum number of threads running in parallel
+        //  - 0 means autodetect maximum
+        //
+        unsigned int parallelism = 0;
+    };
+
     // solver
     //  - modified matrix/mean solver
     //  - Complexity
@@ -115,23 +143,8 @@ namespace cuckoo {
     template <unsigned Complexity,
               typename Generator = cuckoo::hash <2,4>,
               template <typename> class ThreadPoolControl = singlethreaded>
-    class solver {
+    class solver : private parameters {
     public:
-
-        // cancel
-        //  - set 'cancel' to true during search for 'solve' to terminate prematurely
-        //  - NOTE: I know 'volatile' should be pointless here ...but just to be sure
-        //  - does not reset automatically to prevent races
-        //
-        volatile bool * cancel = nullptr;
-
-        // shortest/longest
-        //  - length limits imposed on solutions
-        //  - shortest than 4 and longest than MAXPATHLEN won't work
-        //  - solutions with length outside this range are discarded
-        //
-        unsigned int shortest = 4;
-        unsigned int longest = MAXPATHLEN;
 
         // solve
         //  - finds cycles/solutions and appends them to 'solutions' vector above
@@ -147,7 +160,7 @@ namespace cuckoo {
     private:
         typedef typename std::conditional <(Complexity >= 30), std::uint64_t, std::uint32_t>::type offset;
 
-        static constexpr auto XBITS = (Complexity / 2u) - 7u; // 6 for 26 & 27, 7 for 28 & 29
+        static constexpr auto XBITS = /*(Complexity < 30) ?*/ ((Complexity / 2u) - 7u);// : (1 * (Complexity - 21)); // 6 for 26 & 27, 7 for 28 & 29
         static constexpr auto YBITS = XBITS; // TODO: I rely on these two being same (thread::start/end)
         static constexpr auto BIGSIZE = 5u;
         static constexpr auto BIGSIZE0 = (Complexity < 30) ? 4 : BIGSIZE;
@@ -158,27 +171,27 @@ namespace cuckoo {
         static constexpr auto SMALLSIZE = 5u;
         static constexpr auto BIGGERSIZE = (EXPANDROUND == COMPRESSROUND) ? BIGSIZE : (BIGSIZE + 1);
 
-        static constexpr auto NEDGES = 1uLL << Complexity;
+        static constexpr auto NEDGES = offset (1) << Complexity;
         static constexpr auto EDGEMASK = NEDGES - 1uLL;
         static constexpr auto MAXPATHLEN = 8u << ((Complexity + 3) / 3);
 
-        static constexpr auto NX = 1u << XBITS;
+        static constexpr auto NX = offset (1) << XBITS;
         static constexpr auto XMASK = NX - 1;
-        static constexpr auto NY = 1u << YBITS;
+        static constexpr auto NY = offset (1) << YBITS;
         static constexpr auto YMASK = NY - 1;
         static constexpr auto XYBITS = XBITS + YBITS;
-        static constexpr auto NXY = 1u << XYBITS;
+        static constexpr auto NXY = offset (1) << XYBITS;
         static constexpr auto ZBITS = Complexity - XYBITS;
-        static constexpr auto NZ = 1u << ZBITS;
+        static constexpr auto NZ = offset (1) << ZBITS;
         static constexpr auto ZMASK = NZ - 1;
         static constexpr auto YZBITS = Complexity - XBITS;
-        static constexpr auto NYZ = 1u << YZBITS;
+        static constexpr auto NYZ = offset (1) << YZBITS;
         static constexpr auto YZMASK = NYZ - 1;
         static constexpr auto YZ1BITS = (YZBITS < 15) ? YZBITS : 15;
-        static constexpr auto NYZ1 = 1u << YZ1BITS;
+        static constexpr auto NYZ1 = offset (1) << YZ1BITS;
         static constexpr auto YZ1MASK = NYZ1 - 1u;
         static constexpr auto Z1BITS = YZ1BITS - YBITS;
-        static constexpr auto NZ1 = 1u << Z1BITS;
+        static constexpr auto NZ1 = offset (1) << Z1BITS;
         static constexpr auto Z1MASK = NZ1 - 1;
         static constexpr auto YZ2BITS = (YZBITS < 11) ? YZBITS : 11;
         static constexpr auto NYZ2 = 1u << YZ2BITS;
@@ -286,14 +299,21 @@ namespace cuckoo {
         std::uint32_t           results [2 * NX * NYZ2];
 
     public:
-        explicit solver (unsigned int parallelism = NY)
-            : buckets (new yzbucket <ZBUCKETSIZE> [NX]) {
+        explicit solver (parameters p)
+            : parameters (p)
+            , buckets (new yzbucket <ZBUCKETSIZE> [NX]) {
 
+            if (this->shortest == 0) {
+                this->shortest = 4;
+            }
+            if (this->longest == 0) {
+                this->longest = MAXPATHLEN;
+            }
+            if (this->parallelism > NY || this->parallelism == 0) {
+                this->parallelism = NY;
+            }
             try {
-                if (parallelism > NY) {
-                    parallelism = NY;
-                }
-                this->work.resize (parallelism);
+                this->work.resize (this->parallelism);
             } catch (const std::bad_alloc &) {
                 delete [] this->buckets;
             }

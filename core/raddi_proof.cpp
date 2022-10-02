@@ -2,8 +2,6 @@
 #include "raddi_timestamp.h"
 #include "raddi_eid.h"
 
-#include "../lib/cuckoocycle.h"
-
 #include "../common/log.h"
 #include "../common/platform.h"
 #include "../common/threadpool.h"
@@ -53,16 +51,11 @@ namespace {
     //
     template <typename Solver>
     std::size_t solve (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES],
-                       void * target, std::size_t maximum, unsigned int parallelism, volatile bool * cancel) {
-        if (cancel && *cancel)
+                       void * target, std::size_t maximum, cuckoo::parameters parameters) {
+        if (parameters.cancel && *parameters.cancel)
             return 0;
 
-        auto solver = std::make_unique <Solver> (parallelism);
-
-        solver->shortest = raddi::proof::min_length;
-        solver->longest = raddi::proof::max_length;
-        solver->cancel = cancel;
-
+        auto solver = std::make_unique <Solver> (parameters);
         return solver->solve (hash, [target, maximum] (std::uintmax_t * cycle, std::size_t length) {
 
                                         auto size = raddi::proof::size (length);
@@ -92,21 +85,30 @@ namespace {
     //
     template <unsigned complexity>
     std::size_t attempt (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES],
-                         void * target, std::size_t maximum,
-                         raddi::proof::options options, volatile bool * cancel) {
+                         void * target, std::size_t maximum, raddi::proof::options options) {
 
         auto processors = GetLogicalProcessorCount ();
-        auto parallelism = cuckoo::solver <complexity, generator>::suggested_parallelism; // 64 for 26/27, 128 for 28/29
 
-        if (options.threadpool == raddi::proof::threadpool::automatic) {
-            if ((parallelism > 64) && (processors > 64)) {
-                options.threadpool = raddi::proof::threadpool::custom;
-            } else {
-                options.threadpool = raddi::proof::threadpool::system;
+        if (options.parameters.parallelism == 0) {
+            options.parameters.parallelism = cuckoo::solver <complexity, generator>::suggested_parallelism; // 64 for 26/27, 128 for 28/29
+
+            if (options.threadpool == raddi::proof::threadpool::automatic) {
+                if ((options.parameters.parallelism > 64) && (processors > 64)) {
+                    options.threadpool = raddi::proof::threadpool::custom;
+                } else {
+                    options.threadpool = raddi::proof::threadpool::system;
+                }
+            }
+            if (options.parameters.parallelism > processors) {
+                options.parameters.parallelism = processors;
             }
         }
-        if (parallelism > processors) {
-            parallelism = processors;
+
+        if (options.parameters.shortest == 0) {
+            options.parameters.shortest = raddi::proof::min_length;
+        }
+        if (options.parameters.longest == 0) {
+            options.parameters.longest = raddi::proof::max_length;
         }
 
         std::size_t length = 0;
@@ -114,18 +116,18 @@ namespace {
 
         switch (options.threadpool) {
             case raddi::proof::threadpool::none:
-                length = solve <cuckoo::solver <complexity, generator>> (hash, target, maximum, parallelism, cancel);
+                length = solve <cuckoo::solver <complexity, generator>> (hash, target, maximum, options.parameters);
                 break;
 
             case raddi::proof::threadpool::system:
-                length = solve <cuckoo::solver <complexity, generator, threadpool>> (hash, target, maximum, parallelism, cancel);
+                length = solve <cuckoo::solver <complexity, generator, threadpool>> (hash, target, maximum, options.parameters);
                 break;
 
             case raddi::proof::threadpool::custom:
-                if ((parallelism > 64) && (GetPredominantSMT () >= 4) && (processors >= 48)) { // threadpool overhead exceeds SMT gains
-                    parallelism /= 2;
+                if ((options.parameters.parallelism > 64) && (GetPredominantSMT () >= 4) && (processors >= 48)) { // threadpool overhead exceeds SMT gains
+                    options.parameters.parallelism /= 2;
                 }
-                length = solve <cuckoo::solver <complexity, generator, threadpool2>> (hash, target, maximum, parallelism, cancel);
+                length = solve <cuckoo::solver <complexity, generator, threadpool2>> (hash, target, maximum, options.parameters);
                 break;
         }
 
@@ -147,8 +149,7 @@ namespace {
 }
 
 std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES],
-                                    void * target, std::size_t maximum,
-                                    options options, volatile bool * cancel) {
+                                    void * target, std::size_t maximum, options options) {
 
     static_assert (min_complexity == 26);
     static_assert (max_complexity == 29);
@@ -165,21 +166,21 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
     auto t0 = raddi::microtimestamp ();
     switch (options.requirements.complexity) {
         case 26:
-            if (auto n = attempt <26> (hash, target, maximum, options, cancel))
+            if (auto n = attempt <26> (hash, target, maximum, options))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
             [[ fallthrough ]];
         case 27:
-            if (auto n = attempt <27> (hash, target, maximum, options, cancel))
+            if (auto n = attempt <27> (hash, target, maximum, options))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
 
             [[ fallthrough ]];
         case 28:
-            if (auto n = attempt <28> (hash, target, maximum, options, cancel))
+            if (auto n = attempt <28> (hash, target, maximum, options))
                 return n;
             if ((raddi::microtimestamp () - t0) > tX)
                 return 0;
@@ -187,7 +188,7 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
             [[ fallthrough ]];
         case 29:
             options.requirements.time = 0;
-            if (auto n = attempt <29> (hash, target, maximum, options, cancel))
+            if (auto n = attempt <29> (hash, target, maximum, options))
                 return n;
 
             [[ fallthrough ]];
@@ -196,11 +197,10 @@ std::size_t raddi::proof::generate (const std::uint8_t (&hash) [crypto_hash_sha5
     }
 }
 
-std::size_t raddi::proof::generate (crypto_hash_sha512_state state, void * target, std::size_t maximum,
-                                    options options, volatile bool * cancel) {
+std::size_t raddi::proof::generate (crypto_hash_sha512_state state, void * target, std::size_t maximum, options options) {
     std::uint8_t hash [crypto_hash_sha512_BYTES];
     if (crypto_hash_sha512_final (&state, hash) == 0)
-        return raddi::proof::generate (hash, target, maximum, options, cancel);
+        return raddi::proof::generate (hash, target, maximum, options);
     else
         return false;
 }

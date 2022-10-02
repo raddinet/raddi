@@ -4,6 +4,8 @@
 #include "raddi_eid.h"
 #include <sodium.h>
 
+#include "../lib/cuckoocycle.h"
+
 namespace raddi {
 
     // proof of work
@@ -110,7 +112,7 @@ namespace raddi {
         // threadpool
         //  - which threadpool to use when parallelizing workload
         //
-        enum class threadpool {
+        enum class threadpool : std::uint8_t {
             automatic = 0,
             none,   // v0 "cucukoocycle.h" no threadpool
             system, // v1 "threapool.h" QueueUserWorkItem
@@ -121,8 +123,10 @@ namespace raddi {
         //  - cummulative parameter to configure proof generator optional settings
         //
         struct options {
-            requirements requirements;
-            threadpool   threadpool = threadpool::automatic;
+            requirements        requirements;
+            // bool                progressive = true; // 
+            threadpool          threadpool = threadpool::automatic;
+            cuckoo::parameters  parameters; // PoW generator parameters
         };
 
     public:
@@ -144,13 +148,11 @@ namespace raddi {
         //     - NOTE: it's normal (50% chance) that no proof can be found,
         //             just change hash (increase timestamp) and try again
         //
-        static std::size_t generate (crypto_hash_sha512_state, void * target, std::size_t maximum,
-                                     options, volatile bool * cancel = nullptr);
-        static std::size_t generate (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES], void * target, std::size_t maximum,
-                                     options, volatile bool * cancel = nullptr);
+        static std::size_t generate (crypto_hash_sha512_state, void * target, std::size_t maximum, options);
+        static std::size_t generate (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES], void * target, std::size_t maximum, options);
 
-        static std::size_t generate_wide (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES], void * target, std::size_t maximum,
-                                          options, volatile bool * cancel = nullptr);
+        // static std::size_t generate_wide (const std::uint8_t (&hash) [crypto_hash_sha512_BYTES], void * target, std::size_t maximum,
+        //                                  options, volatile bool * cancel = nullptr);
 
         // size
         //  - returns full size of this 'proof' structure, including header, in bytes
