@@ -1,6 +1,8 @@
 #ifndef RADDI_THREADPOOL2_TCC
 #define RADDI_THREADPOOL2_TCC
 
+#include "threadpool2.h"
+
 template <typename Fiber>
 threadpool2 <Fiber> ::threadpool2 ()
     : semaphore (CreateSemaphore (NULL, 0, 0x7FFF'FFFF, NULL))

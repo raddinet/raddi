@@ -1,6 +1,8 @@
 #ifndef RADDI_MONITOR_TCC
 #define RADDI_MONITOR_TCC
 
+#include "monitor.h"
+
 #include <windows.h>
 #include <set>
 
