@@ -23,7 +23,7 @@ enum class ListPart {
 ListPart ListView_OnContextMenu (const WindowEnvironment * parent, HWND hListView, LONG & x, LONG & y, int * id);
 
 // ListView_CustomHeaderSubclassProcedure
-//  - 
+//  - draws custom, simpler, dark mode enabled, header drawing callbacks out from listview message processing
 //  - install with SetWindowSubclass (hListView, ..., 0, (DWORD_PTR) (const Window *) parent);
 //
 LRESULT CALLBACK ListView_CustomHeaderSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,

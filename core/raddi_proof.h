@@ -114,7 +114,7 @@ namespace raddi {
         //
         enum class threadpool : std::uint8_t {
             automatic = 0,
-            none,   // v0 "cucukoocycle.h" no threadpool
+            none,   // v0 "cuckoocycle.h" no threadpool
             system, // v1 "threapool.h" QueueUserWorkItem
             custom, // v2 "threapool2.h" spans groups, but has higher overhead
         };
@@ -124,7 +124,6 @@ namespace raddi {
         //
         struct options {
             requirements        requirements;
-            // bool                progressive = true; // 
             threadpool          threadpool = threadpool::automatic;
             cuckoo::parameters  parameters; // PoW generator parameters
         };

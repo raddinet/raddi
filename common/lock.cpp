@@ -55,7 +55,7 @@ bool lock::initialize () noexcept {
             Load (h, pReleaseShared, "ReleaseSRWLockShared");
             Load (h, pAcquireExclusive, "AcquireSRWLockExclusive");
             Load (h, pReleaseExclusive, "ReleaseSRWLockExclusive");
-            
+
             // Vista does not have TryAcquire for SRW locks, but we cannot mix CSs and SRWs
             if (!Load (h, pTryAcquireShared, "TryAcquireSRWLockShared") || !Load (h, pTryAcquireExclusive, "TryAcquireSRWLockExclusive")) {
                 pTryAcquireShared = failingTry;
