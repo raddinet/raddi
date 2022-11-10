@@ -398,12 +398,12 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::genVnode
     static const auto NONDEGMASK = (1u << NONDEGBITS) - 1u;
 
     indexer <ZBUCKETSIZE> destination;
-    indexer <TBUCKETSIZE> small;
+    indexer <TBUCKETSIZE> smallbucket;
 
     auto small0 = reinterpret_cast <std::uint8_t *> (&this->bucket);
 
     for (auto ux = this->start; (ux != this->end) && !this->solver->cancelled (); ++ux) {
-        small.initU (0);
+        smallbucket.initU (0);
         for (auto my = 0u; my != NY; ++my) {
 
             auto edge = my << YZBITS;
@@ -424,12 +424,12 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::genVnode
                 edge += ((std::uint32_t) (e >> YZBITS) - edge) & (NNONYZ - 1u);
                 const auto uy = (e >> ZBITS) & YMASK;
 
-                *(std::uint64_t *) (small0 + small.index [uy]) = ((std::uint64_t) edge << ZBITS) | (e & ZMASK);
-                small.index [uy] += SMALLSIZE;
+                *(std::uint64_t *) (small0 + smallbucket.index [uy]) = ((std::uint64_t) edge << ZBITS) | (e & ZMASK);
+                smallbucket.index [uy] += SMALLSIZE;
             }
         }
 
-        small.storeU (&this->bucket, 0);
+        smallbucket.storeU (&this->bucket, 0);
         destination.initU (ux);
 
         for (auto uy = 0u; uy != NY; ++uy) {
@@ -522,12 +522,12 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimEdge
     const auto DSTPREFMASK = (1uLL << DSTPREFBITS) - 1uLL;
 
     indexer <ZBUCKETSIZE> destination;
-    indexer <TBUCKETSIZE> small;
+    indexer <TBUCKETSIZE> smallbucket;
 
     auto small0 = reinterpret_cast <std::uint8_t *> (&this->bucket);
 
     for (auto vx = this->start; vx != this->end; ++vx) {
-        small.initU (0);
+        smallbucket.initU (0);
 
         for (auto ux = 0u; ux != NX; ++ux) {
             auto uxyz = ux << YZBITS;
@@ -543,13 +543,13 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimEdge
 
                 auto vy = (e >> ZBITS) & YMASK;
 
-                *(std::uint64_t *) (small0 + small.index [vy]) = ((std::uint64_t) uxyz << ZBITS) | (e & ZMASK);
+                *(std::uint64_t *) (small0 + smallbucket.index [vy]) = ((std::uint64_t) uxyz << ZBITS) | (e & ZMASK);
                 uxyz &= ~ZMASK;
-                small.index [vy] += DSTSIZE;
+                smallbucket.index [vy] += DSTSIZE;
             }
         }
 
-        small.storeU (&this->bucket, 0);
+        smallbucket.storeU (&this->bucket, 0);
         if (TRIMONV) {
             destination.initV (vx);
         } else {
@@ -603,13 +603,13 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimRena
     const auto SRCPREFMASK2 = (1uLL << SRCPREFBITS2) - 1uLL;
 
     indexer <ZBUCKETSIZE> destination;
-    indexer <TBUCKETSIZE> small;
+    indexer <TBUCKETSIZE> smallbucket;
 
     auto maxnnid = 0u;
     auto small0 = reinterpret_cast <std::uint8_t *> (&this->bucket);
 
     for (auto vx = this->start; vx != this->end; ++vx) {
-        small.initU (0);
+        smallbucket.initU (0);
 
         for (auto ux = 0u; ux != NX; ++ux) {
             auto uyz = 0u;
@@ -630,17 +630,17 @@ void cuckoo::solver <Complexity, Generator, ThreadPoolControl> ::fiber::trimRena
 
                 auto vy = (e >> ZBITS) & YMASK;
 
-                *(std::uint64_t *) (small0 + small.index [vy]) = ((std::uint64_t) (ux << (TRIMONV ? YZBITS : YZ1BITS) | uyz) << ZBITS) | (e & ZMASK);
+                *(std::uint64_t *) (small0 + smallbucket.index [vy]) = ((std::uint64_t) (ux << (TRIMONV ? YZBITS : YZ1BITS) | uyz) << ZBITS) | (e & ZMASK);
 
                 if (TRIMONV) {
                     uyz &= ~ZMASK;
                 }
-                small.index [vy] += SRCSIZE;
+                smallbucket.index [vy] += SRCSIZE;
             }
         }
 
 
-        small.storeU (&this->bucket, 0);
+        smallbucket.storeU (&this->bucket, 0);
         if (TRIMONV) {
             destination.initV (vx);
         } else {
