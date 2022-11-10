@@ -72,7 +72,9 @@ ListOfChannels::ListOfChannels (const Window * parent, UINT id, Node::table tabl
         ListView_SetToolTips (this->hWnd, parent->hToolTip);
         ListView_SetExtendedListViewStyle (this->hWnd, LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
-        SetWindowSubclass (this->hWnd, ListView_CustomHeaderSubclassProcedure, 0, (DWORD_PTR) this->parent);
+        if (winver >= 6) {
+            SetWindowSubclass (this->hWnd, ListView_CustomHeaderSubclassProcedure, 0, (DWORD_PTR) this->parent);
+        }
 
         try {
             LVCOLUMN column;

@@ -57,7 +57,7 @@ ListPart ListView_OnContextMenu (const WindowEnvironment * parent, HWND hListVie
             }
         }
     } else {
-        LVHITTESTINFO info = { { x, y } };
+        LVHITTESTINFO info = { { x, y }, 0, 0, 0 };
         MapWindowPoints (NULL, hListView, &info.pt, 1);
 
         if (SendMessage (hListView, LVM_HITTEST, (winver >= 6) ? -1 : 0, reinterpret_cast <LPARAM> (&info)) != -1) {
@@ -84,9 +84,9 @@ bool Header_GetItemText (HWND hHeader, int index, wchar_t * buffer, std::size_t 
 
 LRESULT CALLBACK ListView_CustomHeaderSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam,
                                                          UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-    if (uIdSubclass) {
+    /*if (uIdSubclass) {
         raddi::log::event (0xA1F0, "ListView_CustomHeaderSubclassProcedure", hWnd, uIdSubclass, dwRefData);
-    }
+    }*/
     switch (message) {
         case WM_NOTIFY:
 
@@ -228,7 +228,9 @@ HWND Lists::Internal::Create (const Window * parent, std::intptr_t id, const std
         ListView_SetToolTips (h, parent->hToolTip);
         ListView_SetExtendedListViewStyle (h, extra);
 
-        SetWindowSubclass (h, ListView_CustomHeaderSubclassProcedure, 1, (DWORD_PTR) parent);
+        if (winver >= 6) {
+            SetWindowSubclass (h, ListView_CustomHeaderSubclassProcedure, 1, (DWORD_PTR) parent);
+        }
 
         SendMessage (h, WM_SETREDRAW, FALSE, 0);
         SetWindowLongPtr (h, GWLP_USERDATA, (LONG_PTR) id);
