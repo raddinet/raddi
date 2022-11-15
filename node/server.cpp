@@ -239,7 +239,7 @@ void Receiver::completion (bool success, std::size_t n) {
                             if (this->next ((std::uint16_t) n))
                                 return;
                         } else
-                            this->report (raddi::log::level::error, 0xA1F0, L"internal error"); // TODO, this catches 'offset' overflow
+                            this->report (raddi::log::level::error, 4); // internal error, TODO, this catches 'offset' overflow
                     }
                     if (size < n) {
                         // TODO: walk the buffer, don't pop-front until the last item

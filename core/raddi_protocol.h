@@ -67,7 +67,7 @@ namespace raddi {
                     std::uint32_t a;
                     std::uint32_t b;
 
-                    std::uint32_t decode () const { return this->a ^ this->b; }
+                    std::uint32_t decode () const;
                     void          encode (std::uint32_t value); // non-deterministic
                 } soft
                 , hard;
@@ -82,6 +82,11 @@ namespace raddi {
             //  - hash of protocol::magic + keys + flags + timestamp
             //
             std::uint64_t checksum;
+
+            // pow
+            //  - 
+            //
+            // std::uint32_t pow [26];
         };
 
         // encryption
@@ -129,12 +134,18 @@ namespace raddi {
             // propose
             //  - randomizes the proposal and generates communication 'head'
             // 
-            void         propose (initial * head);
+            void         propose (initial * head, bool outbound);
 
             // accept
             //  - finishes D-H and generates encryption object according to peer's proposal
             //
-            encryption * accept (const initial * head, accept_fail_reason *);
+            encryption * accept (initial * head, accept_fail_reason *, bool inbound);
+
+            // xorbfuscate
+            //  - adds additional XOR obfuscation to 'head'
+            //  - due to nature of XOR second run clears that obsfuscation
+            //
+            void xorbfuscate (initial * head);
 
             // destructor clears keys from memory
             ~proposal ();

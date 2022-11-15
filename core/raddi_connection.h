@@ -25,14 +25,15 @@ namespace raddi {
         : public Connection
         , virtual raddi::log::provider <raddi::component::server> {
 
-        virtual bool inbound (const unsigned char * data, std::size_t & size) override;
+        virtual bool inbound (unsigned char * data, std::size_t & size) override;
         virtual bool connected () override;
         virtual void overloaded () override;
         virtual void disconnected () override;
 
         void discord ();
         void out_of_memory ();
-        bool head (const raddi::protocol::initial * peer);
+        bool head (raddi::protocol::initial * peer);
+        bool decode (const unsigned char * data, std::size_t size);
         bool message (const unsigned char * entry, std::size_t size);
 
         union {

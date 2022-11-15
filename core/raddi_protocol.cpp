@@ -34,8 +34,11 @@ void raddi::protocol::initial::flags::pair::encode (std::uint32_t value) {
     randombytes_buf (&this->a, sizeof this->a);
     this->b = this->a ^ value;
 }
+std::uint32_t raddi::protocol::initial::flags::pair::decode () const {
+    return this->a ^ this->b;
+}
 
-void raddi::protocol::proposal::propose (initial * head) {
+void raddi::protocol::proposal::propose (initial * head, bool outbound) {
     randombytes_buf (this->inbound_key, sizeof this->inbound_key);
     randombytes_buf (this->outbound_key, sizeof this->outbound_key);
     randombytes_buf (this->inbound_nonce, sizeof this->inbound_nonce);
@@ -71,9 +74,29 @@ void raddi::protocol::proposal::propose (initial * head) {
     hash.seed (head->keys.inbound_key, (const std::uint8_t *) &raddi::protocol::magic [0], sizeof raddi::protocol::magic);
 
     head->checksum = hash (head, sizeof (initial) - sizeof (initial::checksum));
+
+    if (outbound) {
+        // TODO: append PoW
+    }
+    // final XOR to mask easily readable data
+    // this->xorbfuscate (head);
 }
 
-raddi::protocol::encryption * raddi::protocol::proposal::accept (const raddi::protocol::initial * peer, accept_fail_reason * failure) {
+void raddi::protocol::proposal::xorbfuscate (initial * head) {
+    auto masks = reinterpret_cast <std::uint64_t *> (head->keys.inbound_key);
+    auto trail = reinterpret_cast <std::uint64_t *> (head) + sizeof (initial::keys) / sizeof (std::uint64_t);
+
+    for (std::size_t i = 0; i != (sizeof (initial) - sizeof (initial::keys)) / sizeof (std::uint64_t); ++i) {
+        trail [i] ^= masks [i];
+    }
+}
+
+raddi::protocol::encryption * raddi::protocol::proposal::accept (initial * peer, accept_fail_reason * failure, bool inbound) {
+    // this->xorbfuscate (peer);
+    if (inbound) {
+        // TODO: verify PoW
+    }
+
     unsigned char rcvscalarmul [crypto_scalarmult_BYTES];
     unsigned char trmscalarmul [crypto_scalarmult_BYTES];
 

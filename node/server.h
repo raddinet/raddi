@@ -136,7 +136,7 @@ private:
     //     - or that are required to have full packet (greate than size)
     //     - zero to get called again
     //
-    virtual bool inbound (const unsigned char * data, std::size_t & size) = 0;
+    virtual bool inbound (unsigned char * data, std::size_t & size) = 0;
     virtual bool connected () = 0;
     virtual void overloaded () = 0;
     virtual void disconnected () = 0;

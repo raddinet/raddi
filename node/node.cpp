@@ -189,7 +189,7 @@ void raddi::connection::disconnected () {
 
     SetEvent (::disconnected);
 }
-bool raddi::connection::head (const raddi::protocol::initial * peer) {
+bool raddi::connection::head (raddi::protocol::initial * peer) {
     if (::localhosts->contains (this->peer) || ::coordinator->reflecting (&peer->keys)) {
         this->report (raddi::log::level::note, 3);
         return false;
@@ -200,7 +200,7 @@ bool raddi::connection::head (const raddi::protocol::initial * peer) {
     }
 
     raddi::protocol::accept_fail_reason failure;
-    if (auto ee = this->proposal->accept (peer, &failure)) {
+    if (auto ee = this->proposal->accept (peer, &failure, (this->peer.port == 0))) {
 
         // replace proposal with encryption
         delete this->proposal;
@@ -220,7 +220,7 @@ bool raddi::connection::head (const raddi::protocol::initial * peer) {
                 this->report (raddi::log::level::error, 18, peer->flags.hard.decode ());
                 break;
             case raddi::protocol::accept_fail_reason::time:
-                this->report (raddi::log::level::error, 19, (std::int64_t) (peer->timestamp - raddi::microtimestamp ()));
+                this->report (raddi::log::level::error, 19, (std::int64_t) (peer->timestamp - raddi::microtimestamp ())); // BUG: timestamp is XORed
                 break;
             case raddi::protocol::accept_fail_reason::aes:
                 this->report (raddi::log::level::error, 20);

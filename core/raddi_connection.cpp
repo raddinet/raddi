@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <set>
 
+#pragma warning (disable:6262) // function stack size warning
+#pragma warning (disable:26819) // unannotated fallthrough
+
 raddi::address raddi::socks5proxy;
 
 namespace {
@@ -74,7 +77,7 @@ bool raddi::connection::connected () {
             buffer [prologue - 2] = this->peer.port / 256;
             buffer [prologue - 1] = this->peer.port % 256;
         }
-        this->proposal->propose (reinterpret_cast <raddi::protocol::initial *> (buffer + prologue));
+        this->proposal->propose (reinterpret_cast <raddi::protocol::initial *> (buffer + prologue), this->peer.port != 0); // this->peer.port != 0 means outbound connection;
         return this->transmit (buffer, sizeof (raddi::protocol::initial) + prologue);
     } else
         return false;
@@ -166,7 +169,29 @@ void raddi::connection::status () const {
                   this->counters.sent, this->counters.delayed);// */
 }
 
-bool raddi::connection::inbound (const unsigned char * data, std::size_t & n) {
+bool raddi::connection::decode (const unsigned char * data, std::size_t size) {
+    unsigned char entry [raddi::protocol::max_payload] alignas (raddi::entry);
+    if (auto length = this->encryption->decode (entry, sizeof entry, data, size)) {
+        try {
+            if (this->message (entry, length)) {
+                this->messages += length;
+                this->latest = raddi::microtimestamp ();
+                return true;
+
+            } else {
+                this->discord ();
+            }
+        } catch (const std::bad_alloc &) {
+            this->out_of_memory ();
+        }
+    } else {
+        // note: 'n' in range 1..raddi::protocol::frame_overhead-1 end up here
+        this->discord ();
+    }
+    return false;
+}
+
+bool raddi::connection::inbound (unsigned char * data, std::size_t & n) {
     if (this->secured) {
         if (n >= 2) {
             std::uint32_t size = data [0] | (data [1] << 8);
@@ -190,25 +215,8 @@ bool raddi::connection::inbound (const unsigned char * data, std::size_t & n) {
                 default:
                     size += sizeof (std::uint16_t);
                     if (n >= size) {
-                        unsigned char entry [raddi::protocol::max_payload] alignas (raddi::entry);
-                        if (auto length = this->encryption->decode (entry, sizeof entry, data, size)) {
-                            try {
-                                if (this->message (entry, length)) {
-                                    this->messages += length;
-                                    this->latest = raddi::microtimestamp ();
-                                } else {
-                                    this->discord ();
-                                    return false;
-                                }
-                            } catch (const std::bad_alloc &) {
-                                this->out_of_memory ();
-                                return false;
-                            }
-                        } else {
-                            // note: 'n' in range 1..raddi::protocol::frame_overhead-1 end up here
-                            this->discord ();
+                        if (!this->decode (data, size))
                             return false;
-                        }
                     }
                     n = size;
                     break;
@@ -247,7 +255,7 @@ bool raddi::connection::inbound (const unsigned char * data, std::size_t & n) {
         }
 
         if (n >= sizeof (raddi::protocol::initial) + prologue) {
-            if (this->head (reinterpret_cast <const raddi::protocol::initial *> (data + prologue))) {
+            if (this->head (reinterpret_cast <raddi::protocol::initial *> (data + prologue))) {
                 this->secured = true;
                 n = sizeof (raddi::protocol::initial) + prologue;
             } else {
