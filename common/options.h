@@ -40,7 +40,6 @@ std::size_t option_nth (std::size_t i, unsigned long argc, wchar_t ** argw, cons
 template <typename F, std::size_t N>
 std::size_t options (unsigned long argc, wchar_t ** argw, const wchar_t (&name) [N], F f) {
     std::size_t n = 0;
-    const auto length = (sizeof name / sizeof name [0]) - 1;
     for (auto i = 1uL; i != argc; ++i) {
         n += option_nth (i, argc, argw, name, f);
     }
