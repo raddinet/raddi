@@ -44,7 +44,7 @@ SourceState::SourceState (const wchar_t * path, const wchar_t * nonce) {
                     L"D:" // Discretionary
                         // "(D;OICI;GA;;;BG)"  // Deny access to built-in guests
                         // "(D;OICI;GA;;;AN)"  // Deny access to anonymous logon
-                        "(A;OICI;GW;;;AU)"  // Allow write access to authenticated users
+                        "(A;OICI;GA;;;AU)"  // Allow full access to authenticated users
                         // "(A;OICI;GRGWGX;;;AU)" // Allow read/write/execute access to authenticated users
                         "(A;OICI;GA;;;BA)"  // Allow full control to administrators
                         //"(A;NP;GRGWGXFA;;;SY)"  // Allow full control to SYSTEM
