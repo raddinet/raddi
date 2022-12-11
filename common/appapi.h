@@ -17,6 +17,8 @@ bool AreDpiApisScaled (HWND hWnd);
 HICON LoadBestIcon (HMODULE hModule, LPCWSTR resource, SIZE size);
 HBRUSH CreateSolidBrushEx (COLORREF color);
 HBRUSH CreateSolidBrushEx (COLORREF color, unsigned char alpha);
+HPEN CreatePenEx (DWORD style, DWORD width, COLORREF color);
+HPEN CreatePenEx (DWORD style, DWORD width, COLORREF color, unsigned char alpha);
 RECT FixWindowCoordinates (int x, int y, int w, int h);
 bool IsLastWindow (HWND hWnd);
 bool IsColorDark (COLORREF color);

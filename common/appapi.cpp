@@ -202,26 +202,41 @@ HICON LoadBestIcon (HMODULE hModule, LPCWSTR resource, SIZE size) {
         return (HICON) LoadImage (hModule, resource, IMAGE_ICON, size.cx, size.cy, LR_DEFAULTCOLOR);
 }
 
-HBRUSH CreateSolidBrushEx (COLORREF color, unsigned char alpha) {
-    auto b = alpha * ((color & 0x00FF0000) >> 16);
-    auto g = alpha * ((color & 0x0000FF00) >> 8);
-    auto r = alpha * ((color & 0x000000FF) >> 0);
+namespace {
+    const BITMAPINFO InitSolidRgbaBitmapInfo (COLORREF color, BYTE alpha) {
+        auto b = alpha * ((color & 0x00FF0000) >> 16);
+        auto g = alpha * ((color & 0x0000FF00) >> 8);
+        auto r = alpha * ((color & 0x000000FF) >> 0);
 
-    BITMAPINFO bi = {
-        {   sizeof (BITMAPINFO),
-            1,1,1, 32,BI_RGB, 0,0,0,0,0
-        }, {
-            (BYTE) ((b * 0x8081) >> 0x17), // divide by 255
-            (BYTE) ((g * 0x8081) >> 0x17),
-            (BYTE) ((r * 0x8081) >> 0x17),
-            alpha
-        }
-    };
-    return CreateDIBPatternBrushPt (&bi, DIB_RGB_COLORS);
+        return BITMAPINFO {
+            {   sizeof (BITMAPINFOHEADER),
+                1,1,1, 32,BI_RGB, 0,0,0,0,0
+            }, {
+                (BYTE) (b / 255),
+                (BYTE) (g / 255),
+                (BYTE) (r / 255),
+                alpha
+            }
+        };
+    }
+}
+
+HBRUSH CreateSolidBrushEx (COLORREF color, unsigned char alpha) {
+    auto bitmapinfo = InitSolidRgbaBitmapInfo (color, alpha);
+    return CreateDIBPatternBrushPt (&bitmapinfo, DIB_RGB_COLORS);
 }
 HBRUSH CreateSolidBrushEx (COLORREF color) {
     return CreateSolidBrushEx (color, unsigned (color) >> 24u);
 }
+HPEN CreatePenEx (DWORD style, DWORD width, COLORREF color, unsigned char alpha) {
+    auto bitmapinfo = InitSolidRgbaBitmapInfo (color, alpha);
+    LOGBRUSH logbrush = { BS_DIBPATTERNPT, DIB_RGB_COLORS, (ULONG_PTR) &bitmapinfo };
+    return ExtCreatePen (style | PS_GEOMETRIC, width, &logbrush, 0, NULL);
+}
+HPEN CreatePenEx (DWORD style, DWORD width, COLORREF color) {
+    return CreatePenEx (style, width, color, unsigned (color) >> 24u);
+}
+
 bool IsColorDark (COLORREF color) {
     return 2 * GetRValue (color) + 5 * GetGValue (color) + GetBValue (color) <= 1024; // MS default
     // return 299 * GetRValue (color) + 587 * GetGValue (color) + 114 * GetBValue (color) <= 128000; // YIQ?
