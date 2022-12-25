@@ -12,6 +12,7 @@
 #include <sodium.h>
 #include <lzma.h>
 #include "../lib/cuckoocycle.h"
+#include "../lib/cc_verify_signed_message.h"
 
 #include "../common/log.h"
 #include "../common/lock.h"
@@ -95,6 +96,19 @@ std::size_t w2u8 (const wchar_t * p, std::size_t n, std::uint8_t * content, std:
     else
         return 0;
 }
+
+std::string w2u8 (const wchar_t * string) {
+    std::string s;
+    if (string) {
+        auto n = WideCharToMultiByte (CP_UTF8, 0, string, -1, NULL, 0, NULL, NULL) - 1;
+        if (n > 0) {
+            s.resize (n);
+            WideCharToMultiByte (CP_UTF8, 0, string, -1, (LPSTR) &s [0], n + 1, NULL, NULL);
+        }
+    }
+    return s;
+}
+
 
 // u82ws
 //  - converts UTF-8 to UTF-16 (wchar_t) string
@@ -698,6 +712,61 @@ bool go () {
 
     if (auto parameter = command (argc, argw, L"proove")) {
         return proove (parameter);
+    }
+
+    // verify-signed-message
+    //  - 
+
+    if (auto message = command (argc, argw, L"verify-signed-message")) {
+        auto address = w2u8 (option (argc, argw, L"address"));
+        auto signature = w2u8 (option (argc, argw, L"signature"));
+
+        uint8_t raw_signature [68];
+        uint8_t raw_address [65];
+        uint8_t hash [32];
+
+        std::size_t raw_signature_length = 0;
+        if (sodium_base642bin (raw_signature, sizeof raw_signature,
+                               signature.c_str (), signature.length (),
+                               nullptr, &raw_signature_length, nullptr,
+                               sodium_base64_VARIANT_ORIGINAL) != 0) {
+
+            printf ("Invalid signature: Not Base64\n");
+            SetLastError (ERROR_INVALID_PARAMETER);
+            return false;
+        }
+        if (raw_signature_length != 65) {
+            printf ("Invalid signature: Wrong length\n");
+            SetLastError (ERROR_INVALID_PARAMETER);
+            return false;
+        }
+
+        cc_type type;
+
+        bool result = false;
+        if (cc_address_to_bytes (BitcoinCash, address.c_str (), raw_address)) {
+            type = BitcoinCash;
+        } else
+        if (cc_address_to_bytes (Decred, address.c_str (), raw_address)) {
+            type = Decred;
+        } else
+        if (cc_address_to_bytes (Bitcoin, address.c_str (), raw_address)) {
+            type = Bitcoin;
+        } else {
+            printf ("Unrecognized address type\n");
+            SetLastError (ERROR_INVALID_PARAMETER);
+            return true;
+        }
+
+        cc_get_message_hash (type, w2u8 (message).c_str (), hash);
+        result = cc_verify_signed_message (type, hash, raw_address, raw_signature);
+
+        if (result) {
+            printf ("Verified successfully.\nSignature confirms the message was signed by \"%s\" address.\n", address.c_str ());
+        }  else {
+            printf ("VERIFICATION FAILED!\nSignature does not match the address and message!\n");
+        }
+        return true;
     }
 
     // hash
@@ -2446,6 +2515,14 @@ bool proove (const wchar_t * parameter) {
     if (opts.requirements.complexity) {
         first = opts.requirements.complexity;
         last = opts.requirements.complexity;
+    }
+
+    // TODO: add warnings if outside bounds
+    if (auto parameter = option (argc, argw, L"shortest")) {
+        opts.parameters.shortest = std::wcstoul (parameter, nullptr, 0);
+    }
+    if (auto parameter = option (argc, argw, L"longest")) {
+        opts.parameters.longest = std::wcstoul (parameter, nullptr, 0);
     }
 
     for (auto cx = first; (cx != last + 1) && !quit; ++cx) {

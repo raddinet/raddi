@@ -65,6 +65,33 @@
     <ClCompile Include="..\core\raddi_database_peerset.cpp">
       <Filter>Core\Database</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\trezor-crypto\address.c">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\trezor-crypto\base58.c">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\trezor-crypto\bignum.c">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\trezor-crypto\blake256.c">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\trezor-crypto\cash_addr.c">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\trezor-crypto\ecdsa.c">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\trezor-crypto\ripemd160.c">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\trezor-crypto\secp256k1.c">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\cc_verify_signed_message.c">
+      <Filter>Libraries</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="raddi.com-en.rc">
@@ -165,6 +192,42 @@
     <ClInclude Include="..\core\raddi_database_peerset.h">
       <Filter>Core\Database</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\threadpool.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\threadpool2.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\trezor-crypto\address.h">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\trezor-crypto\base58.h">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\trezor-crypto\bignum.h">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\trezor-crypto\blake256.h">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\trezor-crypto\cash_addr.h">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\trezor-crypto\ecdsa.h">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\trezor-crypto\options.h">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\trezor-crypto\ripemd160.h">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\trezor-crypto\secp256k1.h">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\cc_verify_signed_message.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -191,6 +254,9 @@
     <Filter Include="Libraries">
       <UniqueIdentifier>{c7394585-f1df-4547-92f6-bc0f2a920d7b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries\Trezor Firmware Crypto">
+      <UniqueIdentifier>{aa331494-d70a-4226-a559-4a394d9b89e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\img\raddicom.ico">
@@ -214,6 +280,15 @@
     </None>
     <None Include="..\lib\cuckoocycle.tcc">
       <Filter>Libraries</Filter>
+    </None>
+    <None Include="..\common\threadpool.tcc">
+      <Filter>Common</Filter>
+    </None>
+    <None Include="..\common\threadpool2.tcc">
+      <Filter>Common</Filter>
+    </None>
+    <None Include="..\lib\trezor-crypto\secp256k1.table">
+      <Filter>Libraries\Trezor Firmware Crypto</Filter>
     </None>
   </ItemGroup>
 </Project>
