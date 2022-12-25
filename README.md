@@ -14,6 +14,7 @@ Those are needed only for *release* builds. For *portable* builds everything nec
 
 * https://github.com/jedisct1/libsodium - fork at https://github.com/raddinet/libsodium
 * https://github.com/tromp/cuckoo - adapted to [/lib/cuckoocycle.h](https://github.com/raddinet/raddi/blob/master/lib/cuckoocycle.h) ([.tcc](https://github.com/raddinet/raddi/blob/master/lib/cuckoocycle.tcc))
+* https://github.com/trezor/trezor-firmware/tree/master/crypto - adapted [Trezor](https://github.com/trezor/)'s crypto library: [/lib/trezor-crypto](https://github.com/raddinet/raddi/tree/master/lib/trezor-crypto)
 * https://tukaani.org/xz
 * https://sqlite.org/ - client application
 
