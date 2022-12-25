@@ -1,6 +1,11 @@
 # raddi/lib directory
 
-*To successfully compile the project, copy third-party libraries into this directory as described*
+*To successfully compile the project, acquire and copy third-party libraries listed below into this directory*
+
+## Libraries already in repository
+
+* [cuckoocycle.h] - adapts Cuckoo Cycle Mean Miner algorithm from https://github.com/tromp/cuckoo
+* [trezor-crypto] - adapts [Trezor](https://github.com/trezor/)'s crypto library for single purpose of verifying ECDSA public key recovery signatures
 
 ## Libraries to acquire
 
