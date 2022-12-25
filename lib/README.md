@@ -4,8 +4,8 @@
 
 ## Libraries already in repository
 
-* [cuckoocycle.h] - adapts Cuckoo Cycle Mean Miner algorithm from https://github.com/tromp/cuckoo
-* [trezor-crypto] - adapts [Trezor](https://github.com/trezor/)'s crypto library for single purpose of verifying ECDSA public key recovery signatures
+* [cuckoocycle.h](cuckoocycle.h) - adapts Cuckoo Cycle Mean Miner algorithm from https://github.com/tromp/cuckoo
+* [trezor-crypto](trezor-crypto) - adapts [Trezor](https://github.com/trezor/)'s crypto library for single purpose of verifying ECDSA public key recovery signatures
 
 ## Libraries to acquire
 
