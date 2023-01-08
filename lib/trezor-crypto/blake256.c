@@ -132,8 +132,10 @@ void blake256_Init( BLAKE256_CTX *S )
   S->h[5] = 0x9b05688c;
   S->h[6] = 0x1f83d9ab;
   S->h[7] = 0x5be0cd19;
-  S->t[0] = S->t[1] = S->buflen = S->nullt = 0;
   S->s[0] = S->s[1] = S->s[2] = S->s[3] = 0;
+  S->t[0] = S->t[1] = 0;
+  S->buflen = 0;
+  S->nullt = 0;
 }
 
 
@@ -201,12 +203,12 @@ void blake256_Final( BLAKE256_CTX *S, uint8_t *out )
     {
       if ( !S->buflen ) S->nullt = 1;
 
-      S->t[0] -= 440 - ( S->buflen << 3 );
+      S->t[0] -= 440 - (uint32_t) ( S->buflen << 3 );
       blake256_Update( S, padding, 55 - S->buflen );
     }
     else   /* need 2 compressions */
     {
-      S->t[0] -= 512 - ( S->buflen << 3 );
+      S->t[0] -= 512 - (uint32_t) ( S->buflen << 3 );
       blake256_Update( S, padding, 64 - S->buflen );
       S->t[0] -= 440;
       blake256_Update( S, padding + 1, 55 );

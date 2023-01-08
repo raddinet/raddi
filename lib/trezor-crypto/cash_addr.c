@@ -36,7 +36,7 @@
 #define CHECKSUM_SIZE 8
 
 static uint64_t cashaddr_polymod_step(uint64_t pre) {
-  uint8_t b = pre >> 35;
+  uint8_t b = (uint8_t) (pre >> 35);
   return ((pre & 0x7FFFFFFFFULL) << 5) ^ (-((b >> 0) & 1) & 0x98f2bc8e61ULL) ^
          (-((b >> 1) & 1) & 0x79b76d99e2ULL) ^
          (-((b >> 2) & 1) & 0xf33e5fb3c4ULL) ^

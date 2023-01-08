@@ -77,7 +77,7 @@ size_t cc_address_to_bytes (cc_type type, const char * address, uint8_t buffer [
     return 0;
 }
 
-static uint32_t ser_length (uint32_t len, uint8_t * out) {
+static size_t ser_length (size_t len, uint8_t * out) {
     if (len < 253) {
         out [0] = len & 0xFF;
         return 1;
@@ -88,17 +88,33 @@ static uint32_t ser_length (uint32_t len, uint8_t * out) {
         out [2] = (len >> 8) & 0xFF;
         return 3;
     }
-    out [0] = 254;
+#ifdef _WIN64
+    if (len < 0x100000000) {
+#endif
+        out [0] = 254;
+        out [1] = len & 0xFF;
+        out [2] = (len >> 8) & 0xFF;
+        out [3] = (len >> 16) & 0xFF;
+        out [4] = (len >> 24) & 0xFF;
+        return 5;
+#ifdef _WIN64
+    }
+    out [0] = 255;
     out [1] = len & 0xFF;
     out [2] = (len >> 8) & 0xFF;
     out [3] = (len >> 16) & 0xFF;
     out [4] = (len >> 24) & 0xFF;
-    return 5;
+    out [5] = (len >> 32) & 0xFF;
+    out [6] = (len >> 40) & 0xFF;
+    out [7] = (len >> 48) & 0xFF;
+    out [8] = (len >> 56) & 0xFF;
+    return 9;
+#endif
 }
 
 void cc_get_message_hash (cc_type type, const uint8_t * message, size_t message_length, uint8_t hash [32]) {
-    uint8_t vi_message_length [5] = { 0 };
-    uint32_t vi_message_length_cb = ser_length (message_length, vi_message_length);
+    uint8_t vi_message_length [9] = { 0 };
+    size_t vi_message_length_cb = ser_length (message_length, vi_message_length);
 
     union {
         crypto_hash_sha256_state sha256;
