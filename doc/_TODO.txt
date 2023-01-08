@@ -1,6 +1,8 @@
 TODO
 ====
 
+doc: libraries used
+
 accept all data from core nodes (don't consider old)
 
 (go through all reddit comments on raddi for ideas I've already forgot)
@@ -77,8 +79,6 @@ support reading options from file
     - connected app will need elevation of the "node setup dialog" (separate app)
  - node started by tray app or reader app will normally use HKCU 
     - but if local config file (sqlite?) is present (raddi32.cfg) then will use that
-
-gut out OpenSSL, libbitcoin or something and make absolutely minimal library to verify BTC-signed messages
 
 tables: test and fix shard splitting
 tables: add code for client app to process external changes, see 'process' member function

@@ -714,12 +714,13 @@ bool go () {
         return proove (parameter);
     }
 
-    // verify-signed-message
-    //  - 
+    // verify-cc-signed-message
+    //  - verify cryptocurrency-signed message (BTC/BCH/DCR)
 
-    if (auto message = command (argc, argw, L"verify-signed-message")) {
+    if (auto parameter = command (argc, argw, L"verify-cc-signature")) {
+        auto message = w2u8 (option (argc, argw, L"message"));
         auto address = w2u8 (option (argc, argw, L"address"));
-        auto signature = w2u8 (option (argc, argw, L"signature"));
+        auto signature = w2u8 (parameter);
 
         uint8_t raw_signature [68];
         uint8_t raw_address [65];
@@ -758,7 +759,7 @@ bool go () {
             return true;
         }
 
-        cc_get_message_hash (type, w2u8 (message).c_str (), hash);
+        cc_get_message_hash (type, message.c_str (), hash);
         result = cc_verify_signed_message (type, hash, raw_address, raw_signature);
 
         if (result) {
@@ -2386,6 +2387,8 @@ bool benchmark (const wchar_t * parameter) {
     std::uint8_t hash [crypto_hash_sha512_BYTES];
     std::uint8_t buffer [raddi::proof::max_size];
     
+    // 00 B1421E00 E1EA3100 FF763E00 9A285B00 2B294700 7AFA4900 14513B00 46E43E01 BBD74701 00AF2B00 F7242500 F8156000 5DFC7A01 F08F1400 0FE5AC00 69270100 8B480A00 7155C500 93 
+
     static const std::uint8_t expected [] [raddi::proof::max_size] = {
         { // 26
             0x00,
