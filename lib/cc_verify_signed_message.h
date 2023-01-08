@@ -27,7 +27,7 @@ size_t cc_address_to_bytes (cc_type type, const char * address, uint8_t buffer [
 // cc_get_message_hash
 //  - 
 //
-void cc_get_message_hash (cc_type type, const char * message, uint8_t hash [32]);
+void cc_get_message_hash (cc_type type, const uint8_t * message, size_t message_length, uint8_t hash [32]);
 
 // cc_verify_signed_message
 //  -

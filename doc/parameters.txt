@@ -273,6 +273,15 @@ RADDI.com utility functions/commands:
 			- number; requests to benchmark for only <complexity> complexity
 		- optional parameters:
 			- threadpool - override choice of threadpool to schedule work
+	- verify-cc-signature:<cc-signature>
+		- verifies cryptocurrency-signed message (BTC/BCH/DCR)
+		- verifies that 'signature' is of message signed by 'address'
+			- the message is provided as text/content
+		- required parameters:
+			- address
+		- optional parameters:
+			- text, content
+		- prints result of verification as text
 	- deepscan
 		- performs revalidation of the entire database; enumerates all entries
 		  and validates their correctness and verifies their proof-of-work and
@@ -504,6 +513,16 @@ RADDI.com utility additional and optional parameters to functions:
 			- "custom" - custom group-spanning core affinity thread pool
 		- applies to:
 			- benchmark
+	- address:<addr>
+		- cryptocurrency address
+		- addr:
+			- Bitcoin address, e.g.: 1raddi7fqhEtWDoG4P6ZGeRaY1amLWfjF
+			- Bitcoin Cash address (prefix optional)
+				- qqykqax4qzzyjnduqtp4et4jm3h2z0xrwsec9l8nxd
+				- bitcoincash:qqykqax4qzzyjnduqtp4et4jm3h2z0xrwsec9l8nxd
+			- Decred address, e.g.: DsZr2f96Mt2ddyTqBNvuURVamUEQcAs11vK
+		- applies to:
+			- verify-cc-signature
 	- identity:*
 	- identity:<iid>:*
 	- identity:<iid>:<key>

@@ -718,7 +718,7 @@ bool go () {
     //  - verify cryptocurrency-signed message (BTC/BCH/DCR)
 
     if (auto parameter = command (argc, argw, L"verify-cc-signature")) {
-        auto message = w2u8 (option (argc, argw, L"message"));
+        auto messagelength = gather (rawbuffer, sizeof rawbuffer);
         auto address = w2u8 (option (argc, argw, L"address"));
         auto signature = w2u8 (parameter);
 
@@ -759,7 +759,7 @@ bool go () {
             return true;
         }
 
-        cc_get_message_hash (type, message.c_str (), hash);
+        cc_get_message_hash (type, rawbuffer, messagelength, hash);
         result = cc_verify_signed_message (type, hash, raw_address, raw_signature);
 
         if (result) {

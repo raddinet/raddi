@@ -96,9 +96,7 @@ static uint32_t ser_length (uint32_t len, uint8_t * out) {
     return 5;
 }
 
-void cc_get_message_hash (cc_type type, const char * message, uint8_t hash [32]) {
-    uint32_t message_length = (uint32_t) strlen (message);
-
+void cc_get_message_hash (cc_type type, const uint8_t * message, size_t message_length, uint8_t hash [32]) {
     uint8_t vi_message_length [5] = { 0 };
     uint32_t vi_message_length_cb = ser_length (message_length, vi_message_length);
 
@@ -113,7 +111,7 @@ void cc_get_message_hash (cc_type type, const char * message, uint8_t hash [32])
             crypto_hash_sha256_init (&ctx.sha256);
             crypto_hash_sha256_update (&ctx.sha256, (const uint8_t *) "\x18""Bitcoin Signed Message:\n", 25);
             crypto_hash_sha256_update (&ctx.sha256, vi_message_length, vi_message_length_cb);
-            crypto_hash_sha256_update (&ctx.sha256, (const uint8_t *) message, message_length);
+            crypto_hash_sha256_update (&ctx.sha256, message, message_length);
             crypto_hash_sha256_final (&ctx.sha256, hash);
 
             crypto_hash_sha256_init (&ctx.sha256);
@@ -125,7 +123,7 @@ void cc_get_message_hash (cc_type type, const char * message, uint8_t hash [32])
             blake256_Init (&ctx.blake256);
             blake256_Update (&ctx.blake256, (const uint8_t *) "\x17""Decred Signed Message:\n", 24);
             blake256_Update (&ctx.blake256, vi_message_length, vi_message_length_cb);
-            blake256_Update (&ctx.blake256, (const uint8_t *) message, message_length);
+            blake256_Update (&ctx.blake256, message, message_length);
             blake256_Final (&ctx.blake256, hash);
             break;
     }
