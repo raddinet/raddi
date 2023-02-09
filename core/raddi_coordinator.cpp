@@ -79,7 +79,7 @@ void raddi::coordinator::sweep () {
     
     if (ii != ie) {
         do {
-            if (ii->retired && !ii->pending ()) {
+            if (ii->state == connection::state::retired && !ii->pending ()) {
                 ii = this->connections.erase (ii);
                 ie = this->connections.end ();
             } else {
@@ -108,7 +108,7 @@ void raddi::coordinator::flush () {
 void raddi::coordinator::optimize () {
     exclusive guard (this->lock);
     for (auto & connection : this->connections) {
-        if (connection.secured && !connection.retired) {
+        if (connection.state == connection::state::secured) {
             connection.optimize ();
         }
         // TODO: close congested connections // connection.buffer_size () > threshold?
@@ -269,7 +269,7 @@ void raddi::coordinator::operator() () {
             //  - don't connect to addresses already connected to
 
             for (const auto & connection : connections) {
-                if (!connection.retired) {
+                if (connection.state < connection::state::retired) {
                     this->connect_requests.erase (connection.peer);
                 }
             }
@@ -516,7 +516,7 @@ bool raddi::coordinator::process (const unsigned char * data, std::size_t size, 
 
                                     if ((this->random_distribution (this->random_generator) % 8) == 0) {
                                         auto fake_assessment = 9 * (this->random_distribution (this->random_generator) % db::peerset::new_record_assessment) / 8 + 1;
-                                        this->database.peers [validated_nodes]->insert (a, fake_assessment);
+                                        this->database.peers [validated_nodes]->insert (a, (std::uint16_t) fake_assessment);
                                     } else {
                                         this->database.peers [announced_nodes]->insert (a, 2); // freshly announced nodes get only 2 attempts
                                     }
@@ -770,7 +770,7 @@ bool raddi::coordinator::move (const address & address, level new_level, std::ui
     if (adjust) {
         immutability guard (this->lock);
         for (auto & connection : this->connections) {
-            if (!connection.retired) {
+            if (connection.state != connection::state::retired) {
                 if (connection.peer == address) {
                     connection.level = new_level;
                 }
@@ -872,7 +872,7 @@ bool raddi::coordinator::reciprocal (const connection * peer) {
     immutability guard (this->lock);
 
     for (const auto & connection : connections) {
-        if (connection.secured) {
+        if (connection.state == connection::state::secured) {
             if (&connection != peer) {
                 address addr = connection.peer;
                 addr.port = 0;
@@ -899,13 +899,13 @@ std::size_t raddi::coordinator::active (std::size_t attempting [levels],
     immutability guard (this->lock);
 
     for (const auto & connection : connections) {
-        if (!connection.retired) {
+        if (connection.state != connection::state::retired) {
             if (connection.connecting) {
                 if (attempting) {
                     ++attempting [connection.level];
                 }
             }
-            if (connection.secured) {
+            if (connection.state == connection::state::secured) {
                 ++n;
                 if (connected) {
                     ++connected [connection.level];
@@ -925,7 +925,7 @@ bool raddi::coordinator::broadcasting () const {
 void raddi::coordinator::status () const {
     immutability guard (this->lock);
     for (const auto & connection : connections) {
-        if (connection.secured || !connection.retired) {
+        if (connection.state < connection::state::retired) {
             connection.status ();
         }
     }
@@ -937,7 +937,7 @@ std::size_t raddi::coordinator::broadcast (const db::root & top, const entry * d
 
     immutability guard (this->lock);
     for (auto & connection : connections) {
-        if (connection.secured && !connection.retired) {
+        if (connection.state == connection::state::secured) {
 
             // TODO: send to someone immediately and to others with slight delay (up to 1s?) to mess with origin analysis - Aetheral Research
             //        - this will come in hand with the queuing feature described in .send function comments
@@ -956,7 +956,7 @@ std::size_t raddi::coordinator::broadcast (enum class raddi::request::type rq, c
 
     immutability guard (this->lock);
     for (auto & connection : this->connections) {
-        if (connection.secured && !connection.retired) {
+        if (connection.state == connection::state::secured) {
             n += connection.send (rq, data, size);
         }
     }
@@ -1297,7 +1297,7 @@ void raddi::coordinator::announce (const address & a, bool only, connection * cx
     } else {
         immutability guard (this->lock);
         for (auto & c : this->connections) {
-            if (c.secured && !c.retired && (&c != cx))
+            if ((c.state == connection::state::secured) && (&c != cx))
                 c.send (rt, &r, rcb);
         }
     }

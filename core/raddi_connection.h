@@ -37,8 +37,8 @@ namespace raddi {
         bool message (const unsigned char * entry, std::size_t size);
 
         union {
-            protocol::proposal *   proposal; // this->secured == false
-            protocol::encryption * encryption; // this->secured == true
+            protocol::proposal * proposal; // this->state < secured
+            protocol::encryption * encryption; // this->state == secured
         };
 
     public:
@@ -55,8 +55,12 @@ namespace raddi {
         raddi::address  peer; // inbound connections have port set to 0
         raddi::level    level; // not strictly required here, coordinator could do search
 
-        bool            secured = false;
-        bool            retired = false;
+        enum class state : std::uint8_t {
+            pending,
+            securing,
+            secured,
+            retired
+        } state = state::pending;
 
         subscriptions   subscriptions;
 
@@ -139,8 +143,7 @@ namespace raddi {
         //    to determine if we aren't accidentaly connecting back to ourselves
         //
         bool reflecting (const raddi::protocol::keyset * peer) const {
-            return !this->secured
-                && !this->retired
+            return this->state == state::pending
                 && !std::memcmp (peer->inbound_nonce, this->proposal->inbound_nonce, sizeof peer->inbound_nonce)
                 && !std::memcmp (peer->outbound_nonce, this->proposal->outbound_nonce, sizeof peer->outbound_nonce);
         }

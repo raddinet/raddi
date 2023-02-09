@@ -8,7 +8,7 @@ namespace raddi {
     // level
     //  - peer node categories used by coordinator and database
     //
-    enum level : unsigned char {
+    enum level : std::uint8_t {
         core_nodes,         // bootstrapped nodes and relayed by other core nodes
         established_nodes,  // nodes that we connected to repeatedly
         validated_nodes,    // nodes that we successfully connected to

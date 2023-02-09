@@ -37,7 +37,7 @@ raddi::connection::connection (const address & addr, raddi::level level)
     , level (level) {}
 
 raddi::connection::~connection () {
-    if (this->secured) {
+    if (this->state >= state::secured) {
         delete this->encryption;
         this->encryption = nullptr;
     } else {
@@ -135,12 +135,12 @@ bool raddi::connection::send (enum class raddi::request::type type, const void *
 }
 
 std::uint64_t raddi::connection::keepalive (std::uint64_t now, std::uint64_t expected, std::uint64_t period) {
-    if (!this->retired) {
+    if (this->state < state::retired) {
         if (std::int64_t (now - this->latest) > std::int64_t (std::max (4 * period, 1'000'000uLL))) {
             this->report (raddi::log::level::event, 8);
             this->cancel ();
         } else
-        if (this->secured) {
+        if (this->state == state::secured) {
             if (std::int64_t (now - std::max (this->latest, this->probed)) > std::int64_t (period)) {
                 if (!this->unsynchronized_is_live ()) {
                     if (auto message = this->prepare (2)) {
@@ -161,9 +161,16 @@ std::uint64_t raddi::connection::keepalive (std::uint64_t now, std::uint64_t exp
 }
 
 void raddi::connection::status () const {
+    const char * state = "";
+    switch (this->state) {
+        case state::pending: state = "connecting"; break;
+        case state::securing: state = "securing"; break;
+        case state::secured: state = this->encryption->reveal (); break;
+        case state::retired: state = "retired"; break;
+    }
+
     this->report (raddi::log::level::note, 1,
-                  this->retired ? "retired" : this->secured ? this->encryption->reveal () : "connecting",
-                  this->buffer_size (),
+                  state, this->buffer_size (),
                   (raddi::microtimestamp () - std::max (this->probed, this->latest)) / 1'000'000uLL,
                   this->counter, this->messages, this->keepalives,
                   this->counters.sent, this->counters.delayed);// */
@@ -192,83 +199,87 @@ bool raddi::connection::decode (const unsigned char * data, std::size_t size) {
 }
 
 bool raddi::connection::inbound (unsigned char * data, std::size_t & n) {
-    if (this->secured) {
-        if (n >= 2) {
-            std::uint32_t size = data [0] | (data [1] << 8);
-            switch (size) {
+    switch (this->state) {
 
-                case 0x0000:
-                    n = 2;
-                    this->keepalives += n;
-                    if (auto message = this->prepare (2)) {
-                        message [0] = 0xFF;
-                        message [1] = 0xFF;
-                        return this->transmit (message, 2);
-                    } else
-                        return false;
+        case state::secured:
+            if (n >= 2) {
+                std::uint32_t size = data [0] | (data [1] << 8);
+                switch (size) {
 
-                case 0xFFFF:
-                    n = 2;
-                    this->latest = raddi::microtimestamp ();
-                    break;
-
-                default:
-                    size += sizeof (std::uint16_t);
-                    if (n >= size) {
-                        if (!this->decode (data, size))
+                    case 0x0000:
+                        n = 2;
+                        this->keepalives += n;
+                        if (auto message = this->prepare (2)) {
+                            message [0] = 0xFF;
+                            message [1] = 0xFF;
+                            return this->transmit (message, 2);
+                        } else
                             return false;
-                    }
-                    n = size;
-                    break;
-            }
-        } else {
-            n = 2;
-        }
-    } else {
-        std::size_t prologue = 0;
-        if (socks5proxy.port && this->peer.accessible ()) {
-            prologue = 6 + this->peer.size ();
 
-            bool valid = true;
-            switch (n) {
-                default:
-                case 5: if (data [4] != 0x00) valid = false; // RESERVED
-                case 4: if (data [3] != 0x00) valid = false; // SUCCESS
-                case 3: if (data [2] != 0x05) valid = false; // SOCKS5
-                case 2: if (data [1] != 0x00) valid = false; // NO AUTHENTICATION is fine
-                case 1: if (data [0] != 0x05) valid = false; // SOCKS5
-            }
+                    case 0xFFFF:
+                        n = 2;
+                        this->latest = raddi::microtimestamp ();
+                        break;
 
-            if (!valid) {
-                if ((n > 3) && (data [0] == 0x05 && data [1] == 0x00 && data [2] == 0x05)) {
-                    if (data [3] != 6) {
-                        this->report (log::level::error, 16, (unsigned int) data [3],
-                                      log::rsrc_string (0x00020 + ((data [3] < 9) ? data [3] : 9)));
-                    }
-                } else {
-                    this->report (log::level::error, 15);
+                    default:
+                        size += sizeof (std::uint16_t);
+                        if (n >= size) {
+                            if (!this->decode (data, size))
+                                return false;
+                        }
+                        n = size;
+                        break;
                 }
-                return false;
+            } else {
+                n = 2;
             }
-            if (n == 2)
-                this->report (log::level::note, 4, socks5proxy);
-        }
+            break;
 
-        if (n >= sizeof (raddi::protocol::initial) + prologue) {
-            if (this->head (reinterpret_cast <raddi::protocol::initial *> (data + prologue))) {
-                this->secured = true;
-                n = sizeof (raddi::protocol::initial) + prologue;
-            } else {
-                this->discord ();
-                return false;
+        case state::pending:
+            std::size_t prologue = 0;
+            if (socks5proxy.port && this->peer.accessible ()) {
+                prologue = 6 + this->peer.size ();
+
+                bool valid = true;
+                switch (n) {
+                    default:
+                    case 5: if (data [4] != 0x00) valid = false; // RESERVED
+                    case 4: if (data [3] != 0x00) valid = false; // SUCCESS
+                    case 3: if (data [2] != 0x05) valid = false; // SOCKS5
+                    case 2: if (data [1] != 0x00) valid = false; // NO AUTHENTICATION is fine
+                    case 1: if (data [0] != 0x05) valid = false; // SOCKS5
+                }
+
+                if (!valid) {
+                    if ((n > 3) && (data [0] == 0x05 && data [1] == 0x00 && data [2] == 0x05)) {
+                        if (data [3] != 6) {
+                            this->report (log::level::error, 16, (unsigned int) data [3],
+                                          log::rsrc_string (0x00020 + ((data [3] < 9) ? data [3] : 9)));
+                        }
+                    } else {
+                        this->report (log::level::error, 15);
+                    }
+                    return false;
+                }
+                if (n == 2)
+                    this->report (log::level::note, 4, socks5proxy);
             }
-        } else
-            if (n >= sizeof (std::uint32_t) && (*reinterpret_cast <const std::uint32_t *> (data) == 0)) {
-                // peer is overloaded, disconnect and try later
-                return false;
-            } else {
-                n = sizeof (raddi::protocol::initial) + prologue;
-            }
+
+            if (n >= sizeof (raddi::protocol::initial) + prologue) {
+                if (this->head (reinterpret_cast <raddi::protocol::initial *> (data + prologue))) {
+                    this->state = state::secured;
+                    n = sizeof (raddi::protocol::initial) + prologue;
+                } else {
+                    this->discord ();
+                    return false;
+                }
+            } else
+                if (n >= sizeof (std::uint32_t) && (*reinterpret_cast <const std::uint32_t *> (data) == 0)) {
+                    // peer is overloaded, disconnect and try later
+                    return false;
+                } else {
+                    n = sizeof (raddi::protocol::initial) + prologue;
+                }
     }
     return true;
 }
