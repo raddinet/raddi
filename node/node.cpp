@@ -176,16 +176,18 @@ void raddi::connection::discord () {
     ::coordinator->disagreed (this);
 }
 void raddi::connection::disconnected () {
-    if (this->secured) {
+    if (this->state == state::secured) {
         this->report (raddi::log::level::event, 2, this->peer);
     } else {
         this->report (raddi::log::level::event, 3, this->peer);
         ::coordinator->unavailable (this);
+
+        delete this->proposal;
+        this->proposal = nullptr;
     }
 
     this->Socket::disconnect ();
-    this->secured = false;
-    this->retired = true; // 'this' can cease to exist at any time after this line
+    this->state = state::retired; // 'this' can cease to exist at any time after this line
 
     SetEvent (::disconnected);
 }
@@ -204,6 +206,7 @@ bool raddi::connection::head (raddi::protocol::initial * peer) {
 
         // replace proposal with encryption
         delete this->proposal;
+        this->proposal = nullptr;
         this->encryption = ee;
 
         this->report (raddi::log::level::event, 4, ee->reveal ());
@@ -501,6 +504,7 @@ namespace {
         std::size_t max_content_size = raddi::entry::max_content_size;
         switch (level) {
 
+            // case raddi::db::assessed_level::meta:
             case raddi::db::assessed_level::thread:
                 if (raddi::content::is_plain_line (entry->content (), content_size)) {
                     max_content_size = raddi::consensus::max_thread_name_size;
@@ -529,6 +533,7 @@ namespace {
         unsigned int requirement = 0;
         switch (level) {
 
+            // case raddi::db::assessed_level::meta:
             case raddi::db::assessed_level::thread:
                 requirement = raddi::consensus::min_thread_pow_complexity;
                 break;
@@ -597,7 +602,7 @@ namespace {
 
                             // redistribute to other connections even if detached, others may already have the parent
                             if (broadcast) {
-                                auto n = coordinator->broadcast (top, entry, size);
+                                auto n = coordinator->broadcast (top, entry, size, source);
 
                                 if (source == nullptr) {
                                     raddi::log::event (raddi::component::main, 0x21, entry->id, n);
@@ -639,7 +644,7 @@ namespace {
                 // keep track on threads and basic channel traffic details
                 // so that GUI apps can present meaningful info to the user
                 
-                if (settings.track_all_channels)
+                if (settings.track_all_channels) // TODO: extend to distinguish 'meta'
                     return true;
                 
                 // ensure data comming from other connections are current and not being a flood of historical playback
@@ -693,7 +698,7 @@ namespace {
                     //  - generaly old entries are comming back only on request
 
                     if (!old) {
-                        coordinator->broadcast (top, entry, size);
+                        coordinator->broadcast (top, entry, size, source);
                     }
                     return true;
                 }
@@ -735,7 +740,7 @@ namespace {
                             //  - generaly old entries are comming back only on request
 
                             if (broadcast && !old) {
-                                auto n = coordinator->broadcast (top, entry, size);
+                                auto n = coordinator->broadcast (top, entry, size, source);
 
                                 if (source == nullptr) {
                                     raddi::log::event (raddi::component::main, 0x21, entry->id, n);

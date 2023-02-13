@@ -931,12 +931,15 @@ void raddi::coordinator::status () const {
     }
 }
 
-std::size_t raddi::coordinator::broadcast (const db::root & top, const entry * data, std::size_t size) {
+std::size_t raddi::coordinator::broadcast (const db::root & top, const entry * data, std::size_t size, connection * ignore) {
     const bool announcement = data->is_announcement ();
     std::size_t n = 0;
 
     immutability guard (this->lock);
     for (auto & connection : connections) {
+        if (&connection == ignore)
+            continue;
+
         if (connection.state == connection::state::secured) {
 
             // TODO: send to someone immediately and to others with slight delay (up to 1s?) to mess with origin analysis - Aetheral Research
@@ -951,11 +954,14 @@ std::size_t raddi::coordinator::broadcast (const db::root & top, const entry * d
     return n;
 }
 
-std::size_t raddi::coordinator::broadcast (enum class raddi::request::type rq, const void * data, std::size_t size) {
+std::size_t raddi::coordinator::broadcast (enum class raddi::request::type rq, const void * data, std::size_t size, connection * ignore) {
     std::size_t n = 0;
 
     immutability guard (this->lock);
     for (auto & connection : this->connections) {
+        if (&connection == ignore)
+            continue;
+
         if (connection.state == connection::state::secured) {
             n += connection.send (rq, data, size);
         }

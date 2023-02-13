@@ -309,14 +309,14 @@ namespace raddi {
         //  - broadcasts the entry to all connections that are subscribed to the channel/thread/stream
         //    or everything (typically all, except leaf nodes)
         //
-        std::size_t broadcast (const db::root &, const entry * data, std::size_t size);
+        std::size_t broadcast (const db::root &, const entry * data, std::size_t size, connection * ignore);
 
         // broadcast
         //  - sends request to all connections (optionally with additional data)
         //
-        std::size_t broadcast (enum class raddi::request::type, const void * data, std::size_t size);
-        std::size_t broadcast (enum class raddi::request::type rq) {
-            return this->broadcast (rq, nullptr, 0);
+        std::size_t broadcast (enum class raddi::request::type, const void * data, std::size_t size, connection * ignore = nullptr);
+        std::size_t broadcast (enum class raddi::request::type rq, connection * ignore = nullptr) {
+            return this->broadcast (rq, nullptr, 0, ignore);
         }
 
         // keepalive
