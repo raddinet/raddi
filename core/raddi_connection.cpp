@@ -164,7 +164,7 @@ void raddi::connection::status () const {
     const char * state = "";
     switch (this->state) {
         case state::pending: state = "connecting"; break;
-        case state::securing: state = "securing"; break;
+        // case state::securing: state = "securing"; break;
         case state::secured: state = this->encryption->reveal (); break;
         case state::retired: state = "retired"; break;
     }

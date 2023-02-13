@@ -57,7 +57,6 @@ namespace raddi {
 
         enum class state : std::uint8_t {
             pending,
-            securing,
             secured,
             retired
         } state = state::pending;
