@@ -91,11 +91,23 @@ ENTRY
  - valid when CB is range 154 ~ 65534 inclusive
 
 | FRAMING  | HEADER                                  | CONTENT | PROOF OF WORK         |
-|          |      ID      |  PARENT ID   | SIGNATURE |         |                       |
+|          |      ID      |    PARENT    | SIGNATURE |         |                       |
 | CB | AES | Te | Tc | NN | Te | Tc | NN |           |         | NUL | EDGE...    | FT |
 | 2B | 16B | 4B | 4B | 4B | 4B | 4B | 4B |    64B    |    ~    | 1B  | 4B × 2 × N | 1B |
 
 
+ID - identifier of the new entry: raddi_eid.h/.cpp
+PARENT - identifier of the parent entry in the hierarchy (or same as ID)
+
+If ID and PARENT are identical, the entry announces existence of the identity or a new
+channel. If ID.Te == ID.Tc the announcement is of the identity.
+
+SIGNATURE - 
+PROOF OF WORK - 
+
+Invariants:
+ - Te >= Tc
+ - ID T >= PARENT T
+
 TODO: raddi_iid.h/.cpp
-TODO: raddi_eid.h/.cpp
 TODO: raddi_proof.h/.cpp
