@@ -60,8 +60,8 @@ void raddi::protocol::proposal::propose (initial * head, bool outbound) {
                 aes = 0x02;
                 break;
             default: // automatic or forced
-                if (crypto_aead_aegis256_is_available ()) aes |= 0x02;
-                if (crypto_aead_aes256gcm_is_available ()) aes |= 0x01;
+                if (is_fast_crypto_aead_aegis256_available ()) aes |= 0x02;
+                if (is_fast_crypto_aead_aes256gcm_available ()) aes |= 0x01;
                 break;
         }
     }
@@ -130,11 +130,11 @@ raddi::protocol::encryption * raddi::protocol::proposal::accept (initial * peer,
     }
 
     if (aes256gcm_mode != aes256gcm_mode::disabled) {
-        if ((peer->flags.soft.decode () & 0x0000'0002) && (aes256gcm_mode != aes256gcm_mode::force_gcm) && crypto_aead_aegis256_is_available ()) {
+        if ((peer->flags.soft.decode () & 0x0000'0002) && (aes256gcm_mode != aes256gcm_mode::force_gcm) && is_fast_crypto_aead_aegis256_available ()) {
             *failure = accept_fail_reason::succeeded;
             return new aegis256 (this, &peer->keys);
         }
-        if ((peer->flags.soft.decode () & 0x0000'0001) && (aes256gcm_mode != aes256gcm_mode::force_aegis) && crypto_aead_aes256gcm_is_available ()) {
+        if ((peer->flags.soft.decode () & 0x0000'0001) && (aes256gcm_mode != aes256gcm_mode::force_aegis) && is_fast_crypto_aead_aes256gcm_available ()) {
             *failure = accept_fail_reason::succeeded;
             return new aes256gcm (this, &peer->keys);
         }
@@ -185,6 +185,7 @@ std::size_t raddi::protocol::aegis256::encode (unsigned char * message, std::siz
         message [0] = (length >> 0) & 0xFF;
         message [1] = (length >> 8) & 0xFF;
 
+        //sodium_add (this->outbound_nonce, sizeof this->outbound_nonce, size) !!! or add/xor message hash???
         sodium_increment (this->outbound_nonce, sizeof this->outbound_nonce);
         if (crypto_aead_aegis256_encrypt (&message [2], nullptr, data, size, &message [0], 2,
                                           nullptr, this->outbound_nonce, this->outbound_key) == 0)

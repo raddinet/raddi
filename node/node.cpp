@@ -1119,14 +1119,14 @@ namespace {
                     // if forced particular AES version is not available revert to default
 
                     case aes256gcm_mode::force_gcm:
-                        if (!crypto_aead_aes256gcm_is_available ()) {
+                        if (!is_fast_crypto_aead_aes256gcm_available ()) {
                             aes256gcm_mode = aes256gcm_mode::disabled;
                             raddi::log::error (11, aes256gcm::name, xchacha20poly1305::name);
                         }
                         break;
 
                     case aes256gcm_mode::force_aegis:
-                        if (!crypto_aead_aegis256_is_available ()) {
+                        if (!is_fast_crypto_aead_aegis256_available ()) {
                             aes256gcm_mode = aes256gcm_mode::disabled;
                             raddi::log::error (11, aegis256::name, xchacha20poly1305::name);
                         }
@@ -1136,15 +1136,15 @@ namespace {
                     //  - if neither, revert to default as above
 
                     case aes256gcm_mode::forced:
-                        if (!crypto_aead_aegis256_is_available () && !crypto_aead_aes256gcm_is_available ()) {
+                        if (!is_fast_crypto_aead_aegis256_available () && !is_fast_crypto_aead_aes256gcm_available ()) {
                             aes256gcm_mode = aes256gcm_mode::disabled;
                             raddi::log::error (11, "AES", xchacha20poly1305::name);
                         } else {
-                            if (crypto_aead_aegis256_is_available ()) {
+                            if (is_fast_crypto_aead_aegis256_available ()) {
                                 aes256gcm_mode = aes256gcm_mode::force_aegis;
                                 raddi::log::note (6, aegis256::name);
                             } else
-                            if (crypto_aead_aes256gcm_is_available ()) {
+                            if (is_fast_crypto_aead_aes256gcm_available ()) {
                                 aes256gcm_mode = aes256gcm_mode::force_gcm;
                                 raddi::log::note (6, aes256gcm::name);
                             }
