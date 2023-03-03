@@ -19,7 +19,7 @@ class Window : public WindowEnvironment {
 public:
     const HWND hWnd;
     const LPARAM id;
-
+    
     // TODO: remove unused IDs, keep only those needed for callbacks
     struct ID {
         static constexpr auto MAX_LISTS = 0x1F0;
@@ -150,8 +150,11 @@ private:
     RECT GetRightPane (const RECT * client, const RECT & rListTabs);
     RECT GetFeedsFrame (const RECT *, const RECT & rFeedsTabs);
     RECT GetFiltersRect (const RECT * rcArea, const RECT & rRightPane);
+    
+    template <typename T>
+    void ClampDividerRange (int id, const RECT * client, T & x, T & y);
 
-    RECT GetTabControlClipRect (RECT);
+    RECT GetTabControlClipRect (RECT &);
     RECT GetTabControlContentRect (RECT);
     void BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fromControl);
     LONG UpdateStatusBar (HWND hStatusBar, UINT dpi, const RECT & rParent);

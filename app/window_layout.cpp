@@ -86,13 +86,13 @@ const MARGINS * Window::GetDwmMargins () {
     if (winver < 10) {
         if (design.nice) {
             margins.cxLeftWidth = dividers.left;
-            margins.cxRightWidth = dividers.right;
+            margins.cxRightWidth = dividers.right + 2;
             margins.cyBottomHeight = minimum.statusbar.cy + 2;
         }
     }
     if ((design.override.backdrop != DWMSBT_NONE) && (winbuild >= 22543)) {
         margins.cxLeftWidth = dividers.left;
-        margins.cxRightWidth = dividers.right + 1;
+        margins.cxRightWidth = dividers.right + 2;
         margins.cyBottomHeight = minimum.statusbar.cy + 2;
     }
 
@@ -137,9 +137,6 @@ void Window::UpdateListsPosition (HDWP & hDwp, const RECT & client, const RECT &
 }
 void Window::UpdateViewsPosition (HDWP & hDwp, const RECT & client) {
     auto r = this->GetTabControlContentRect (this->GetViewsFrame (&client));
-    if (design.composited && (winver < 10)) {
-        r.right += 2;
-    }
     r.right -= r.left;
     r.bottom -= r.top;
 
@@ -174,6 +171,7 @@ RECT Window::GetListsTabRect () {
             }
         }
     } else {
+        r.top--;
         r.left = 2;
     }
 
@@ -204,7 +202,11 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
             if (GetClientRect (hWnd, &client)) {
 
                 if (this->height && client.bottom) {
-                    this->dividers.feeds = (double) (this->dividers.feeds) * double (client.bottom) / double (this->height);
+                    double x;
+                    double y = (double) (this->dividers.feeds) * double (client.bottom) / double (this->height);
+                    
+                    this->ClampDividerRange (0x103, &client, x, y);
+                    this->dividers.feeds = y;
                 }
                 this->height = client.bottom;
 
@@ -240,10 +242,14 @@ LRESULT Window::OnPositionChange (const WINDOWPOS & position) {
                     auto rFilters = this->GetFiltersRect (&client, rRightPane);
                     auto rIdentities = rRightPane;
 
-                    InflateRect (&rFilters, -2, -2);
-                    rFilters.right = rFilters.right - rFilters.left - 2;
-                    rFilters.bottom = rFilters.bottom - rFilters.top;// -2;
-
+                    if (IsAppThemed ()) {
+                        InflateRect (&rFilters, -1, -1);
+                    } else {
+                        InflateRect (&rFilters, -2, -2);
+                    }
+                    rFilters.right -= rFilters.left;
+                    rFilters.bottom -= rFilters.top;
+                    
                     DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::TABS_VIEWS), tabs);
                     DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::TABS_LISTS), rListTabs);
                     DeferWindowPos (hDwp, GetDlgItem (hWnd, ID::TABS_FEEDS), rFeedsTabs);
@@ -376,71 +382,72 @@ LRESULT Window::OnVisualEnvironmentChange () {
     
     if (ptrAllowDarkModeForWindow) {
         ptrAllowDarkModeForWindow (hWnd, true);
+    } 
+    if (winver >= 11) {
+        if ((design.override.backdrop != DWMSBT_NONE) && (winbuild >= 22543)) {
+            ptrDwmSetWindowAttribute (hWnd, DWMWA_SYSTEMBACKDROP_TYPE, &design.override.backdrop, sizeof design.override.backdrop);
+        }
 
-        if (winver >= 11) {
-            if ((design.override.backdrop != DWMSBT_NONE) && (winbuild >= 22543)) {
-                ptrDwmSetWindowAttribute (hWnd, DWMWA_SYSTEMBACKDROP_TYPE, &design.override.backdrop, sizeof design.override.backdrop);
-            }
-
-            if (design.override.outline) {
-                COLORREF clr = design.colorization.inactive;
-                if ((design.override.backdrop != DWMSBT_NONE) && (winver >= 11)) {
-                    if (winbuild >= 22543) {
-                        clr = DWMWA_COLOR_NONE;
-                    } else
-                    if (design.light) {
-                        clr = 0x00FFFFFF;
-                    } else {
-                        clr = 0x00000000;
-                    }
+        if (design.override.outline) {
+            COLORREF clr = design.colorization.inactive;
+            if ((design.override.backdrop != DWMSBT_NONE) && (winver >= 11)) {
+                if (winbuild >= 22543) {
+                    clr = DWMWA_COLOR_NONE;
+                } else
+                if (design.light) {
+                    clr = 0x00FFFFFF;
+                } else {
+                    clr = 0x00000000;
                 }
-                ptrDwmSetWindowAttribute (hWnd, DWMWA_CAPTION_COLOR, &clr, sizeof clr);
             }
-            if (design.override.corners) {
-                ptrDwmSetWindowAttribute (hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, &design.override.corners, sizeof design.override.corners);
-            }
+            ptrDwmSetWindowAttribute (hWnd, DWMWA_CAPTION_COLOR, &clr, sizeof clr);
         }
-
-        LONG dark = !design.light;
-        if (winver >= 11 || winbuild >= 20161) {
-            ptrDwmSetWindowAttribute (hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof dark);
-        } else
-        if (winbuild >= 18875) {
-            CompositionAttributeData attr = { WCA_USEDARKMODECOLORS, &dark, sizeof dark };
-            ptrSetWindowCompositionAttribute (hWnd, &attr);
-        } else if (winbuild >= 14393) {
-            ptrDwmSetWindowAttribute (hWnd, 0x13, &dark, sizeof dark);
+        if (design.override.corners) {
+            ptrDwmSetWindowAttribute (hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, &design.override.corners, sizeof design.override.corners);
         }
+    }
 
-        this->tabs.views->dark = dark;
-        this->tabs.lists->dark = dark;
-        this->tabs.feeds->dark = dark;
+    LONG dark = !design.light;
+    if (winver >= 11 || winbuild >= 20161) {
+        ptrDwmSetWindowAttribute (hWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof dark);
+    } else
+    if (winbuild >= 18875) {
+        CompositionAttributeData attr = { WCA_USEDARKMODECOLORS, &dark, sizeof dark };
+        ptrSetWindowCompositionAttribute (hWnd, &attr);
+    } else if (winbuild >= 14393) {
+        ptrDwmSetWindowAttribute (hWnd, 0x13, &dark, sizeof dark);
+    }
 
-        if (dark) {
-            this->tabs.views->style.dark.tab = 0x232221;
-            this->tabs.views->style.dark.inactive = 0x232221;
-            /* if (design.prevalence && winver == 10) {
-                this->tabs.views->style.dark.tab = 0;
-            }*/
-            this->tabs.views->style.dark.hot = design.colorization.background;
-            this->tabs.views->style.dark.current = design.colorization.background;
+    this->tabs.views->dark = dark;
+    this->tabs.lists->dark = dark;
+    this->tabs.feeds->dark = dark;
 
-            this->tabs.lists->style = this->tabs.views->style;
-            this->tabs.feeds->style = this->tabs.views->style;
-        }
+    if (dark) {
+        this->tabs.views->style.dark.tab = 0x232221;
+        this->tabs.views->style.dark.inactive = 0x232221;
+        /* if (design.prevalence && winver == 10) {
+            this->tabs.views->style.dark.tab = 0;
+        }*/
+        this->tabs.views->style.dark.hot = design.colorization.background;
+        this->tabs.views->style.dark.current = design.colorization.background;
 
+        this->tabs.lists->style = this->tabs.views->style;
+        this->tabs.feeds->style = this->tabs.views->style;
     }
 
     EnumChildWindows (this->hWnd, UpdateWindowTreeTheme, (LPARAM) 0);
     SetWindowTheme (this->hToolTip, design.light ? NULL : L"DarkMode_Explorer", NULL);
 
-    ListView_SetBkColor (GetDlgItem (this->hWnd, ID::FILTERS) , design.colorization.background);
+    ListView_SetBkColor (GetDlgItem (this->hWnd, ID::FILTERS), design.colorization.background);
     ListView_SetTextColor (GetDlgItem (this->hWnd, ID::FILTERS), design.colorization.text);
 
     for (const auto & tab : this->tabs.lists->tabs) {
         ListView_SetBkColor (tab.second.content, design.colorization.background);
         ListView_SetTextColor (tab.second.content, design.colorization.text);
         ListView_SetTextBkColor (tab.second.content, CLR_NONE);
+    }
+    for (const auto & tab : this->tabs.feeds->tabs) {
+
     }
 
     //ListView_SetBkColor (this->lists)
@@ -564,6 +571,40 @@ LRESULT Window::OnNonClientHitTest (UINT message, WPARAM wParam, LPARAM lParam) 
     return result;
 }
 
+template <typename T>
+void Window::ClampDividerRange (int id, const RECT * client, T & x, T & y) {
+
+    const auto w = metrics [SM_CXFRAME] + metrics [SM_CXPADDEDBORDER];
+    const auto h = metrics [SM_CYFRAME] + metrics [SM_CXPADDEDBORDER];
+
+    switch (id) {
+        case 0x201:
+            if (x > (client->right - this->dividers.right) - w) {
+                x = (client->right - this->dividers.right) - w;
+            }
+            if (x < w) {
+                x = w;
+            }
+            break;
+        case 0x202:
+            if (x > client->right) {
+                x = client->right;
+            }
+            if (x < this->dividers.left + w) {
+                x = this->dividers.left + w;
+            }
+            break;
+        case 0x103:
+            if (y > client->bottom - this->tabs.feeds->minimum.cy - this->extension) {
+                y = client->bottom - this->tabs.feeds->minimum.cy - this->extension;
+            }
+            if (y < this->extension + 4 * this->fonts.text.height) {
+                y = this->extension + 4 * this->fonts.text.height;
+            }
+            break;
+    }
+}
+
 LRESULT Window::OnMouse (UINT message, WPARAM modifiers, LONG x, LONG y) {
     RECT client;
     GetClientRect (hWnd, &client);
@@ -582,22 +623,9 @@ LRESULT Window::OnMouse (UINT message, WPARAM modifiers, LONG x, LONG y) {
 
             case WM_MOUSEMOVE:
                 element = this->drag.what;
-                switch (this->drag.what) { // confine to minimum and maximum position
-                    case 0x201:
-                        if (x > (client.right - dividers.right) - w) x = (client.right - dividers.right) - w;
-                        if (x < w) x = w;
-                        break;
-                    case 0x202:
-                        if (x > client.right) x = client.right;
-                        if (x < dividers.left + w) x = dividers.left + w;
-                        break;
-                    case 0x103:
-                        // TODO: properly limit
-                        if (y > client.bottom - this->tabs.feeds->minimum.cy) y = client.bottom - this->tabs.feeds->minimum.cy;
-                        if (y < extension + 4 * this->fonts.text.height) y = extension + 4 * this->fonts.text.height;
-                        break;
-                }
-                switch ((this->drag.what & 0x0F00) >> 8) { // compute distance from previous position
+                this->ClampDividerRange (element, &client, x, y);
+
+                switch ((element & 0x0F00) >> 8) { // compute distance from previous position
                     case 2:
                         distance = (x - this->drag.x);
                         this->drag.x = x;
@@ -607,8 +635,9 @@ LRESULT Window::OnMouse (UINT message, WPARAM modifiers, LONG x, LONG y) {
                         this->drag.y = y;
                         break;
                 }
+
                 if (distance) {
-                    switch (this->drag.what) { // move
+                    switch (element) { // move
                         case 0x201:
                             dividers.left = dividers.left + distance;
                             if (dividers.left < metrics [SM_CXICON]) {
@@ -823,13 +852,19 @@ void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fro
         SelectObject (hDC, GetStockObject (NULL_BRUSH));
         SetDCPenColor (hDC, GetSysColor (COLOR_3DDKSHADOW));
 
+        auto hPen = CreatePenEx (PS_SOLID, 1, 0x7F000000 | GetSysColor (COLOR_3DSHADOW));
+        auto hOldPen = SelectObject (hDC, hPen);
+
         auto rPane = GetViewsFrame (&rcArea);
         auto rPaneClip = GetTabControlClipRect (rPane);
-        Rectangle (hDC, rPaneClip.left, rPaneClip.top, rPaneClip.right, rPaneClip.bottom + 1);
+        Rectangle (hDC, rPaneClip.left, rPaneClip.top, rPaneClip.right, rPaneClip.bottom);
 
         Rectangle (hDC, rList.left, rList.top, rList.right, rList.bottom);
-        Rectangle (hDC, rFeeds.left, rFeeds.top, rFeeds.right - 2, rFeeds.bottom);
-        Rectangle (hDC, rFilters.left, rFilters.top, rFilters.right - 2, rFilters.bottom);
+        Rectangle (hDC, rFeeds.left, rFeeds.top, rFeeds.right, rFeeds.bottom);
+        Rectangle (hDC, rFilters.left, rFilters.top, rFilters.right, rFilters.bottom);
+
+        SelectObject (hDC, hOldPen);
+        DeleteObject (hPen);
 
     } else
     if (HANDLE hTheme = OpenThemeData (hWnd, VSCLASS_TAB)) {
@@ -844,13 +879,23 @@ void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fro
         auto rFeedsClip = GetTabControlClipRect (rFeeds);
         DrawThemeBackground (hTheme, hDC, TABP_PANE, 0, &rFeeds, &rFeedsClip);
         auto rFiltersClip = GetTabControlClipRect (rFilters);
-        DrawThemeBackground (hTheme, hDC, TABP_PANE, 0, &rFilters, &rFiltersClip);
+
+        if (winver < 6) {
+            rFilters.right += 2;
+            rFilters.bottom += 2;
+            rFiltersClip.right += 2;
+            rFiltersClip.bottom += 1;
+        }
+
+        DrawThemeBackground (hTheme, hDC, TABP_PANE, 0, &rFilters, &rFiltersClip);// */
         CloseThemeData (hTheme);
+        
     } else {
         auto rPane = GetViewsFrame (&rcArea);
 
         DrawEdge (hDC, &rPane, BDR_SUNKEN, BF_RECT);
         DrawEdge (hDC, &rList, BDR_SUNKEN, BF_RECT);
+        rFeeds.top += 1;
         DrawEdge (hDC, &rFeeds, BDR_SUNKEN, BF_RECT);
         DrawEdge (hDC, &rFilters, BDR_SUNKEN, BF_RECT);
     }
@@ -886,7 +931,6 @@ RECT Window::GetTabControlContentRect (RECT r) {
         r.bottom += metrics [SM_CYCAPTION] + metrics [SM_CYFRAME];
         InflateRect (&r, -1, -1);
         if (winver < 6) {
-            r.right -= 2;
             r.bottom -= this->extension + metrics [SM_CYFRAME] - 2; // shadow
         }
     } else {
@@ -906,7 +950,7 @@ RECT Window::GetAdjustedFrame (RECT r, LONG top, const RECT & rTabs) {
             r.bottom -= metrics [SM_CYFRAME];
         }
     } else {
-        r.top -= 1;
+        r.top -= 2;
         r.left -= 2;
     }
     return r;
@@ -917,11 +961,7 @@ RECT Window::GetListsFrame (const RECT * rcArea, const RECT & rListTabs) {
 }
 
 RECT Window::GetFeedsFrame (const RECT * rcArea, const RECT & rFeedsTabs) {
-    auto r = this->GetAdjustedFrame (*rcArea, rFeedsTabs.top, rFeedsTabs);
-    if (design.nice && !design.contrast) {
-        r.right += 2;
-    }
-    return r;
+    return this->GetAdjustedFrame (*rcArea, rFeedsTabs.top, rFeedsTabs);
 }
 
 RECT Window::GetRightPane (const RECT * client, const RECT & rListTabs) {
@@ -930,26 +970,37 @@ RECT Window::GetRightPane (const RECT * client, const RECT & rListTabs) {
     r.right = (client->right - client->left) - r.left;
     if (!IsZoomed (hWnd) && !design.contrast) {
         r.right -= metrics [SM_CXPADDEDBORDER];
+
+        if ((winver < 6) && IsAppThemed ()) {
+            r.right -= metrics [SM_CXFRAME];
+        }
+        if ((winver == 6 || winver == 7) && IsAppThemed () && !design.composited) {
+            r.right -= 2;
+        }
+    } else {
+        r.right--;
     }
     return r;
 }
 
 RECT Window::GetFiltersRect (const RECT * rcArea, const RECT & rRightPane) {
     RECT r = *rcArea;
-    r.bottom = r.top + LONG (dividers.feeds);
+    r.bottom = r.top + LONG (dividers.feeds) - 1;
     r.top += rRightPane.top + /*this->tabs.views->minimum.cy*/ this->fonts.text.height + 4 * this->metrics [SM_CYFIXEDFRAME] - 1 + metrics [SM_CYFRAME];
     r.left += rRightPane.left;
     r.right = r.left + rRightPane.right;
-    if (design.nice && !design.contrast) {
-        r.right += 2;
-    }
     return r;
 }
 
-RECT Window::GetTabControlClipRect (RECT r) {
-    if (design.nice && !design.contrast) {
+RECT Window::GetTabControlClipRect (RECT & rX) {
+    RECT r = rX;
+    if (winver == 5 && IsAppThemed ()) {
         r.right -= 2;
         r.bottom -= 1;
+    }
+    if (winver >= 6 && !design.contrast) {
+        rX.right += 2;
+        rX.bottom += 1;
     }
     return r;
 }

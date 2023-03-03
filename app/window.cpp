@@ -33,6 +33,15 @@ extern Resolver resolver;
 
 namespace {
     LRESULT CALLBACK ProperBgSubclassProcedure (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR);    
+
+    HWND GetComboBoxListBox (HWND hComboBox) {
+        COMBOBOXINFO cbi;
+        cbi.cbSize = sizeof cbi;
+        if (GetComboBoxInfo (hComboBox, &cbi)) {
+            return cbi.hwndList;
+        } else
+            return NULL;
+    }
 }
 
 LPCTSTR Window::Initialize (HINSTANCE hInstance) {
@@ -529,9 +538,10 @@ LRESULT Window::OnCreate (const CREATESTRUCT * cs) {
                                            0, 0, 0, 0, hWnd, (HMENU) ID::IDENTITIES, cs->hInstance, NULL)) {
         // database.identities.list
         SendMessage (hIdentities, CB_SETEXTENDEDUI, TRUE, 0);
-        SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"TEST TEST TEST");
-        SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"AAA");
+        SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"My Username (43872b5840b2cb0)");
+        SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"J (xxx7276a40b2c7a)");
         SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"BBBBB");
+        SendMessage (hIdentities, CB_ADDSTRING, 0, (LPARAM) L"TEST TEST TEST");
         if (design.may_need_fix_alpha) {
             SetWindowSubclass (hIdentities, AlphaSubclassProcedure, 0, 2);
         }
