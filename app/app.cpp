@@ -66,7 +66,7 @@ namespace {
 
 int CALLBACK wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
     AttachConsole (ATTACH_PARENT_PROCESS);
-    if (IsDebuggerPresent ()) {
+    if (IsDebuggerPresent () || (option (__argc, __wargv, L"debug", L"") == std::wstring_view (L"true"))) {
         AllocConsole ();
     }
     InitPlatformAPI ();
@@ -257,11 +257,12 @@ namespace {
             // if pool is empty, fill
             //  - TODO: generate on background during first "New user" dialog
 
-            if (database.query <long long> (L"SELECT COUNT(*) FROM `pool`") == 0) {
+            auto poolsize = database.query <long long> (L"SELECT COUNT(*) FROM `pool`");
+            if (poolsize < 108) {
                 auto insert = database.prepare (L"INSERT INTO `pool` VALUES (?)");
 
                 std::uint8_t seed [crypto_sign_ed25519_SEEDBYTES];
-                for (auto i = 0u; i != 108u; ++i) {
+                for (auto i = poolsize; i != 108; ++i) {
                     randombytes_buf (seed, sizeof seed);
                     insert (SQLite::Blob (seed, sizeof seed));
                 }
