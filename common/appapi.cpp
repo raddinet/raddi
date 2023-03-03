@@ -605,15 +605,13 @@ void Design::update () {
         this->colorization.active = GetSysColor (COLOR_WINDOW); // 0xFFFFFF;
 
         HKEY hKey;
-        if (ptrAllowDarkModeForWindow) {
-            if (RegOpenKeyEx (HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
-                DWORD value = TRUE;
-                DWORD size = sizeof value;
-                if (RegQueryValueEx (hKey, L"AppsUseLightTheme", NULL, NULL, reinterpret_cast <LPBYTE> (&value), &size) == ERROR_SUCCESS) {
-                    this->light = value;
-                }
-                RegCloseKey (hKey);
+        if (RegOpenKeyEx (HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+            DWORD value = TRUE;
+            DWORD size = sizeof value;
+            if (RegQueryValueEx (hKey, L"AppsUseLightTheme", NULL, NULL, reinterpret_cast <LPBYTE> (&value), &size) == ERROR_SUCCESS) {
+                this->light = value;
             }
+            RegCloseKey (hKey);
         }
 
         if (RegOpenKeyEx (HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\DWM", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
