@@ -89,6 +89,9 @@ const MARGINS * Window::GetDwmMargins () {
             margins.cxRightWidth = dividers.right + 2;
             margins.cyBottomHeight = minimum.statusbar.cy + 2;
         }
+        if (design.composited) {
+            margins.cyBottomHeight--;
+        }
     }
     if ((design.override.backdrop != DWMSBT_NONE) && (winbuild >= 22543)) {
         margins.cxLeftWidth = dividers.left;
@@ -139,6 +142,10 @@ void Window::UpdateViewsPosition (HDWP & hDwp, const RECT & client) {
     auto r = this->GetTabControlContentRect (this->GetViewsFrame (&client));
     r.right -= r.left;
     r.bottom -= r.top;
+
+    if (design.composited && winver < 10) {
+        r.right -= 2;
+    }
 
     for (const auto & tab : this->tabs.views->tabs) {
         if (tab.second.content)
