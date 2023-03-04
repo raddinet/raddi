@@ -659,7 +659,16 @@ LRESULT Window::OnMouse (UINT message, WPARAM modifiers, LONG x, LONG y) {
                     if (ptrDwmExtendFrameIntoClientArea) {
                         ptrDwmExtendFrameIntoClientArea (hWnd, this->GetDwmMargins ());
                     }
+
                     RedrawWindow (hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
+
+                    if (!design.composited) {
+                        switch (element) {
+                            case 0x103:
+                                RedrawWindow (GetDlgItem (hWnd, ID::TABS_FEEDS), NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+                                break;
+                        }
+                    }
                 }
                 break;
         }
@@ -852,7 +861,7 @@ void Window::BackgroundFill (HDC hDC, RECT rcArea, const RECT * rcClip, bool fro
         SelectObject (hDC, GetStockObject (NULL_BRUSH));
         SetDCPenColor (hDC, GetSysColor (COLOR_3DDKSHADOW));
 
-        auto hPen = CreatePenEx (PS_SOLID, 1, 0x7F000000 | GetSysColor (COLOR_3DSHADOW));
+        auto hPen = CreatePenEx (PS_SOLID, 1, 0x9F000000 | GetSysColor (COLOR_3DSHADOW));
         auto hOldPen = SelectObject (hDC, hPen);
 
         auto rPane = GetViewsFrame (&rcArea);
