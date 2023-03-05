@@ -140,7 +140,7 @@ namespace {
 
 ATOM InitializeTabControl (HINSTANCE hInstance) {
     WNDCLASSEX wc = {
-        sizeof (WNDCLASSEX), CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
+        sizeof (WNDCLASSEX), CS_HREDRAW | CS_VREDRAW,
         Procedure, 0, 0, hInstance,  NULL,
         LoadCursor (NULL, IDC_ARROW), NULL, NULL, L"RADDI:Tabs", NULL
     };
