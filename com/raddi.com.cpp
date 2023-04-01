@@ -587,7 +587,7 @@ int wmain (int argc, wchar_t ** argw) {
 bool benchmark (const wchar_t *);
 bool database_verification ();
 bool hash (const wchar_t *);
-bool proove (const wchar_t *);
+bool prove (const wchar_t *);
 bool aead_benchmark (const wchar_t *);
 
 bool new_identity ();
@@ -711,11 +711,11 @@ bool go () {
         return aead_benchmark (parameter);
     }
 
-    // proove
+    // prove
     //  - find proof for provided content
 
-    if (auto parameter = command (argc, argw, L"proove")) {
-        return proove (parameter);
+    if (auto parameter = command (argc, argw, L"prove")) {
+        return prove (parameter);
     }
 
     // verify-cc-signed-message
@@ -2625,7 +2625,7 @@ bool aead_benchmark (const wchar_t * parameter) {
     return true;
 }
 
-bool proove (const wchar_t * parameter) {
+bool prove (const wchar_t * parameter) {
     // TODO: 'parameter' will allow to choose different PoW algorithm in the future
 
     std::uint8_t hash [crypto_hash_sha512_BYTES];
