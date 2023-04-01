@@ -273,6 +273,7 @@ RADDI.com utility functions/commands:
 			- number; requests to benchmark for only <complexity> complexity
 		- optional parameters:
 			- threadpool - override choice of threadpool to schedule work
+			- count - run the benchmark multiple (count) times
 	- verify-cc-signature:<cc-signature>
 		- verifies cryptocurrency-signed message (BTC/BCH/DCR)
 		- verifies that 'signature' is of message signed by 'address'
@@ -511,6 +512,11 @@ RADDI.com utility additional and optional parameters to functions:
 			- "none" - use only single thread, schedule work sequentially
 			- "system" - schedule work through the simplest OS API
 			- "custom" - custom group-spanning core affinity thread pool
+		- applies to:
+			- benchmark
+	- count:<N>
+		- numeric value, that overrides number of runs for the CC PoW benchmark
+		- default is: 1
 		- applies to:
 			- benchmark
 	- address:<addr>
