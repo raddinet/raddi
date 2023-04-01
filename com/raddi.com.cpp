@@ -2676,8 +2676,9 @@ bool prove (const wchar_t * parameter) {
 
         try {
             if (auto n = raddi::proof::generate (hash, buffer, sizeof buffer, opts)) {
+                auto [complexity, length] = reinterpret_cast <raddi::proof *> (&buffer [n - 1])->decode ();
 
-                std::printf ("%u:", cx);
+                std::printf ("%u: (%u:%u):", cx, complexity, length);
                 for (auto i = 1u; i != n; ++i) {
                     if (!((i - 1) % 4)) {
                         std::printf (" ");
