@@ -63,6 +63,20 @@ namespace raddi {
         //
         bool initialize (enum class algorithm, std::size_t complexity, std::size_t length);
 
+        // decoded
+        //  - results of the 'decode' function
+        //  - unadjusted values, for display purposes
+        //
+        struct decoded {
+            unsigned int complexity;
+            unsigned int length;
+        };
+
+        // decode
+        //  - removes biases from adjusted stored data members, and returns the display values
+        //
+        decoded decode ();
+
         // solution
         //  - representation of the solution
         //  - return pointer to first byte/uint32 after proof's initial NUL byte

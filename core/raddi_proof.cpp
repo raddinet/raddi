@@ -289,6 +289,13 @@ bool raddi::proof::initialize (enum class algorithm a, std::size_t complexity, s
         return false;
 }
 
+raddi::proof::decoded raddi::proof::decode () {
+    return {
+        this->complexity + raddi::proof::complexity_bias,
+        this->length * 2 + raddi::proof::length_bias
+    };
+}
+
 std::size_t raddi::proof::validate (std::size_t data_size) const {
     auto proof_size = this->size ();
     if ((this->algorithm == proof::algorithm::cuckoo_cycle) && (data_size >= proof_size))
