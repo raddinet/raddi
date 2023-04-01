@@ -49,6 +49,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
     MAIN | DATA  | 0x10 "warning: requested complexity {1} out of regular range {2}...{3}"
     MAIN | DATA  | 0x11 "no proof found for complexity {1}"
+    MAIN | DATA  | 0x12 "warning: requested {4} proof length limit {1} out of supported range {2}...{3}"
+    MAIN | DATA  | 0x13 "warning: ignoring invalid {3} proof length limit {1}, smaller than lower {2}"
 
     MAIN | DATA  | 0x90 "warning: instance {1} is not broadcasting at the moment"
     MAIN | DATA  | 0x91 "warning: no node instance available"

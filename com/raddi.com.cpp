@@ -588,6 +588,7 @@ bool benchmark (const wchar_t *);
 bool database_verification ();
 bool hash (const wchar_t *);
 bool proove (const wchar_t *);
+bool aead_benchmark (const wchar_t *);
 
 bool new_identity ();
 bool new_channel ();
@@ -706,7 +707,10 @@ bool go () {
     if (auto parameter = command (argc, argw, L"benchmark")) {
         return benchmark (parameter);
     }
-    
+    if (auto parameter = command (argc, argw, L"aead")) {
+        return aead_benchmark (parameter);
+    }
+
     // proove
     //  - find proof for provided content
 
@@ -2456,42 +2460,168 @@ bool benchmark (const wchar_t * parameter) {
 
     raddi::proof::options opts;
     opts.threadpool = threadpool ();
+    opts.requirements.time = 0;
 
-    for (auto complexity = first; (complexity != last + 1) && !quit; ++complexity) {
-        printf ("benchmarking complexity %u: ", complexity);
+    std::uint32_t count = 1;
+    option (argc, argw, L"count", count);
 
-        opts.requirements.complexity = complexity;
-        opts.parameters.cancel = &quit;
+    while (!quit && count--) {
+        for (auto complexity = first; (complexity != last + 1) && !quit; ++complexity) {
+            printf ("benchmarking complexity %u: ", complexity);
 
-        try {
-            auto t0 = raddi::microtimestamp ();
-            if (auto n = raddi::proof::generate (hash, buffer, sizeof buffer, opts)) {
+            opts.requirements.complexity = complexity;
+            opts.parameters.cancel = &quit;
 
-                printf ("found... %.2fs\n", (raddi::microtimestamp () - t0) / 1000000.0);
+            try {
+                auto t0 = raddi::microtimestamp ();
+                if (auto n = raddi::proof::generate (hash, buffer, sizeof buffer, opts)) {
 
-                for (auto i = 0u; i != n; ++i) {
-                    if (buffer [i] != expected [complexity - raddi::proof::min_complexity] [i]) {
+                    printf ("found... %.2fs\n", (raddi::microtimestamp () - t0) / 1000000.0);
 
-                        wchar_t result [3 * raddi::proof::max_size + 1];
+                    for (auto i = 0u; i != n; ++i) {
+                        if (buffer [i] != expected [complexity - raddi::proof::min_complexity][i]) {
 
-                        auto offset = 0u;
-                        for (auto i = 0u; i != n; ++i) {
-                            std::swprintf (&result [offset], 4, L"%02X ", buffer [i]);
-                            offset += 2 + !(i % 4);
+                            wchar_t result [3 * raddi::proof::max_size + 1];
+
+                            auto offset = 0u;
+                            for (auto i = 0u; i != n; ++i) {
+                                std::swprintf (&result [offset], 4, L"%02X ", buffer [i]);
+                                offset += 2 + !(i % 4);
+                            }
+
+                            raddi::log::error (0x25, result);
+                            return false;
                         }
-
-                        raddi::log::error (0x25, result);
-                        return false;
                     }
-                }
 
-            } else
-                return raddi::log::error (0x26);
+                } else
+                    return raddi::log::error (0x26);
 
-        } catch (const std::bad_alloc &) {
-            raddi::log::error (5);
+            } catch (const std::bad_alloc &) {
+                raddi::log::error (5);
+            }
         }
     }
+    return true;
+}
+
+typedef int (*encrypt_function_type) (
+    unsigned char * c,
+    unsigned long long * clen_p,
+    const unsigned char * m,
+    unsigned long long mlen,
+    const unsigned char * ad,
+    unsigned long long adlen,
+    const unsigned char * nsec,
+    const unsigned char * npub,
+    const unsigned char * k
+);
+
+bool aead_benchmark_cycle (encrypt_function_type function, const std::uint8_t * key, std::uint8_t * nonce) {
+    constexpr auto n = sizeof rawbuffer / 2;
+    
+    { // faster random fill
+        auto b = *reinterpret_cast <std::uint32_t *> (nonce);
+        for (auto i = 0; i < n / 4; ++i) {
+            reinterpret_cast <std::uint32_t *> (rawbuffer) [i] = ++b;
+        }
+    }
+
+    if (function (&rawbuffer [n], nullptr, // tgt
+                  &rawbuffer [0], n, // src
+                  nullptr, 0, nullptr, nonce, key) == 0) {
+        
+        ++*reinterpret_cast <std::uint32_t *> (&rawbuffer [n]);
+        return true;
+    } else
+        return false;
+}
+
+std::uint32_t aead_benchmark_run (encrypt_function_type function, std::uint64_t length) {
+    std::uint8_t nonce [32];
+    std::uint8_t key [32];
+
+    randombytes_buf (key, sizeof key);
+    randombytes_buf (nonce, sizeof nonce);
+
+    std::uint32_t n = 0;
+    auto t0 = raddi::microtimestamp ();
+    auto tA = t0;
+    auto t = t0;
+
+    while (!quit && ((t = raddi::microtimestamp ()) - t0 < length)) {
+        if (t - tA >= 131072) {
+            tA = t;
+            std::printf ("\b%c", "|/-\\" [(t / 131072) % 4]);
+        }
+        if (aead_benchmark_cycle (function, key, nonce)) {
+            ++n;
+        } else
+            return 0;
+    }
+    return n;
+}
+
+template <std::size_t N>
+std::uint32_t aead_helper_smallest (const std::uint32_t (&data) [N]) {
+    std::uint32_t copy [N];
+    std::memcpy (copy, data, sizeof copy);
+    std::sort (&copy [0], &copy [N]);
+    for (std::size_t i = 0u; i != N; ++i) {
+        if (copy [i] != 0)
+            return copy [i];
+    }
+    return 0;
+}
+
+bool aead_benchmark (const wchar_t * parameter) {
+    std::printf ("fast AEGIS-256: %s\n", is_fast_crypto_aead_aegis256_available () ? "yes" : "no");
+    std::printf ("fast AES256-GCM: %s\n", is_fast_crypto_aead_aes256gcm_available () ? "yes" : "no");
+    std::printf ("\n");
+
+    constexpr std::uint64_t M = sizeof rawbuffer / 2;
+    constexpr std::uint32_t N = 5u;
+    constexpr std::uint32_t seconds = 3;
+    constexpr std::uint64_t t = 1'000'000uLL * seconds;
+
+    std::uint32_t n [N] = {};
+
+    static const struct {
+        encrypt_function_type   function;
+        const char *            name;
+    } aeads [] = {
+        { crypto_aead_aegis256_encrypt, "AEGIS-256" },
+        { crypto_aead_aegis128l_encrypt, "AEGIS-128L" },
+        { crypto_aead_aes256gcm_encrypt, "AES256-GCM" },
+        { crypto_aead_chacha20poly1305_ietf_encrypt, "ChaCha20-Poly1305" },
+        { crypto_aead_xchacha20poly1305_ietf_encrypt, "XChaCha20-Poly1305" },
+    };
+    
+    auto i = 0u;
+    for (auto & aead : aeads) {
+        std::printf ("\r%u/%u: %s...  ", i + 1, N, aead.name);
+        n [i++] = aead_benchmark_run (aead.function, t);
+    }
+
+    if (std::uint64_t s = aead_helper_smallest (n)) {
+        s *= M;
+        s /= seconds;
+        auto r = 0u;
+        while (s >= 104858) {
+            s /= 1024;
+            ++r;
+        }
+
+        std::printf ("\r");
+
+        auto i = 0u;
+        for (auto & aead : aeads) {
+            std::printf ("%18s: %6.2f %cB/s\n", aead.name, double (n [i] * M) / double (1024uLL << (10 * r)) / seconds, "kMGTPE" [r]);
+            ++i;
+        }
+    }
+
+    std::printf ("\n");
     return true;
 }
 
@@ -2505,7 +2635,6 @@ bool proove (const wchar_t * parameter) {
     crypto_hash_sha512 (hash, rawbuffer, datasize);
 
     raddi::proof::options opts;
-
     opts.parameters.cancel = &quit;
     opts.requirements.time = 0;
     opts.requirements.complexity = 0;
@@ -2520,12 +2649,26 @@ bool proove (const wchar_t * parameter) {
         last = opts.requirements.complexity;
     }
 
-    // TODO: add warnings if outside bounds
     if (auto parameter = option (argc, argw, L"shortest")) {
-        opts.parameters.shortest = std::wcstoul (parameter, nullptr, 0);
+        auto value = std::wcstoul (parameter, nullptr, 0);
+        if (value >= raddi::proof::min_length && value <= raddi::proof::max_length) {
+            opts.parameters.shortest = (std::uint16_t) value;
+        } else {
+            raddi::log::data (0x12, value, raddi::proof::min_length, raddi::proof::max_length, L"lower");
+        }
     }
     if (auto parameter = option (argc, argw, L"longest")) {
-        opts.parameters.longest = std::wcstoul (parameter, nullptr, 0);
+        auto value = std::wcstoul (parameter, nullptr, 0);
+        if (value >= raddi::proof::min_length && value <= raddi::proof::max_length) {
+
+            if (value >= opts.parameters.shortest) {
+                opts.parameters.longest = (std::uint16_t) value;
+            } else {
+                raddi::log::data (0x13, value, opts.parameters.shortest, L"upper");
+            }
+        } else {
+            raddi::log::data (0x12, value, raddi::proof::min_length, raddi::proof::max_length, L"upper");
+        }
     }
 
     for (auto cx = first; (cx != last + 1) && !quit; ++cx) {
