@@ -12,7 +12,7 @@ extern std::uint8_t winver;
 
 // winbuild
 //  - real Windows build number
-//  - this is not subject to compatibility shim lying, thus prefer IsWindowsBuildOrGreater
+//  - this is not subject to compatibility shim lying
 //
 extern std::uint16_t winbuild;
 
@@ -20,10 +20,5 @@ extern std::uint16_t winbuild;
 //  - initializes 'winver' and 'winbuild'
 //
 void InitializeWinVer ();
-
-// IsWindowsBuildOrGreater 
-//  - uses standard VersionHelpers.h API to compare for BUILD number
-//
-bool IsWindowsBuildOrGreater (WORD wMajorVersion, WORD wMinorVersion, DWORD dwBuildNumber);
 
 #endif
