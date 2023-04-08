@@ -8,8 +8,6 @@
 #include <shlobj.h>
 #include <powrprof.h>
 
-#include <VersionHelpers.h>
-
 #include <stdexcept>
 #include <cstdarg>
 #include <list>
@@ -88,6 +86,7 @@ int wmain (int argc, wchar_t ** argw) {
     SetDllDirectoryW (L"");
     RegDisablePredefinedCache ();
     InitPlatformAPI ();
+    InitializeWinVer ();
 
     ULONG heapmode = 2;
     HeapSetInformation (GetProcessHeap (), HeapCompatibilityInformation, &heapmode, sizeof heapmode);
@@ -101,13 +100,13 @@ int wmain (int argc, wchar_t ** argw) {
         && (disconnected = CreateEvent (NULL, FALSE, FALSE, NULL))
         && (sodium_init () != -1)) {
 
-        if (IsWindowsVistaOrGreater ()) {
+        if (winver >= 6) {
             status.dwControlsAccepted |= SERVICE_ACCEPT_PRESHUTDOWN;
         }
-        if (IsWindows7OrGreater ()) {
+        if (winver >= 7) {
             status.dwControlsAccepted |= SERVICE_ACCEPT_TIMECHANGE;
         }
-        if (IsWindowsBuildOrGreater (10, 0, 15063)) {
+        if (winbuild >= 15063) {
             status.dwControlsAccepted |= SERVICE_ACCEPT_LOWRESOURCES | SERVICE_ACCEPT_SYSTEMLOWRESOURCES;
         }
 
