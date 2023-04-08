@@ -98,7 +98,6 @@ bool Download::done () {
 }
 
 void Download::Context::HttpHandler (HINTERNET request, DWORD code, char * data, DWORD size) {
-    char buffer [8193];
     switch (code) {
 
         case WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
@@ -115,10 +114,10 @@ void Download::Context::HttpHandler (HINTERNET request, DWORD code, char * data,
             break;
 
         case WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE:
-            size = sizeof buffer;
-            if (WinHttpQueryHeaders (request, WINHTTP_QUERY_STATUS_CODE, NULL, buffer, &size, WINHTTP_NO_HEADER_INDEX)) {
+            size = sizeof this->buffer;
+            if (WinHttpQueryHeaders (request, WINHTTP_QUERY_STATUS_CODE, NULL, this->buffer, &size, WINHTTP_NO_HEADER_INDEX)) {
 
-                auto status = std::wcstoul (reinterpret_cast <const wchar_t *> (buffer), nullptr, 10);
+                auto status = std::wcstoul (reinterpret_cast <const wchar_t *> (this->buffer), nullptr, 10);
                 if (status == 200) {
                     if (WinHttpQueryDataAvailable (request, NULL))
                         return;
@@ -171,7 +170,7 @@ void Download::Context::HttpHandler (HINTERNET request, DWORD code, char * data,
                 [[ fallthrough ]];
 
         case WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE:
-                if (WinHttpReadData (request, buffer, sizeof buffer - 1, NULL))
+                if (WinHttpReadData (request, this->buffer, sizeof this->buffer - 1, NULL))
                     return;
 
                 this->report (raddi::log::level::error, 0x25, "read");

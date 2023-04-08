@@ -58,6 +58,7 @@ private:
         HINTERNET    connection;
         Download *   download;
         Callback *   callback;
+        char         buffer [8193];
 
         void HttpHandler (HINTERNET, DWORD, char *, DWORD);
 
