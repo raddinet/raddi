@@ -1241,7 +1241,7 @@ namespace {
                     dns->resolve (&coordinator, Dns::Type::A, L"443.raddi.net", 443);
                     dns->resolve (&coordinator, Dns::Type::A, L"44303.raddi.net", raddi::defaults::coordinator_listening_port);
 
-                    if (IsWindowsVistaOrGreater ()) {
+                    if (winver >= 6) {
                         dns->resolve (&coordinator, Dns::Type::AAAA, L"443.raddi.net", 443);
                         dns->resolve (&coordinator, Dns::Type::AAAA, L"44303.raddi.net", raddi::defaults::coordinator_listening_port);
                     }
@@ -1400,7 +1400,7 @@ namespace {
                         if (!initial_optimize) {
                             raddi::log::event (0x04);
                         }
-                        if (IsWindows8Point1OrGreater ()) {
+                        if (winver >= 9) {
                             HeapSetInformation (NULL, HeapOptimizeResources, NULL, 0);
                         }
 
@@ -1409,7 +1409,7 @@ namespace {
                         database.flush ();
                         coordinator.optimize ();
 
-                        if (IsWindows8Point1OrGreater ()) {
+                        if (winver >= 9) {
                             HeapSetInformation (NULL, HeapOptimizeResources, NULL, 0);
                         }
                         SetProcessWorkingSetSize (GetCurrentProcess (), (SIZE_T) -1, (SIZE_T) -1);
