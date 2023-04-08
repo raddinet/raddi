@@ -95,8 +95,8 @@ const MARGINS * Window::GetDwmMargins () {
     }
     if ((design.override.backdrop != DWMSBT_NONE) && (winbuild >= 22543)) {
         margins.cxLeftWidth = dividers.left;
-        margins.cxRightWidth = dividers.right + 2;
-        margins.cyBottomHeight = minimum.statusbar.cy + 2;
+        margins.cxRightWidth = dividers.right;
+        margins.cyBottomHeight = minimum.statusbar.cy + 1;
     }
 
     return &margins;
@@ -143,7 +143,7 @@ void Window::UpdateViewsPosition (HDWP & hDwp, const RECT & client) {
     r.right -= r.left;
     r.bottom -= r.top;
 
-    if (design.composited && winver < 10) {
+    if (design.composited && (winver < 10)) {
         r.right -= 2;
     }
 

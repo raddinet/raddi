@@ -173,13 +173,10 @@ LRESULT Window::Dispatch (UINT message, WPARAM wParam, LPARAM lParam) {
         case WM_CTLCOLOREDIT:
         case WM_CTLCOLORSTATIC:
         case WM_CTLCOLORLISTBOX:
-            if (!design.light) { // dark
-                SetBkColor ((HDC) wParam, design.colorization.background);
-                SetTextColor ((HDC) wParam, design.colorization.text);
-                SetDCBrushColor ((HDC) wParam, design.colorization.background);
-                return (WPARAM) GetStockObject (DC_BRUSH);
-            } else
-                break;
+            SetBkColor ((HDC) wParam, design.colorization.background);
+            SetTextColor ((HDC) wParam, design.colorization.text);
+            SetDCBrushColor ((HDC) wParam, design.colorization.background);
+            return (WPARAM) GetStockObject (DC_BRUSH);
         
         case WM_CTLCOLORBTN:
             return OnControlPrePaint ((HDC) wParam, (HWND) lParam);
