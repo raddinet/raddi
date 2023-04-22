@@ -185,7 +185,6 @@ std::size_t raddi::protocol::aegis256::encode (unsigned char * message, std::siz
         message [0] = (length >> 0) & 0xFF;
         message [1] = (length >> 8) & 0xFF;
 
-        //sodium_add (this->outbound_nonce, sizeof this->outbound_nonce, size) !!! or add/xor message hash???
         sodium_increment (this->outbound_nonce, sizeof this->outbound_nonce);
         if (crypto_aead_aegis256_encrypt (&message [2], nullptr, data, size, &message [0], 2,
                                           nullptr, this->outbound_nonce, this->outbound_key) == 0)
