@@ -64,6 +64,8 @@ bool raddi::identity::create (std::uint8_t (&private_key) [crypto_sign_ed25519_S
         //  - this prevents creation of, likely coliding, vanity nonces
         //  - using simplified siphash24 above, no security requirements
         //     - TODO: we also use simplified siphash in raddi::proof, consider merging
+        //     - TODO: replace with cryptographically stronger hash
+        //              - hash also content
         
         this->id.timestamp = timestamp;
         this->id.identity.timestamp = timestamp;
