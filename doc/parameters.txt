@@ -506,12 +506,12 @@ RADDI.com utility additional and optional parameters to functions:
 		- value: one of predefined strings:
 			- "auto" - default, use the appropriate implementation
 			  current behavior (may change) selects:
-				- "system" pool for complexities 26 and 27
-				- "custom" pool for complexities 28 and above on hardware
-				  with more than 64 hardware threads (logical processors)
+				- "custom" pool on hardware with more than 64 hardware
+				  threads (logical processors)
+				- "system" pool otherwise
 			- "none" - use only single thread, schedule work sequentially
 			- "system" - schedule work through the simplest OS API
-			- "custom" - custom group-spanning core affinity thread pool
+			- "custom" - custom group-spanning core-affinity thread pool
 		- applies to:
 			- benchmark
 	- count:<N>

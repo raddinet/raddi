@@ -93,7 +93,7 @@ namespace {
             options.parameters.parallelism = cuckoo::solver <complexity, generator>::suggested_parallelism; // 64 for 26/27, 128 for 28/29
 
             if (options.threadpool == raddi::proof::threadpool::automatic) {
-                if ((options.parameters.parallelism > 64) && (processors > 64)) {
+                if (processors > 64) {
                     options.threadpool = raddi::proof::threadpool::custom;
                 } else {
                     options.threadpool = raddi::proof::threadpool::system;
