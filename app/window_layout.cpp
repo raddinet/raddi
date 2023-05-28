@@ -573,6 +573,16 @@ LRESULT Window::OnNonClientHitTest (UINT message, WPARAM wParam, LPARAM lParam) 
             if (pt.x > (r.right - (metrics [SM_CXSMICON] + metrics [SM_CXFRAME] + metrics [SM_CXPADDEDBORDER]))
                 && pt.y > (r.bottom - (metrics [SM_CYSMICON] + metrics [SM_CYFRAME] + metrics [SM_CXPADDEDBORDER]))) {
                 result = HTBOTTOMRIGHT;
+            } else
+            if (pt.x <= metrics [SM_CXPADDEDBORDER]) {
+                if (!design.contrast && !IsZoomed (hWnd) && IsAppThemed ()) {
+                    result = HTLEFT;
+                }
+            } else
+            if (pt.x >= (r.right - metrics [SM_CXPADDEDBORDER])) {
+                if (!design.contrast && !IsZoomed (hWnd) && IsAppThemed ()) {
+                    result = HTRIGHT;
+                }
             }
     }
     return result;
