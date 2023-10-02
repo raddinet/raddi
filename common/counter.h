@@ -17,7 +17,7 @@ struct counter {
 // translate
 //  - for passing Counters as a log function parameter
 //
-inline std::wstring translate (counter c, const std::wstring &) {
+inline std::wstring translate (const counter & c, const std::wstring &) {
     static const char prefix [] = { 'B', 'k', 'M', 'G', 'T', 'P', 'E' };
 
     auto m = 0;

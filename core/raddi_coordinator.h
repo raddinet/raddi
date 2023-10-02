@@ -11,6 +11,7 @@
 #include "raddi_protocol.h"
 #include "raddi_timestamp.h"
 #include "raddi_discovery.h"
+#include "raddi_instance.h"
 #include "raddi_database.h"
 #include "raddi_database_peerset.h"
 #include "raddi_subscription_set.h"
@@ -276,9 +277,13 @@ namespace raddi {
 
         // status
         //  - displays status of all connections
-        //  - TODO: add function that will return data for 'overview'
         //
         void status () const;
+
+        // report_connections
+        //  - reports status of connections into registry via 'overview'
+        //
+        void report_connections (raddi::instance & overview) const;
 
     public:
 

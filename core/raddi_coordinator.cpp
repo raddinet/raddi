@@ -931,6 +931,14 @@ void raddi::coordinator::status () const {
     }
 }
 
+void raddi::coordinator::report_connections (raddi::instance & overview) const {
+    immutability guard (this->lock);
+    for (const auto & connection : connections) {
+        overview.report_connection ((connection.peer.port ? L"\x2191 " : L"\x2193 ") + log::translate (connection.peer, std::wstring ()),
+                                    connection.status_report ());
+    }
+}
+
 std::size_t raddi::coordinator::broadcast (const db::root & top, const entry * data, std::size_t size, connection * ignore) {
     const bool announcement = data->is_announcement ();
     std::size_t n = 0;

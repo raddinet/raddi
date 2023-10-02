@@ -68,6 +68,16 @@ namespace raddi {
         using Connection::optimize;
         using Connection::buffer_size;
 
+    private:
+        // queues:
+        //  0 - new identities
+        //  1 - new channels
+        //  2 - responses to requests
+        //  3 - new data queued last, ordered by timestamp, AND size
+            
+        // queues [4]
+        // std::vector <std::uint8_t>
+
     public:
         std::uint64_t latest = raddi::microtimestamp ();
         std::uint64_t probed = 0;
@@ -151,6 +161,11 @@ namespace raddi {
         //  - displays/logs a short connection statistics log note
         //
         void status () const;
+
+        // status_report
+        //  - 
+        //
+        std::wstring status_report () const;
     };
 }
 

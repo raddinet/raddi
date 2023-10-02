@@ -169,11 +169,35 @@ void raddi::connection::status () const {
         case state::retired: state = "retired"; break;
     }
 
+    // "{1}, {2} B pending, {3}s idle; RCV {4}: MSG {5}, K/A {6}; TRM {7}: DLY {8}"
     this->report (raddi::log::level::note, 1,
                   state, this->buffer_size (),
                   (raddi::microtimestamp () - std::max (this->probed, this->latest)) / 1'000'000uLL,
                   this->counter, this->messages, this->keepalives,
                   this->counters.sent, this->counters.delayed);// */
+}
+
+std::wstring raddi::connection::status_report () const {
+    std::wstring r;
+    r.reserve (256);
+
+    switch (this->state) {
+        case state::pending: r += L"\x2026"; break;
+        case state::secured: r += log::translate (this->encryption->reveal (), std::wstring ()) + L": "; break;
+        case state::retired: r += L"\x2020"; break;
+    }
+
+    if (this->state != state::retired) {
+        r += log::translate ((raddi::microtimestamp () - std::max (this->probed, this->latest)) / 1'000'000uLL, std::wstring ()) + L"s idle; ";
+    }
+
+    r += L"RCV " + translate (this->counter, std::wstring ()) + L": ";
+    r += L"MSG " + translate (this->messages, std::wstring ()) + L", ";
+    r += L"K/A " + translate (this->keepalives, std::wstring ()) + L"; ";
+    r += L"TRM " + translate (this->counters.sent, std::wstring ()) + L": ";
+    r += L"DLY " + translate (this->counters.delayed, std::wstring ());
+
+    return r;
 }
 
 bool raddi::connection::decode (const unsigned char * data, std::size_t size) {

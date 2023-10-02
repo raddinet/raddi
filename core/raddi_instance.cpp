@@ -13,7 +13,7 @@ raddi::instance::instance (raddi::log::scope scope) {
     if (this->status != ERROR_SUCCESS) {
         this->failure_point = L"SOFTWARE\\RADDI.net";
     } else {
-        this->status = RegCreateKeyEx (registry, this->pid, 0, NULL, REG_OPTION_VOLATILE, KEY_READ | KEY_WRITE, NULL, &this->overview, NULL);
+        this->status = RegCreateKeyEx (this->registry, this->pid, 0, NULL, REG_OPTION_VOLATILE, KEY_READ | KEY_WRITE, NULL, &this->overview, NULL);
         if (this->status != ERROR_SUCCESS) {
             this->failure_point = this->pid;
         } else {
@@ -24,6 +24,7 @@ raddi::instance::instance (raddi::log::scope scope) {
                 this->status = GetLastError ();
                 this->failure_point = L"GetProcessTimes";
             }
+            RegCreateKeyEx (this->overview, L"connections", 0, NULL, REG_OPTION_VOLATILE, KEY_READ | KEY_WRITE, NULL, &this->connections, NULL);
         }
     }
     SetLastError (this->status);
@@ -86,6 +87,38 @@ bool raddi::instance::set (const wchar_t * name, DWORD type, const void * data, 
         return RegSetValueEx (this->overview, name, NULL, type, reinterpret_cast <const BYTE *> (data), (DWORD) size) == ERROR_SUCCESS;
     } else
         return false;
+}
+
+bool raddi::instance::report_begin () {
+    return this->connections != NULL;
+}
+void raddi::instance::report_connection (const std::wstring & name, const std::wstring & value) {
+    auto size = (DWORD) (sizeof (wchar_t) * (value.size () + 1));
+    if (RegSetValueEx (this->connections, name.c_str (), NULL, REG_SZ, reinterpret_cast <const BYTE *> (value.data ()), size) == ERROR_SUCCESS) {
+        this->report_set.insert (name);
+    }
+}
+void raddi::instance::report_finish () {
+    DWORD deleted;
+    do {
+        deleted = 0;
+
+        DWORD i = 0;
+        wchar_t name [256]; // 16384
+
+        DWORD n = sizeof name / sizeof name [0];
+        while (RegEnumValue (this->connections, i++, name, &n, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+            n = sizeof name / sizeof name [0];
+
+            if (!this->report_set.contains (name)) {
+                if (RegDeleteValue (this->connections, name) == ERROR_SUCCESS) {
+                    ++deleted;
+                    --i;
+                }
+            }
+        }
+    } while (deleted);
+    this->report_set.clear ();
 }
 
 template <> uuid raddi::instance::get <uuid> (const wchar_t * name) const {

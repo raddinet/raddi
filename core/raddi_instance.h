@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <string>
 #include <map>
+#include <set>
 #include "..\common\log.h"
 #include "..\common\uuid.h"
 
@@ -15,6 +16,7 @@ namespace raddi {
     class instance {
         HKEY registry = NULL;
         HKEY overview = NULL;
+        HKEY connections = NULL;
 
         public:
             wchar_t pid [14];
@@ -62,6 +64,10 @@ namespace raddi {
             bool set (const wchar_t * name, FILETIME value);
             bool set (const wchar_t * name, uuid value);
 
+            bool report_begin ();
+            void report_connection (const std::wstring & name, const std::wstring & value);
+            void report_finish ();
+
             // get
             //  - 
             //
@@ -99,6 +105,8 @@ namespace raddi {
 
             instance (const instance &) = delete;
             instance & operator = (const instance &) = delete;
+
+            std::set <std::wstring> report_set;
     };
 }
 

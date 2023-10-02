@@ -1459,7 +1459,6 @@ namespace {
 
                     // update status entries
                     //  - TODO: entries processed, accepted, rejected, transmitted (per entry & per transmission)
-                    //  - TODO: list of connections
                     //  - TODO: list of currently open database shards
                     //  - TODO: some database stats?
 
@@ -1472,6 +1471,11 @@ namespace {
 
                     overview.set (L"detached", coordinator.detached.size ().bytes);
                     overview.set (L"detached highwater", coordinator.detached.highwater.bytes);
+
+                    if (overview.report_begin ()) {
+                        coordinator.report_connections (overview);
+                        overview.report_finish ();
+                    }
 
                     auto stats = database.stats ();
                     overview.set (L"shards", stats.shards.active);
