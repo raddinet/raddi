@@ -110,7 +110,7 @@ void raddi::instance::report_finish () {
         while (RegEnumValue (this->connections, i++, name, &n, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
             n = sizeof name / sizeof name [0];
 
-            if (!this->report_set.contains (name)) {
+            if (!this->report_set.count (name)) {
                 if (RegDeleteValue (this->connections, name) == ERROR_SUCCESS) {
                     ++deleted;
                     --i;
