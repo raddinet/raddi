@@ -6,13 +6,6 @@
 #include <algorithm>
 #include <sodium.h>
 
-inline bool is_fast_crypto_aead_aegis256_available () {
-    return sodium_runtime_has_armcrypto () || sodium_runtime_has_aesni ();
-}
-inline bool is_fast_crypto_aead_aes256gcm_available () {
-    return crypto_aead_aes256gcm_is_available ();
-}
-
 namespace raddi {
     namespace protocol {
 

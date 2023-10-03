@@ -1,6 +1,8 @@
 #include "raddi_protocol.h"
 #include "raddi_timestamp.h"
 #include "raddi_consensus.h"
+#include "raddi_libsodium_utils.h"
+#include "../common/platform.h"
 #include "../lib/cuckoocycle.h"
 
 alignas (std::uint64_t) char raddi::protocol::magic [8] = "RADDI/0";
@@ -60,8 +62,8 @@ void raddi::protocol::proposal::propose (initial * head, bool outbound) {
                 aes = 0x02;
                 break;
             default: // automatic or forced
-                if (is_fast_crypto_aead_aegis256_available ()) aes |= 0x02;
-                if (is_fast_crypto_aead_aes256gcm_available ()) aes |= 0x01;
+                if (fast_crypto_aead_aegis256_available) aes |= 0x02;
+                if (fast_crypto_aead_aes256gcm_available) aes |= 0x01;
                 break;
         }
     }
@@ -130,11 +132,11 @@ raddi::protocol::encryption * raddi::protocol::proposal::accept (initial * peer,
     }
 
     if (aes256gcm_mode != aes256gcm_mode::disabled) {
-        if ((peer->flags.soft.decode () & 0x0000'0002) && (aes256gcm_mode != aes256gcm_mode::force_gcm) && is_fast_crypto_aead_aegis256_available ()) {
+        if ((peer->flags.soft.decode () & 0x0000'0002) && (aes256gcm_mode != aes256gcm_mode::force_gcm) && fast_crypto_aead_aegis256_available) {
             *failure = accept_fail_reason::succeeded;
             return new aegis256 (this, &peer->keys);
         }
-        if ((peer->flags.soft.decode () & 0x0000'0001) && (aes256gcm_mode != aes256gcm_mode::force_aegis) && is_fast_crypto_aead_aes256gcm_available ()) {
+        if ((peer->flags.soft.decode () & 0x0000'0001) && (aes256gcm_mode != aes256gcm_mode::force_aegis) && fast_crypto_aead_aes256gcm_available) {
             *failure = accept_fail_reason::succeeded;
             return new aes256gcm (this, &peer->keys);
         }
@@ -181,7 +183,7 @@ std::size_t raddi::protocol::aegis256::encode (unsigned char * message, std::siz
                                                const unsigned char * data, std::size_t size) {
     if ((size <= raddi::protocol::max_payload) && (size + raddi::protocol::frame_overhead <= max)) {
 
-        auto length = size + crypto_aead_aegis256_ABYTES;
+        auto length = size + 16; // crypto_aead_aegis256_ABYTES;
         message [0] = (length >> 0) & 0xFF;
         message [1] = (length >> 8) & 0xFF;
 

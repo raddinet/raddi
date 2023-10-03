@@ -27,6 +27,7 @@
 #include "../core/raddi_peer_levels.h"
 #include "../core/raddi_database_peerset.h"
 #include "../core/raddi_protocol.h"
+#include "../core/raddi_libsodium_utils.h"
 
 #pragma warning (disable:6262) // function stack size warning
 
@@ -504,7 +505,8 @@ int wmain (int argc, wchar_t ** argw) {
     std::signal (SIGINT, [](int) { ::quit = true; });
 
     sodium_init ();
-    
+    raddi::initial_check_for_fast_crypto ();
+
     ::argc = argc;
     ::argw = argw;
 
@@ -2461,9 +2463,11 @@ bool benchmark (const wchar_t * parameter) {
     raddi::proof::options opts;
     opts.threadpool = threadpool ();
     opts.requirements.time = 0;
+    opts.parameters.parallelism = 0;
 
     std::uint32_t count = 1;
     option (argc, argw, L"count", count);
+    option (argc, argw, L"parallelism", opts.parameters.parallelism);
 
     while (!quit && count--) {
         for (auto complexity = first; (complexity != last + 1) && !quit; ++complexity) {
@@ -2575,8 +2579,8 @@ std::uint32_t aead_helper_smallest (const std::uint32_t (&data) [N]) {
 }
 
 bool aead_benchmark (const wchar_t * parameter) {
-    std::printf ("fast AEGIS-256: %s\n", is_fast_crypto_aead_aegis256_available () ? "yes" : "no");
-    std::printf ("fast AES256-GCM: %s\n", is_fast_crypto_aead_aes256gcm_available () ? "yes" : "no");
+    std::printf ("fast AEGIS-256: %s\n", fast_crypto_aead_aegis256_available ? "yes" : "no");
+    std::printf ("fast AES256-GCM: %s\n", fast_crypto_aead_aes256gcm_available ? "yes" : "no");
     std::printf ("\n");
 
     constexpr std::uint64_t M = sizeof rawbuffer / 2;

@@ -37,6 +37,7 @@
 #include "../core/raddi_content.h"
 #include "../core/raddi_consensus.h"
 #include "../core/raddi_instance.h"
+#include "../core/raddi_libsodium_utils.h"
 
 #pragma warning (disable:28112) // interlocked warnings
 #pragma warning (disable:26812) // unscoped enum warning
@@ -936,6 +937,8 @@ namespace {
             Optional <HPOWERNOTIFY, HANDLE, DWORD> (L"USER32", "RegisterSuspendResumeNotification", &callback, DEVICE_NOTIFY_CALLBACK);
         }
 
+        raddi::initial_check_for_fast_crypto ();
+
         // overview
         //  - monitoring and control from other processes
         //
@@ -1118,14 +1121,14 @@ namespace {
                     // if forced particular AES version is not available revert to default
 
                     case aes256gcm_mode::force_gcm:
-                        if (!is_fast_crypto_aead_aes256gcm_available ()) {
+                        if (!fast_crypto_aead_aes256gcm_available) {
                             aes256gcm_mode = aes256gcm_mode::disabled;
                             raddi::log::error (11, aes256gcm::name, xchacha20poly1305::name);
                         }
                         break;
 
                     case aes256gcm_mode::force_aegis:
-                        if (!is_fast_crypto_aead_aegis256_available ()) {
+                        if (!fast_crypto_aead_aegis256_available) {
                             aes256gcm_mode = aes256gcm_mode::disabled;
                             raddi::log::error (11, aegis256::name, xchacha20poly1305::name);
                         }
@@ -1135,15 +1138,15 @@ namespace {
                     //  - if neither, revert to default as above
 
                     case aes256gcm_mode::forced:
-                        if (!is_fast_crypto_aead_aegis256_available () && !is_fast_crypto_aead_aes256gcm_available ()) {
+                        if (!fast_crypto_aead_aegis256_available && !fast_crypto_aead_aes256gcm_available) {
                             aes256gcm_mode = aes256gcm_mode::disabled;
                             raddi::log::error (11, "AES", xchacha20poly1305::name);
                         } else {
-                            if (is_fast_crypto_aead_aegis256_available ()) {
+                            if (fast_crypto_aead_aegis256_available) {
                                 aes256gcm_mode = aes256gcm_mode::force_aegis;
                                 raddi::log::note (6, aegis256::name);
                             } else
-                            if (is_fast_crypto_aead_aes256gcm_available ()) {
+                            if (fast_crypto_aead_aes256gcm_available) {
                                 aes256gcm_mode = aes256gcm_mode::force_gcm;
                                 raddi::log::note (6, aes256gcm::name);
                             }
