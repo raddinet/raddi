@@ -276,7 +276,12 @@ HKEY raddi::instance::find_sub (HKEY hBase) {
 }
 
 raddi::instance::~instance () {
+    if (this->connections) {
+        RegCloseKey (this->connections);
+        this->connections = NULL;
+    }
     if (this->overview) {
+        RegDeleteKey (this->overview, L"connections");
         RegCloseKey (this->overview);
         this->overview = NULL;
     }
