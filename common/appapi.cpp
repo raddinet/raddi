@@ -270,7 +270,7 @@ HRESULT DrawCompositedText (HDC hDC, std::wstring_view string, DWORD format, REC
     }
     
     if (ptrDrawThemeTextEx && options->theme) {
-        auto padding = options->glow;
+        LONG padding = options->glow;
         //auto padding = std::max (options->glow,
         //                         options->shadow.size + std::max (std::abs (options->shadow.offset.x),
         //                                                          std::abs (options->shadow.offset.y)) + 1);
