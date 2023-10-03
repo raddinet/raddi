@@ -99,8 +99,10 @@ namespace {
                     options.threadpool = raddi::proof::threadpool::system;
                 }
             }
-            if (options.parameters.parallelism > processors) {
-                options.parameters.parallelism = processors;
+            if (IsHomogeneousSystem ()) {
+                if (options.parameters.parallelism > processors) {
+                    options.parameters.parallelism = processors;
+                }
             }
         }
 

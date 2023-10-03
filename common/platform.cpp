@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cwctype>
 #include <map>
+#include <set>
 
 namespace {
     BOOL  (WINAPI * ptrProcessIdToSessionId) (DWORD, DWORD *) = NULL;
@@ -130,6 +131,34 @@ std::size_t GetPredominantSMT () {
         return highest + 1;
     } else
         return 1;
+}
+
+bool IsHomogeneousSystem () { 
+    std::set <BYTE> classes;
+    std::set <BYTE> smts;
+
+    if (ptrGetLogicalProcessorInformationEx) {
+
+        auto buffer = CallGetLogicalProcessorInformationEx (RelationAll);
+        if (!buffer.empty ()) {
+            auto p = buffer.data ();
+
+            while (true) {
+                auto info = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *) p;
+                if (info->Size) {
+                    if (info->Relationship == RelationProcessorCore) {
+                        classes.insert (info->Processor.EfficiencyClass);
+                        if (info->Processor.Flags & LTP_PC_SMT) {
+                            smts.insert (CountSetBits (info->Processor.GroupMask [0].Mask));
+                        }
+                    }
+                    p += info->Size;
+                } else
+                    break;
+            }
+        }
+    }
+    return (classes.size () < 2) && (smts.size () < 2);
 }
 
 std::vector <Processor> GetRankedLogicalProcessorList () {
@@ -261,7 +290,7 @@ std::vector <Processor> GetRankedLogicalProcessorList () {
             auto smt = 0u;
             for (auto i = 0u; i != n; ++i) {
                 if (buffer [i].Relationship == RelationProcessorCore) {
-                    if (buffer [i].ProcessorCore.Flags & 1) {
+                    if (buffer [i].ProcessorCore.Flags & LTP_PC_SMT) {
                         smt = CountSetBits (buffer [i].ProcessorMask);
                         break;
                     }

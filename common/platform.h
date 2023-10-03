@@ -106,6 +106,7 @@ public:
     bool operator < (const Processor & other) const { return this->order () < other.order (); }
 };
 
+bool IsHomogeneousSystem ();
 std::size_t GetPredominantSMT ();
 std::vector <Processor> GetRankedLogicalProcessorList ();
 
