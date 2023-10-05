@@ -82,6 +82,13 @@ namespace raddi {
         std::uint64_t latest = raddi::microtimestamp ();
         std::uint64_t probed = 0;
 
+        // age
+        //  - 
+        //
+        std::uint64_t age (std::uint64_t now = raddi::microtimestamp ()) const {
+            return raddi::microtimestamp () - std::max (this->probed, this->latest);
+        }
+
         struct counter messages;
         struct counter keepalives;
 

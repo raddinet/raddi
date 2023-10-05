@@ -141,7 +141,7 @@ std::uint64_t raddi::connection::keepalive (std::uint64_t now, std::uint64_t exp
             this->cancel ();
         } else
         if (this->state == state::secured) {
-            if (std::int64_t (now - std::max (this->latest, this->probed)) > std::int64_t (period)) {
+            if (std::int64_t (this->age (now)) > std::int64_t (period)) {
                 if (!this->unsynchronized_is_live ()) {
                     if (auto message = this->prepare (2)) {
                         message [0] = 0x00;
@@ -172,7 +172,7 @@ void raddi::connection::status () const {
     // "{1}, {2} B pending, {3}s idle; RCV {4}: MSG {5}, K/A {6}; TRM {7}: DLY {8}"
     this->report (raddi::log::level::note, 1,
                   state, this->buffer_size (),
-                  (raddi::microtimestamp () - std::max (this->probed, this->latest)) / 1'000'000uLL,
+                  this->age () / 1'000'000uLL,
                   this->counter, this->messages, this->keepalives,
                   this->counters.sent, this->counters.delayed);// */
 }
@@ -188,7 +188,7 @@ std::wstring raddi::connection::status_report () const {
     }
 
     if (this->state != state::retired) {
-        r += log::translate ((raddi::microtimestamp () - std::max (this->probed, this->latest)) / 1'000'000uLL, std::wstring ()) + L"s idle; ";
+        r += log::translate (this->age () / 1'000'000uLL, std::wstring ()) + L"s idle; ";
     }
 
     r += L"RCV " + translate (this->counter, std::wstring ()) + L": ";

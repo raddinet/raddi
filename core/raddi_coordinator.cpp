@@ -74,12 +74,13 @@ std::uint64_t raddi::coordinator::keepalive () {
 void raddi::coordinator::sweep () {
     exclusive guard (this->lock);
 
+    auto now = raddi::microtimestamp ();
     auto ii = this->connections.begin ();
     auto ie = this->connections.end ();
     
     if (ii != ie) {
         do {
-            if (ii->state == connection::state::retired && !ii->pending ()) {
+            if (ii->state == connection::state::retired && (!ii->pending () || ii->age (now) > 1'200'000'000uLL)) {
                 ii = this->connections.erase (ii);
                 ie = this->connections.end ();
             } else {
