@@ -29,6 +29,10 @@ log passed seconds to detect time spans when the device was off, then issue down
 
 32-bit version issues
 
+WinXP
+ - 32-bit with msvc 14.15 then Release builds work
+ - 64-bit only portable builds work (and both 32-bit, with msvcrt 14.0)
+
 libsodium: https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions
 
 frustration module (MITM protection)
