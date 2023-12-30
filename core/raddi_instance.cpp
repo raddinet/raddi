@@ -7,6 +7,8 @@
 #include <cwchar>
 
 raddi::instance::instance (raddi::log::scope scope) {
+    this->owner = true;
+
     _snwprintf (this->pid, sizeof this->pid / sizeof this->pid [0], L"%u", GetCurrentProcessId ());
     this->status = RegCreateKeyEx ((scope == raddi::log::scope::machine) ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
                                    L"SOFTWARE\\RADDI.net", 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &this->registry, NULL);
@@ -183,6 +185,8 @@ bool raddi::instance::get (const wchar_t * name, DWORD type, BYTE * data, DWORD 
 }
 
 raddi::instance::instance (const wchar_t * parameter) {
+    this->owner = false;
+
     if (parameter != nullptr) {
         _snwprintf (this->pid, sizeof this->pid / sizeof this->pid [0], L"%s", parameter);
     } else {
@@ -281,12 +285,14 @@ raddi::instance::~instance () {
         this->connections = NULL;
     }
     if (this->overview) {
-        RegDeleteKey (this->overview, L"connections");
+        if (this->owner) {
+            RegDeleteKey (this->overview, L"connections");
+        }
         RegCloseKey (this->overview);
         this->overview = NULL;
     }
     if (this->registry) {
-        if (this->pid [0]) {
+        if (this->owner) {
             RegDeleteKey (this->registry, this->pid);
         }
         RegCloseKey (this->registry);

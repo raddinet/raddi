@@ -25,6 +25,7 @@ namespace raddi {
             //  - set on failures, to be logged later
             //
             LONG status = ERROR_SUCCESS;
+            bool owner = false;
             const wchar_t * failure_point = nullptr;
 
         public:
